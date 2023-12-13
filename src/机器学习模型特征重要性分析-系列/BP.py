@@ -32,6 +32,7 @@ bp_nn.fit(X_train_scaled, y_train)
 # 由于神经网络不直接提供特征重要性，我们可以通过观察权重来间接估计
 # 获取输入层到第一个隐藏层的权重
 weights = bp_nn.coefs_[0]
+print(weights)
 
 # 计算权重的平均绝对值，用作特征重要性的代理
 importance = np.mean(np.abs(weights), axis=1)
