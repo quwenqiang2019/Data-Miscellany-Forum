@@ -39,31 +39,31 @@ for i in df.columns:
 print('存在' if any(df.duplicated()) else '不存在', '重复观测值')
 df.drop_duplicates()
 ### 2.4.2 缺失值处理
-print(data.isnull())
-print('不存在' if any(data.isnull()) else '存在', '缺失值')
-print(data.isnull().sum())   #检测每列中缺失值的数量
-print(data.isnull().T.sum())    #检测每行缺失值的数量
-data.dropna()  # 直接删除记录
-data.fillna(method='ffill')  # 前向填充
-data.fillna(method='bfill')  # 后向填充
-data.fillna(value=2)  # 值填充
-data.fillna(value={'resting_blood_pressure': data['resting_blood_pressure'].mean()})  # 统计值填充
+print(df.isnull())
+print('不存在' if any(df.isnull()) else '存在', '缺失值')
+print(df.isnull().sum())   #检测每列中缺失值的数量
+print(df.isnull().T.sum())    #检测每行缺失值的数量
+df.dropna()  # 直接删除记录
+df.fillna(method='ffill')  # 前向填充
+df.fillna(method='bfill')  # 后向填充
+df.fillna(value=2)  # 值填充
+df.fillna(value={'resting_blood_pressure': df['resting_blood_pressure'].mean()})  # 统计值填充
 ### 2.4.3 异常值处理
-data1 = data['resting_blood_pressure']
+df1 = df['resting_blood_pressure']
 # 标准差监测
-xmean =  data1.mean()
-xstd = data1.std()
-print('存在' if any(data1 > xmean + 2 * xstd) else '不存在', '上限异常值')
-print('存在' if any(data1 < xmean - 2 * xstd) else '不存在', '下限异常值')
+xmean =  df1.mean()
+xstd = df1.std()
+print('存在' if any(df1 > xmean + 2 * xstd) else '不存在', '上限异常值')
+print('存在' if any(df1 < xmean - 2 * xstd) else '不存在', '下限异常值')
 # 箱线图监测
-q1 = data1.quantile(0.25)
-q3 = data1.quantile(0.75)
+q1 = df1.quantile(0.25)
+q3 = df1.quantile(0.75)
 up = q3 + 1.5 * (q3 - q1)
 dw = q1 - 1.5 * (q3 - q1)
-print('存在' if any(data1 > up) else '不存在', '上限异常值')
-print('存在' if any(data1 < dw) else '不存在', '下限异常值')
-data1[data1 > up] = data1[data1 <  up].max()
-data1[data1 < dw] = data1[data1 >  dw].min()
+print('存在' if any(df1 > up) else '不存在', '上限异常值')
+print('存在' if any(df1 < dw) else '不存在', '下限异常值')
+df1[df1 > up] = df1[df1 <  up].max()
+df1[df1 < dw] = df1[df1 >  dw].min()
 
 ## 2.5 数据探索
 ### 2.5.1 特征分布
