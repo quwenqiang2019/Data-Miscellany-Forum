@@ -10,42 +10,101 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 
 
-# 准备数据
+# 1、准备数据
 data = pd.read_csv(r'Dataset.csv')
 df = pd.DataFrame(data)
 
-# 数据预处理
+# 2、数据预处理
+
+## 2.1 数据基本信息
+print(df.info())
+### 2.1.1 数据量
+print(df.shape)
+### 2.1.2 字段名和类型
+print(df.columns)
+print(df.dtypes)
 cat_cols = [col for col in df.columns if df[col].dtype == "object"] # 类别型变量名
 num_cols = [col for col in df.columns if df[col].dtype != "object"] # 数值型变量名
-print(cat_cols)
-print(num_cols)
 
-# 提取目标变量和特征变量
+## 2.2 错误数据处理
+for i in df.columns:
+    print(df[i].value_counts())
+    df["pcv"] = pd.to_numeric(df["pcv"], errors="coerce")
+
+## 2.3 特征编码
+#（略）
+
+## 2.4 数据清洗
+### 2.4.1 重复值
+print('存在' if any(df.duplicated()) else '不存在', '重复观测值')
+df.drop_duplicates()
+### 2.4.2 缺失值处理
+print(data.isnull())
+print('不存在' if any(data.isnull()) else '存在', '缺失值')
+print(data.isnull().sum())   #检测每列中缺失值的数量
+print(data.isnull().T.sum())    #检测每行缺失值的数量
+data.dropna()  # 直接删除记录
+data.fillna(method='ffill')  # 前向填充
+data.fillna(method='bfill')  # 后向填充
+data.fillna(value=2)  # 值填充
+data.fillna(value={'resting_blood_pressure': data['resting_blood_pressure'].mean()})  # 统计值填充
+### 2.4.3 异常值处理
+data1 = data['resting_blood_pressure']
+# 标准差监测
+xmean =  data1.mean()
+xstd = data1.std()
+print('存在' if any(data1 > xmean + 2 * xstd) else '不存在', '上限异常值')
+print('存在' if any(data1 < xmean - 2 * xstd) else '不存在', '下限异常值')
+# 箱线图监测
+q1 = data1.quantile(0.25)
+q3 = data1.quantile(0.75)
+up = q3 + 1.5 * (q3 - q1)
+dw = q1 - 1.5 * (q3 - q1)
+print('存在' if any(data1 > up) else '不存在', '上限异常值')
+print('存在' if any(data1 < dw) else '不存在', '下限异常值')
+data1[data1 > up] = data1[data1 <  up].max()
+data1[data1 < dw] = data1[data1 >  dw].min()
+
+## 2.5 数据探索
+### 2.5.1 特征分布
+### 2.6.2 特征相关性
+
+
+# 3 提取目标变量和特征变量
 target = 'target'
 features = df.columns.drop(target)
 print(data["target"].value_counts()) # 顺便查看一下样本是否平衡
 
-# 划分训练集和测试集
+
+# 4、 归一化
+
+
+
+# 5、划分训练集和测试集
 df = shuffle(df)
 X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, random_state=0)
 
-# 训练模型
+
+# 6、特征重要性分析与筛选
+
+
+# 7、模型的构建与训练
 model = DecisionTreeClassifier(max_depth=5)
 model.fit(X_train, y_train)
 
-# 模型推理
+
+# 8、模型的特征重要性分析
+
+
+# 9、模型推理与评价
 y_pred = model.predict(X_test)
 print(y_pred)
 y_scores = model.predict_proba(X_test)
 print(y_scores[:, 1])
-
-
-# 模型评价
 acc = accuracy_score(y_test, y_pred) # 准确率acc
 cm = confusion_matrix(y_test, y_pred) # 混淆矩阵
 cr = classification_report(y_test, y_pred) # 分类报告
-# 计算ROC曲线和AUC值,绘制ROC曲线
-fpr, tpr, thresholds = roc_curve(y_test, y_scores[:, 1], pos_label=1)
+fpr, tpr, thresholds = roc_curve(y_test, y_scores[:, 1], pos_label=1) # 计算ROC曲线和AUC值,绘制ROC曲线
 roc_auc = auc(fpr, tpr)
 plt.figure()
 plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
@@ -57,3 +116,6 @@ plt.ylabel('True Positive Rate')
 plt.title('Receiver Operating Characteristic')
 plt.legend(loc="lower right")
 plt.show()
+
+
+# 10、模型的优化与部署
