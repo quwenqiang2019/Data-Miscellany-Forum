@@ -17,19 +17,18 @@ df = pd.DataFrame(data)
 # 2、数据预处理
 
 ## 2.1 数据基本信息
+print(df.head())
 print(df.info())
-### 2.1.1 数据量
 print(df.shape)
-### 2.1.2 字段名和类型
 print(df.columns)
 print(df.dtypes)
 cat_cols = [col for col in df.columns if df[col].dtype == "object"] # 类别型变量名
 num_cols = [col for col in df.columns if df[col].dtype != "object"] # 数值型变量名
 
-## 2.2 错误数据处理
-for i in df.columns:
+## 2.2 错误数据检测与处理
+for i in num_cols:
     print(df[i].value_counts())
-    df["pcv"] = pd.to_numeric(df["pcv"], errors="coerce")
+    df[i] = pd.to_numeric(df[i], errors="coerce")
 
 ## 2.3 特征编码
 #（略）
@@ -44,17 +43,19 @@ print('不存在' if any(df.isnull()) else '存在', '缺失值')
 print(df.isnull().sum())   #检测每列中缺失值的数量
 print(df.isnull().T.sum())    #检测每行缺失值的数量
 df.dropna()  # 直接删除记录
-df.fillna(method='ffill')  # 前向填充
-df.fillna(method='bfill')  # 后向填充
-df.fillna(value=2)  # 值填充
-df.fillna(value={'resting_blood_pressure': df['resting_blood_pressure'].mean()})  # 统计值填充
+# df.fillna(method='ffill')  # 前向填充
+# df.fillna(method='bfill')  # 后向填充
+# df.fillna(value=2)  # 值填充
+# df.fillna(value={'resting_blood_pressure': df['resting_blood_pressure'].mean()})  # 统计值填充
 ### 2.4.3 异常值处理
-df1 = df['resting_blood_pressure']
+df1 = df['age']
 # 标准差监测
-xmean =  df1.mean()
+xmean = df1.mean()
 xstd = df1.std()
 print('存在' if any(df1 > xmean + 2 * xstd) else '不存在', '上限异常值')
 print('存在' if any(df1 < xmean - 2 * xstd) else '不存在', '下限异常值')
+df1[df1 > xmean + 2 * xstd] = df1[df1 < xmean + 2 * xstd].max()
+df1[df1 < xmean - 2 * xstd] = df1[df1 > xmean - 2 * xstd].min()
 # 箱线图监测
 q1 = df1.quantile(0.25)
 q3 = df1.quantile(0.75)
@@ -62,30 +63,32 @@ up = q3 + 1.5 * (q3 - q1)
 dw = q1 - 1.5 * (q3 - q1)
 print('存在' if any(df1 > up) else '不存在', '上限异常值')
 print('存在' if any(df1 < dw) else '不存在', '下限异常值')
-df1[df1 > up] = df1[df1 <  up].max()
-df1[df1 < dw] = df1[df1 >  dw].min()
+df1[df1 > up] = df1[df1 < up].max()
+df1[df1 < dw] = df1[df1 > dw].min()
 
 ## 2.5 数据探索
+print(df.describe())
 ### 2.5.1 特征分布
 ### 2.6.2 特征相关性
 
+# 3、 归一化
 
-# 3 提取目标变量和特征变量
+# 4、 提取目标变量和特征变量
 target = 'target'
 features = df.columns.drop(target)
 print(data["target"].value_counts()) # 顺便查看一下样本是否平衡
 
 
-# 4、 归一化
 
 
+# 5、特征重要性分析与筛选
 
-# 5、划分训练集和测试集
+# 6、划分训练集和测试集
 df = shuffle(df)
 X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, random_state=0)
 
 
-# 6、特征重要性分析与筛选
+
 
 
 # 7、模型的构建与训练
