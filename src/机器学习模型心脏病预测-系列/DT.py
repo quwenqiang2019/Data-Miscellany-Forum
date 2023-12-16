@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
+from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
@@ -31,6 +32,8 @@ for i in num_cols:
     df[i] = pd.to_numeric(df[i], errors="coerce")
 
 ## 2.3 特征编码
+# le = preprocessing.LabelEncoder()
+# df['sex'] = le.fit_transform(df['sex'])
 #（略）
 
 ## 2.4 数据清洗
@@ -83,12 +86,10 @@ print(data["target"].value_counts()) # 顺便查看一下样本是否平衡
 
 # 5、特征重要性分析与筛选
 
+
 # 6、划分训练集和测试集
 df = shuffle(df)
 X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, random_state=0)
-
-
-
 
 
 # 7、模型的构建与训练
