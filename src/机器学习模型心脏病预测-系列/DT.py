@@ -27,10 +27,10 @@ cat_cols = [col for col in df.columns if df[col].dtype == "object"] # 类别型�
 num_cols = [col for col in df.columns if df[col].dtype != "object"] # 数值型变量名
 
 ## 2.2 错误数据检测与处理
-for i in num_cols:
-    print(df[i].value_counts())
-    df[i] = pd.to_numeric(df[i], errors="coerce")
-
+# for i in num_cols:
+#     print(df[i].value_counts())
+#     df[i] = pd.to_numeric(df[i], errors="coerce")
+# (略)
 ## 2.3 特征编码
 # le = preprocessing.LabelEncoder()
 # df['sex'] = le.fit_transform(df['sex'])
@@ -51,6 +51,7 @@ df.dropna()  # 直接删除记录
 # df.fillna(value=2)  # 值填充
 # df.fillna(value={'resting_blood_pressure': df['resting_blood_pressure'].mean()})  # 统计值填充
 ### 2.4.3 异常值处理
+# (略，参考下面的案例)
 df1 = df['age']
 # 标准差监测
 xmean = df1.mean()
@@ -75,6 +76,7 @@ print(df.describe())
 ### 2.6.2 特征相关性
 
 # 3、 归一化
+# (略)
 
 # 4、 提取目标变量和特征变量
 target = 'target'
@@ -102,9 +104,7 @@ model.fit(X_train, y_train)
 
 # 9、模型推理与评价
 y_pred = model.predict(X_test)
-print(y_pred)
 y_scores = model.predict_proba(X_test)
-print(y_scores[:, 1])
 acc = accuracy_score(y_test, y_pred) # 准确率acc
 cm = confusion_matrix(y_test, y_pred) # 混淆矩阵
 cr = classification_report(y_test, y_pred) # 分类报告
