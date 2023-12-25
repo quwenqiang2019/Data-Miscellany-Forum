@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # 准备数据
-data = pd.read_csv(r'E:\数据杂坛\\UCI Heart Disease Dataset.csv')
+data = pd.read_csv(r'dataset.csv')
 df = pd.DataFrame(data)
 
 # 目标变量和特征变量

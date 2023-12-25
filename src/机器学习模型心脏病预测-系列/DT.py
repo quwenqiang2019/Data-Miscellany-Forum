@@ -84,8 +84,6 @@ features = df.columns.drop(target)
 print(data["target"].value_counts()) # 顺便查看一下样本是否平衡
 
 
-
-
 # 5、特征重要性分析与筛选
 
 
@@ -120,6 +118,5 @@ plt.ylabel('True Positive Rate')
 plt.title('Receiver Operating Characteristic')
 plt.legend(loc="lower right")
 plt.show()
-
 
 # 10、模型的优化与部署
