@@ -27,18 +27,20 @@ async def main():
     all_repositories = []
     page = 1
     max_pages = 3   # 获取前n页
-    target_pages = [8, 15, 55]  # 想要获取的页码列表
+    # target_pages = [8, 15, 55]  # 想要获取的页码列表
 
     async with aiohttp.ClientSession(headers=headers) as session:
         # while True:
-        # while page <= max_pages:
-        for page in target_pages:
+        while page <= max_pages:
+        # for page in target_pages:
             repositories = await fetch_repositories(session, org_name, page)
             if not repositories:
                 break
 
             all_repositories.extend(repositories)
             page += 1
+
+            print(page)
 
     await write_to_excel(all_repositories)
     print('Repositories information written to gitee_repositories.xlsx')
