@@ -1,5 +1,4 @@
 import time
-
 import aiohttp
 import asyncio
 import openpyxl
@@ -15,17 +14,22 @@ async def fetch_repositories(session, org_name, page):
     params = {'page': page}
     access_token = 'ed1d0fb3d6aa397c514569b4b965e3a9'
     headers = {'Authorization': f'Bearer {access_token}'}
-    async with session.get(url, headers = headers, params=params) as response:
+    async with session.get(url, headers=headers, params=params) as response:
+        try:
+            return await response.json()
+        except:
+            print('error')
 
-        content_type = response.headers.get('Content-Type', '').lower()
-        data = await response.read()
 
-        if 'application/json' in content_type:
-            return await response.json(), response.headers.get('Link')
-        elif 'text/plain' in content_type:
-            raise ValueError(f"Unexpected content type: {content_type}. Response content: {data.decode('utf-8')}")
-        else:
-            raise ValueError(f"Unsupported content type: {content_type}. Response content: {data.decode('utf-8')}")
+        # content_type = response.headers.get('Content-Type', '').lower()
+        # data = await response.read()
+        #
+        # if 'application/json' in content_type:
+        #     return await response.json(), response.headers.get('Link')
+        # elif 'text/plain' in content_type:
+        #     raise ValueError(f"Unexpected content type: {content_type}. Response content: {data.decode('utf-8')}")
+        # else:
+        #     raise ValueError(f"Unsupported content type: {content_type}. Response content: {data.decode('utf-8')}")
 
 
 async def get_repository_names(session, org_name, page):
@@ -35,12 +39,10 @@ async def get_repository_names(session, org_name, page):
         repositories, _ = await fetch_repositories(session, org_name, page)
         error_page_list.append(None)
         return [repo['name'] for repo in repositories], error_page_list
-        # return [repo['name'] for repo in repositories].append(page)
     except ValueError as e:
         print(f"Error while fetching repositories {page}: {e}")
         error_page_list.append(page)
         return [], error_page_list
-        # return [].append(page)
 
 async def get_all_repository_names(org_name, num_pages):
     async with aiohttp.ClientSession() as session:
