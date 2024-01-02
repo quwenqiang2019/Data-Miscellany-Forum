@@ -1,0 +1,110 @@
+import time
+import aiohttp
+import asyncio
+import openpyxl
+import itertools
+import requests
+import json
+
+
+async def get_spec_names_onerepo(session, org, repo, br, access_token):
+    url = f"https://gitee.com/api/v5/repos/{org}/{repo}/git/trees/{br}"
+    headers = {'Authorization': f'Bearer {access_token}'}
+
+
+    async with session.get(url, headers=headers) as response:
+
+        try:
+            # 获取 filetree
+            res = await response.json()
+            # print(res)
+            fileTree = []
+            try:
+                for file in res["tree"]:
+                    # print(file)
+                    fileTree.append(file["path"])
+            except Exception as e:
+                print(e)
+
+
+            # 提取spec文件
+            specFile = None
+            for file in fileTree:
+                if file.endswith(".spec"):
+                    specFile = file
+                    print(specFile)
+                    break
+            #
+            # # 下载spec文件
+            # url = f"https://gitee.com/{org}/{repo}/raw/{br}/{specFile}"
+            # params = {
+            #     "access_token": self.token
+            # }
+            # http = HTTPRequest(timeout=10)
+            # status_code, response = await http.get(url, params)
+            #
+            # if status_code == 200:
+            #     writeFileInDirectory(f"data/{org}/{br}/{repo}", specFile, response)
+            #     return specFile
+            #
+            # # 写入数据库
+            # if progress and log:
+            #     progress.value = round(index / total, 4)
+            #     log.push(f"正在抓取 {repo.name} 的 spec 文件")
+            #     await asyncio.sleep(0.01)
+            # if specName != None:
+            #     Packages.update(specFile=specName).where(Packages.name == repo.name).execute()
+
+        except:
+            pass
+
+
+        print(fileTree)
+
+
+
+
+async def get_all_spec_names(org, br, access_token, repo_list):
+    async with aiohttp.ClientSession() as session:
+        tasks = [get_spec_names_onerepo(session, org, repo, br, access_token) for repo in repo_list]
+        res = await asyncio.gather(*tasks)
+
+        return res
+
+
+async def main():
+    org = 'src-oepkgs'
+    br = "openEuler-22.03-LTS"
+    access_token = 'ed1d0fb3d6aa397c514569b4b965e3a9'
+    repo_list = ['esekeyd', 'execline', 'httest', 'psst']
+
+
+    spec_names_repo = await get_all_spec_names(org, br, access_token, repo_list)
+    # print(spec_names_repo)
+
+
+    # repository_names = [tup[0] for tup in repository_names_page]
+    # repository_names = list(itertools.chain(*repository_names))
+    #
+    # pages = [tup[1] for tup in repository_names_page]
+    # error_pages = list(itertools.chain(*pages))
+    # error_pages = list(filter(None, error_pages))
+    #
+    #
+    # print(error_pages)
+    # start_time = time.time()  # 记录循环开始的时间
+    # while error_pages and time.time() - start_time < 300:
+    #     repository_names_page = await get_error_repository_names(org_name, access_token, error_pages)
+    #     repository_names_error_page = [tup[0] for tup in repository_names_page]
+    #     repository_names_error_page = list(itertools.chain(*repository_names_error_page))
+    #     repository_names.extend(repository_names_error_page)
+    #     pages = [tup[1] for tup in repository_names_page]
+    #     error_pages = list(itertools.chain(*pages))
+    #     error_pages = list(filter(None, error_pages))
+    #
+    # await write_to_excel(org_name, repository_names)
+
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())

@@ -1,11 +1,12 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import AdaBoostRegressor
+from sklearn.ensemble import AdaBoostClassifier
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.preprocessing import MinMaxScaler
 
 # 准备数据
-data = pd.read_csv(r'E:\数据杂坛\\UCI Heart Disease Dataset.csv')
+data = pd.read_csv(r'dataset.csv')
 df = pd.DataFrame(data)
 
 # 目标变量和特征变量
@@ -13,11 +14,19 @@ target = 'target'
 features = df.columns.drop(target)
 
 # 划分训练集和测试集
-X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(df[features], df[[target]], test_size=0.2, random_state=0)
+
+# 归一化
+mm1 = MinMaxScaler()   # 特征进行归一化
+X_train_m = mm1.fit_transform(X_train)
+mm2 = MinMaxScaler()     # 标签进行归一化
+y_train_m = mm2.fit_transform(y_train)
 
 # 训练随机森林模型
-model = AdaBoostRegressor(n_estimators=100, random_state=0)
-model.fit(X_train, y_train)
+model = AdaBoostClassifier(n_estimators=100, random_state=0)
+model.fit(X_train_m, y_train_m)
+
+
 
 # 提取特征重要性
 feature_importance = model.feature_importances_

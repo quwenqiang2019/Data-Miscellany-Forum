@@ -48,9 +48,11 @@ async def get_total_pages(org_name, access_token):
     url = f'https://gitee.com/api/v5/orgs/{org_name}/repos'
     headers = {'Authorization': f'Bearer {access_token}'}
     response = requests.get(url, headers=headers)
+    print(response.headers)
     total_pages = int(response.headers.get("total_page"))
+    total_counts = int(response.headers.get("total_count"))
 
-    return total_pages
+    return total_pages, total_counts
 
 
 async def write_to_excel(org_name, repository_names):
@@ -69,8 +71,9 @@ async def write_to_excel(org_name, repository_names):
 async def main():
     org_name = 'src-oepkgs'
     access_token = 'ed1d0fb3d6aa397c514569b4b965e3a9'
-    num_pages = await get_total_pages(org_name, access_token)
+    num_pages, total_repo = await get_total_pages(org_name, access_token)
     print(num_pages)
+    print(total_repo)
 
     repository_names_page = await get_all_repository_names(org_name, access_token, num_pages)
     repository_names = [tup[0] for tup in repository_names_page]
