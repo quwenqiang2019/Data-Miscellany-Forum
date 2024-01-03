@@ -11,28 +11,18 @@ async def get_spec_names_onerepo(session, org, repo, br, access_token):
     url = f"https://gitee.com/api/v5/repos/{org}/{repo}/git/trees/{br}"
     headers = {'Authorization': f'Bearer {access_token}'}
 
-
     async with session.get(url, headers=headers) as response:
-
+        error_repo_list = []
         try:
             # 获取 filetree
             res = await response.json()
-            # print(res)
             fileTree = []
-            try:
-                for file in res["tree"]:
-                    # print(file)
-                    fileTree.append(file["path"])
-            except Exception as e:
-                print(e)
-
-
+            for file in res["tree"]:
+                fileTree.append(file["path"])
             # 提取spec文件
-            specFile = None
             for file in fileTree:
                 if file.endswith(".spec"):
                     specFile = file
-                    print(specFile)
                     break
             #
             # # 下载spec文件
@@ -48,18 +38,18 @@ async def get_spec_names_onerepo(session, org, repo, br, access_token):
             #     return specFile
             #
             # # 写入数据库
-            # if progress and log:
-            #     progress.value = round(index / total, 4)
-            #     log.push(f"正在抓取 {repo.name} 的 spec 文件")
-            #     await asyncio.sleep(0.01)
+            # specName = specFile
+            # # print(specName)
             # if specName != None:
             #     Packages.update(specFile=specName).where(Packages.name == repo.name).execute()
 
+            error_repo_list.append(None)
+            return error_repo_list
+
         except:
-            pass
-
-
-        print(fileTree)
+            print(f"Error while fetching repositories {repo}")
+            error_repo_list.append(repo)
+            return error_repo_list
 
 
 
@@ -80,7 +70,7 @@ async def main():
 
 
     spec_names_repo = await get_all_spec_names(org, br, access_token, repo_list)
-    # print(spec_names_repo)
+    print(spec_names_repo)
 
 
     # repository_names = [tup[0] for tup in repository_names_page]
