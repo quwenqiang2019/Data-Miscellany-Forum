@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # 准备数据
-data = pd.read_csv(r'G:\数据杂坛\\UCI Heart Disease Dataset.csv')
+data = pd.read_csv(r'dataset.csv')
 df = pd.DataFrame(data)
 
 # 目标变量和特征变量
@@ -25,9 +25,11 @@ feature_names = features
 
 # 创建特征重要性的DataFrame
 importance_df = pd.DataFrame({'Feature': feature_names, 'Importance': feature_importance})
+print(importance_df)
 
 # 对特征重要性进行排序
 importance_df = importance_df.sort_values(by='Importance', ascending=False)
+print(importance_df)
 
 # 可视化特征重要性
 plt.figure(figsize=(10, 6))
