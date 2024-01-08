@@ -1,65 +1,33 @@
-import itertools
+from pyrpm.spec import Spec, replace_macros
+
+def getURLandSourceFromSpecFileOneRepo(spec_file):
+    url, source = None, None
+
+
+    spec = Spec.from_file(spec_file)
+    print(spec)
+    if spec.sources == [] and spec.url == '':
+        url, source = None, None
+
+    if spec.url is not None:
+        urlList = extractURLFromStr(replace_macros(spec.url, spec))
+        if urlList != []:
+            url = urlList[0]
+            print(url)
+        # if spec.sources != []:
+        #     sourceList = extractURLFromStr(replace_macros(spec.sources[0], spec))
+        #     if sourceList != []:
+        #         source = sourceList[0]
+        # if url is None:
+        #     if len(spec.macros) >= 1:
+        #         if spec.macros.get('goipath'):
+        #             url = "https://" + spec.macros['goipath'] + "/"
+        #
+        # return url, source
 
 
 
-data = [(['kibana', 'OCK', 'perl-HTTP-Body', 'puzzle-jigsaw', 'movim'], [None]),
-        (['ngraph-gtk', 'ruby-tty-spinner', 'apertium-eu-es', 'ruby-sprockets', 'duma'], [None]),
-        (['octave-linear-algebra', 'codequery', 'ruby-plist', 'dnss', 'crowdsec'], [None]),
-        (['clickhouse', 'python-asdf', 'ruby-mixlib-config', 'ruby-fog-aws', 'ayatana-webmail'], [None]),
-        (['lunar-date', 'dynamips', 'singularity-container', 'tuxtype', 'ruby-grit'], [None]),
-        ([], [12])]
 
-l = [[None], [None], [None], [None], [None], [None], [None], [None], [None], [None], [None], [None], [None], [None], [None], [None], [None], [None]]
-l = list(itertools.chain(*l))
-print(l)
-
-error_page_list = []
-error_page_list.append('')
-print(error_page_list)
-
-
-my_list = [1, 2, 3]
-my_list.extend([4, 5, 6])
-print(my_list)
-my_list.append([4, 5, 6])
-print(my_list)
-
-import asyncio
-
-async def long_running_task():
-    # 模拟一个耗时的任务
-    await asyncio.sleep(5)
-    print("长时间任务完成")
-
-async def task_with_timeout(task, timeout):
-    try:
-        await asyncio.wait_for(task, timeout)
-    except asyncio.TimeoutError:
-        print("任务超时:", task)
-        task.cancel()  # 取消任务
-
-async def main():
-    # 创建任务列表
-    tasks = [
-        asyncio.ensure_future(long_running_task()),
-        asyncio.ensure_future(asyncio.sleep(2)),  # 一个短时间的任务
-        asyncio.ensure_future(long_running_task()),
-        asyncio.ensure_future(asyncio.sleep(3)),  # 一个短时间的任务
-    ]
-
-    # 设置超时时间为4秒
-    timeout = 4
-
-    # 并发执行任务，并设置超时时间
-    done, pending = await asyncio.wait(tasks, timeout=timeout, return_when=asyncio.FIRST_COMPLETED)
-
-    # 取消超时的任务
-    for task in pending:
-        task.cancel()
-
-    # # 等待所有任务完成
-    # await asyncio.gather(*tasks)
-
-# 运行主程序
-asyncio.run(main())
-
+if __name__ == '__main__':
+    spec_file = 'D:\workspace\gitlab_proj\\upstream-observer\data\src-oepkgs\openEuler-22.03-LTS\ghc-language-ecmascript\ghc-language-ecmascript.spec'
+    getURLandSourceFromSpecFileOneRepo(spec_file)
