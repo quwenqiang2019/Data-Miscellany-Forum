@@ -14,3 +14,11 @@ with open("output.txt", "r") as file:
 
 print(processed_files)
 # processed_files = [int(item) for item in processed_files]
+
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+logger.debug("This is  DEBUG")
+logger.info("This is  INFO")
