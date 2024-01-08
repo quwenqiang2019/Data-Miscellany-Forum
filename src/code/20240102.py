@@ -65,7 +65,7 @@ async def get_all_spec_names(org, br, access_token, repo_list):
 async def main():
     org = 'src-oepkgs'
     br = "openEuler-22.03-LTS"
-    access_token = 'ed1d0fb3d6aa397c514569b4b965e3a9'
+    access_token = 'xxxxxxxxxxxxxx'
     repo_list = ['esekeyd', 'execline', 'httest', 'psst']
 
 

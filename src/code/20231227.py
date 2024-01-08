@@ -20,7 +20,7 @@ async def write_to_excel(repositories):
 
 async def main():
     org_name = 'src-oepkgs'
-    access_token = 'ed1d0fb3d6aa397c514569b4b965e3a9'
+    access_token = 'xxxxxxxxxxxxxx'
 
     headers = {'Authorization': f'Bearer {access_token}'}
 

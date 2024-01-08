@@ -70,7 +70,7 @@ async def write_to_excel(org_name, repository_names):
 
 async def main():
     org_name = 'src-oepkgs'
-    access_token = 'ed1d0fb3d6aa397c514569b4b965e3a9'
+    access_token = 'xxxxxxxxxxxxxx'
     num_pages, total_repo = await get_total_pages(org_name, access_token)
     print(num_pages)
     print(total_repo)

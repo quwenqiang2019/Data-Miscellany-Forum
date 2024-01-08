@@ -63,7 +63,7 @@ async def get_total_pages(org_name):
 
     url = f'https://gitee.com/api/v5/orgs/{org_name}/repos'
 
-    access_token = 'ed1d0fb3d6aa397c514569b4b965e3a9'
+    access_token = 'xxxxxxxxxxxxxx'
     headers = {'Authorization': f'Bearer {access_token}'}
     response = requests.get(url, headers=headers)
     total_pages = int(response.headers.get("total_page"))
