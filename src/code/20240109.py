@@ -8,49 +8,25 @@
 
 
 
+
 import multiprocessing
 import time
 
-def infinite_loop():
+def sixunhuan():
     while True:
-        print("Running...")
+        print("这是一个死循环！")
 
 
-
-
-
-def main():
-    print('s')
-    try:
-        p = multiprocessing.Process(target=infinite_loop)
-        p.start()
-
-        # 等待一段时间后终止新进程的执行
-        time.sleep(5)
-        p.terminate()  # 终止新进程的执行
-    except:
-        print('e')
-
-
-
-import multiprocessing
 
 def square(x):
-    time.sleep(20)
+    time.sleep(200000)    # 模拟死循环
     return x ** 2
 
 if __name__ == '__main__':
-    try:
-        # 调用进程池中的进程执行函数，并传递参数
-        p = multiprocessing.Process(target=square, args=(5,))
-        p.start()
-
-        time.sleep(5)
-        p.terminate()
-
-        # # 打印函数的返回值
-        # print("函数的返回值为:", result)
-    except Exception as e:
-        print(e)
-
-
+    with multiprocessing.Pool() as pool:
+        result = pool.apply_async(sixunhuan)
+        try:
+            output = result.get(timeout=1)  # 设置超时时间为10秒
+            print("函数的处理结果:", output)
+        except multiprocessing.TimeoutError:
+            print("函数执行超时")
