@@ -1,24 +1,33 @@
+data = [1, 2, 3, 4, 5]
 
-
-my_list = [1, 2, 3, 4, 5]
-
-with open("output.txt", "w") as file:
-    for item in my_list:
+with open("output1.txt", "w") as file:
+    for item in data:
         file.write(str(item) + "\n")
 
 
 
 
-with open("output.txt", "r") as file:
-    processed_files = file.read().splitlines()
+with open("output1.txt", "r") as file:
+    data = file.read().splitlines()
 
-print(processed_files)
+print(data)
 # processed_files = [int(item) for item in processed_files]
 
-import logging
+data = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+
+with open("output2.txt", "w") as file:
+    for row in data:
+        for item in row:
+            file.write(str(item) + ' ')
+        file.write('\n')
 
 
-logger = logging.getLogger(__name__)
+with open('output2.txt', 'r') as file:
+    lines = file.readlines()
+    print(lines)
+    data = []
+    for line in lines:
+        row = line.strip().split(' ')
+        data.append(row)
 
-logger.debug("This is  DEBUG")
-logger.info("This is  INFO")
+print(data)
