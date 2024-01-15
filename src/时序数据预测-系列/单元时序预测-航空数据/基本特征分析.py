@@ -15,16 +15,18 @@ data.set_index('Month', inplace=True)
 # 时序数据分解
 from statsmodels.tsa.seasonal import seasonal_decompose
 result = seasonal_decompose(data)
-result.plot().show()
+result.plot()
+plt.show()
 
 # ACF：自相关函数
 from statsmodels.graphics.tsaplots import plot_acf
 plot_acf(data).show()
+plt.show()
 
 # PACF：偏自相关函数
 from statsmodels.graphics.tsaplots import plot_pacf
 plot_pacf(data).show()
-
+plt.show()
 
 # 平稳性检验：Dickey-Fuller检验
 from statsmodels.tsa.stattools import adfuller

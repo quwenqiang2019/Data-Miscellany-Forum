@@ -14,8 +14,8 @@ warnings.filterwarnings("ignore")
 from numpy.random import seed
 
 #加载数据
-train = pd.read_csv('C:/Users/asus/Desktop/CNN-LSTM/train.csv', parse_dates=['date'])
-test = pd.read_csv('C:/Users/asus/Desktop/CNN-LSTM/test.csv', parse_dates=['date'])
+train = pd.read_csv('CNN-LSTM/train.csv', parse_dates=['date'])
+test = pd.read_csv('CNN-LSTM/test.csv', parse_dates=['date'])
 
 
 # 训练数据集的时间周期
