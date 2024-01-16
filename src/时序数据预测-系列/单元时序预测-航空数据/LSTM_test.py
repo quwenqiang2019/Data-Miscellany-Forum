@@ -1,12 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import LSTM
 import pandas as pd
-import  os
-from keras.models import Sequential, load_model
 from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
 
 # 读取数据集
 data = pd.read_csv('international-airline-passengers.csv')
@@ -19,6 +16,7 @@ data.set_index('Month', inplace=True)
 train_size = int(len(data) * 0.8)
 train_data = data[:train_size]
 test_data = data[train_size:]
+
 # 绘制训练集和测试集的折线图
 plt.figure(figsize=(10, 6))
 plt.plot(train_data, label='Training Data')
@@ -33,7 +31,6 @@ plt.show()
 scaler = MinMaxScaler()
 train_data_scaler = scaler.fit_transform(train_data.values.reshape(-1, 1))
 test_data_scaler = scaler.transform(test_data.values.reshape(-1, 1))
-
 
 # 定义滑动窗口函数
 def create_sliding_windows(data, window_size):
@@ -55,9 +52,6 @@ X_train = np.reshape(X_train, (X_train.shape[0], window_size, 1))
 X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
 
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
-
 # 构建 LSTM 模型
 model = Sequential()
 model.add(LSTM(50, activation='relu', input_shape=(window_size, 1)))
@@ -73,20 +67,12 @@ test_predictions = model.predict(X_test)
 
 # 反归一化预测结果
 train_predictions = scaler.inverse_transform(train_predictions)
-print(len(train_predictions))
-print(len(train_data))
 test_predictions = scaler.inverse_transform(test_predictions)
-print(len(test_predictions))
-print(len(test_data))
-# # 将预测结果与原始数据对齐
-# train_predictions_aligned = np.concatenate((np.zeros(window_size), train_predictions.flatten()))
-# test_predictions_aligned = np.concatenate((np.zeros(train_size + window_size), test_predictions.flatten()))
-
 
 # 绘制测试集预测结果的折线图
 plt.figure(figsize=(10, 6))
-plt.plot(range(len(test_data)), test_data, label='Actual')
-plt.plot(range(len(test_predictions)), test_predictions, label='Predicted')
+plt.plot(test_data, label='Actual')
+plt.plot(list(test_data.index)[-17:], test_predictions, label='Predicted')
 plt.xlabel('Month')
 plt.ylabel('Passengers')
 plt.title('Actual vs Predicted')
@@ -96,8 +82,8 @@ plt.show()
 # 绘制原始数据、训练集预测结果和测试集预测结果的折线图
 plt.figure(figsize=(10, 6))
 plt.plot(data, label='Actual')
-plt.plot(range(len(train_data)), train_predictions, label='Training Predictions')
-plt.plot(range(len(test_data)), test_predictions, label='Testing Predictions')
+plt.plot(list(train_data.index)[window_size:train_size], train_predictions, label='Training Predictions')
+plt.plot(list(test_data.index)[-(len(test_data)-window_size):], test_predictions, label='Testing Predictions')
 plt.xlabel('Year')
 plt.ylabel('Passenger Count')
 plt.title('International Airline Passengers - Actual vs Predicted')
