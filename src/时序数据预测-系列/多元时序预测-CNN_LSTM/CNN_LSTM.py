@@ -4,7 +4,8 @@ import tensorflow as tf
 import pandas as pd
 import matplotlib.pyplot as plt
 from keras import optimizers
-from keras.utils import plot_model
+# from keras.utils import plot_model
+from keras.utils.vis_utils import plot_model
 from keras.models import Sequential, Model
 from keras.layers.convolutional import Conv1D, MaxPooling1D
 from keras.layers import Dense, LSTM, RepeatVector, TimeDistributed, Flatten
@@ -12,7 +13,9 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 warnings.filterwarnings("ignore")
 from numpy.random import seed
+import os
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 #加载数据
 train = pd.read_csv('CNN-LSTM/train.csv', parse_dates=['date'])
 test = pd.read_csv('CNN-LSTM/test.csv', parse_dates=['date'])
