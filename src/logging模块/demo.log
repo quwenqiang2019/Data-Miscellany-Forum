@@ -1,0 +1,13 @@
+2024-01-09 10:55:29,392 - __main__ - INFO - This is  INFO !!
+2024-01-09 10:55:29,405 - __main__ - WARNING - This is  WARNING !!
+2024-01-09 10:55:29,408 - __main__ - ERROR - This is  ERROR !!
+2024-01-09 10:55:29,410 - __main__ - CRITICAL - This is  CRITICAL !!
+2024-01-09 10:55:29,413 - __main__ - ERROR - division by zero
+Traceback (most recent call last):
+  File "D:\workspace\github_proj\Data-Miscellany-Forum\src\loggingÄ£¿é\main.py", line 25, in main
+    3 / 0
+ZeroDivisionError: division by zero
+2024-01-09 10:55:29,559 - module - INFO - This is  INFO
+2024-01-09 10:55:29,560 - module - WARNING - This is  WARNING
+2024-01-09 10:55:29,562 - module - ERROR - This is  ERROR
+2024-01-09 10:55:29,566 - module - CRITICAL - This is  CRITICAL

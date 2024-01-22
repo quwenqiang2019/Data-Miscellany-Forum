@@ -1,0 +1,20 @@
+2024-01-08 20:48:56 - root - DEBUG     - 20230110.py : 18 line - This is  DEBUG !!
+2024-01-08 20:48:56 - root - INFO      - 20230110.py : 19 line - This is  INFO !!
+2024-01-08 20:48:56 - root - WARNING   - 20230110.py : 20 line - This is  WARNING !!
+2024-01-08 20:48:56 - root - ERROR     - 20230110.py : 21 line - This is  ERROR !!
+2024-01-08 20:48:56 - root - CRITICAL  - 20230110.py : 22 line - This is  CRITICAL !!
+2024-01-08 20:48:56 - root - ERROR     - 20230110.py : 31 line - division by zero
+Traceback (most recent call last):
+  File "F:/github_proj/Data-Miscellany-Forum/src/code/20230110.py", line 28, in <module>
+    3/0
+ZeroDivisionError: division by zero
+2024-01-08 20:49:03 - root - DEBUG     - 20230110.py : 18 line - This is  DEBUG !!
+2024-01-08 20:49:03 - root - INFO      - 20230110.py : 19 line - This is  INFO !!
+2024-01-08 20:49:03 - root - WARNING   - 20230110.py : 20 line - This is  WARNING !!
+2024-01-08 20:49:03 - root - ERROR     - 20230110.py : 21 line - This is  ERROR !!
+2024-01-08 20:49:03 - root - CRITICAL  - 20230110.py : 22 line - This is  CRITICAL !!
+2024-01-08 20:49:03 - root - ERROR     - 20230110.py : 31 line - division by zero
+Traceback (most recent call last):
+  File "F:/github_proj/Data-Miscellany-Forum/src/code/20230110.py", line 28, in <module>
+    3/0
+ZeroDivisionError: division by zero

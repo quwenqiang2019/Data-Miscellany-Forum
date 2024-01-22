@@ -1,0 +1,10 @@
+2024-01-09 10:58:42 - root - DEBUG     - test.py  : 12 line - This is  DEBUG !!
+2024-01-09 10:58:42 - root - INFO      - test.py  : 13 line - This is  INFO !!
+2024-01-09 10:58:42 - root - WARNING   - test.py  : 14 line - This is  WARNING !!
+2024-01-09 10:58:42 - root - ERROR     - test.py  : 15 line - This is  ERROR !!
+2024-01-09 10:58:42 - root - CRITICAL  - test.py  : 16 line - This is  CRITICAL !!
+2024-01-09 10:58:42 - root - ERROR     - test.py  : 24 line - division by zero
+Traceback (most recent call last):
+  File "D:\workspace\github_proj\Data-Miscellany-Forum\src\loggingÄ£¿é\test.py", line 21, in <module>
+    3/0
+ZeroDivisionError: division by zero

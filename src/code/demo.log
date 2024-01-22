@@ -1,0 +1,8 @@
+2024-01-08 20:22:27 - root - WARNING   - 20230110.py : 16 line - This is  WARNING !!
+2024-01-08 20:22:27 - root - ERROR     - 20230110.py : 17 line - This is  ERROR !!
+2024-01-08 20:22:27 - root - CRITICAL  - 20230110.py : 18 line - This is  CRITICAL !!
+2024-01-08 20:22:27 - root - ERROR     - 20230110.py : 27 line - division by zero
+Traceback (most recent call last):
+  File "F:/github_proj/Data-Miscellany-Forum/src/code/20230110.py", line 24, in <module>
+    3/0
+ZeroDivisionError: division by zero
