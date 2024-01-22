@@ -72,7 +72,7 @@ test_predictions = scaler.inverse_transform(test_predictions)
 # 绘制测试集预测结果的折线图
 plt.figure(figsize=(10, 6))
 plt.plot(test_data, label='Actual')
-plt.plot(list(test_data.index)[-17:], test_predictions, label='Predicted')
+plt.plot(list(test_data.index)[-len(test_predictions):], test_predictions, label='Predicted')
 plt.xlabel('Month')
 plt.ylabel('Passengers')
 plt.title('Actual vs Predicted')
