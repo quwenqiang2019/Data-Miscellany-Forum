@@ -1,3 +1,4 @@
+import pandas as pd
 from pandas import read_csv
 from pandas import DataFrame
 from pandas import concat
@@ -5,32 +6,23 @@ from matplotlib import pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 
 dataset = read_csv('sate.csv', header=0, index_col=0)
+df = pd.DataFrame(dataset)
 print(dataset.head())
 print(dataset.shape)
 
 
-test_split=round(len(dataset)*0.20)
-train = dataset[:-test_split]
-test = dataset[-test_split:]
+# 拆分数据集为训练集和测试集
+test_split=round(len(df)*0.20)
+df_for_training=df[:-test_split]
+df_for_testing=df[-test_split:]
 
-print(train.shape)
-print(test.shape)
-# # 绘制训练集和测试集的折线图
-# plt.figure(figsize=(10, 6))
-# plt.plot(train, label='Training Data')
-# plt.plot(test, label='Testing Data')
-# plt.xlabel('Day')
-# plt.ylabel('Open value')
-# plt.title('Training and Testing Data')
-# plt.legend()
-# plt.show()
 
 
 
 # 将数据归一化到 0~1 范围
 scaler = MinMaxScaler(feature_range=(0,1))
-train_scaled = scaler.fit_transform(train)
-test_scaled=scaler.transform(test)
+df_for_training_scaled = scaler.fit_transform(df_for_training)
+df_for_testing_scaled=scaler.transform(df_for_testing)
 
 
 
@@ -63,6 +55,13 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 
 
 
-Train = series_to_supervised(train_scaled, 3, 1)
-print(Train.shape)
-train_X, train_y = Train[:, :-1], Train[:, -1]
+train = series_to_supervised(df_for_training, 2, 2)
+# train_X, train_y = train[:, :-1], train[:, -1]
+print(train.shape)
+print(train.head())
+
+
+# test = series_to_supervised(df_for_testing, 1, 1)
+# # test_X, test_y = test[:, :-1], test[:, -1]
+# print(test.shape)
+# print(test.head())
