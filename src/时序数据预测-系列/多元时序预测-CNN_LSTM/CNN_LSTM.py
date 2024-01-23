@@ -34,114 +34,114 @@ daily_sales = train.groupby('date', as_index=False)['sales'].sum()
 store_daily_sales = train.groupby(['store', 'date'], as_index=False)['sales'].sum()
 item_daily_sales = train.groupby(['item', 'date'], as_index=False)['sales'].sum()
 
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-# 设置Seaborn样式
-sns.set_style("whitegrid")
-sns.set_palette("bright")  # 设置亮色调色板
-
-# 创建图像
-fig, ax = plt.subplots(figsize=(10, 6))  # 设置图像大小
-
-# 绘制折线图
-sns.lineplot(data=daily_sales, x='date', y='sales', ax=ax)
-
-# 设置标题和轴标签
-ax.set_title('Daily Sales', fontsize=16)
-ax.set_xlabel('Date', fontsize=12)
-ax.set_ylabel('Sales', fontsize=12)
-
-# 调整刻度标签字体大小
-ax.tick_params(axis='x', labelsize=10)
-ax.tick_params(axis='y', labelsize=10)
-
-# 调整图例样式和位置
-ax.legend(['Sales'], loc='upper left', fontsize=10)
-
-# 保存图像（可选）
-plt.savefig('daily_sales_plot.png', dpi=300, bbox_inches='tight')
-
-# 显示图像
-plt.show()
-
-
-# 设置Seaborn样式
-sns.set_style("whitegrid")
-sns.set_palette("bright")  # 设置亮色调色板
-
-# 创建图像
-fig, ax = plt.subplots(figsize=(10, 6))  # 设置图像大小
-
-# 遍历每个店铺的销售数据
-for store in store_daily_sales['store'].unique():
-    current_store_daily_sales = store_daily_sales[store_daily_sales['store'] == store]
-    
-    # 绘制折线图
-    sns.lineplot(data=current_store_daily_sales, x='date', y='sales', label=f"Store {store}", ax=ax)
-
-# 设置标题和轴标签
-ax.set_title('Store Daily Sales', fontsize=16)
-ax.set_xlabel('Date', fontsize=12)
-ax.set_ylabel('Sales', fontsize=12)
-
-# 调整刻度标签字体大小
-ax.tick_params(axis='x', labelsize=10)
-ax.tick_params(axis='y', labelsize=10)
-
-# 调整图例样式和位置
-ax.legend(loc='upper left', fontsize=10)
-
-# 保存图像（可选）
-plt.savefig('store_daily_sales_plot.png', dpi=300, bbox_inches='tight')
-
-# 显示图像
-plt.show()
-
-
-# 设置Seaborn样式
-sns.set_style("whitegrid")
-sns.set_palette("bright")  # 设置亮色调色板
-
-# 创建图像
-fig, ax = plt.subplots(figsize=(10, 6))  # 设置图像大小
-
-# 遍历每个商品的销售数据
-max_legend_items = 5  # 最多显示的图例项数
-num_legend_items = 0  # 当前已显示的图例项数
-
-for item in item_daily_sales['item'].unique():
-    current_item_daily_sales = item_daily_sales[item_daily_sales['item'] == item]
-    
-    # 只绘制前 max_legend_items 个图例项
-    if num_legend_items < max_legend_items:
-        # 绘制折线图
-        sns.lineplot(data=current_item_daily_sales, x='date', y='sales', label=f"Item {item}", ax=ax)
-        num_legend_items += 1
-    else:
-        break
-
-# 添加省略号标识
-if num_legend_items < len(item_daily_sales['item'].unique()):
-    ax.plot([], [], ' ', label='...')
-
-# 设置标题和轴标签
-ax.set_title('Item Daily Sales', fontsize=16)
-ax.set_xlabel('Date', fontsize=12)
-ax.set_ylabel('Sales', fontsize=12)
-
-# 调整刻度标签字体大小
-ax.tick_params(axis='x', labelsize=10)
-ax.tick_params(axis='y', labelsize=10)
-
-# 调整图例样式和位置
-ax.legend(loc='upper left', fontsize=10)
-
-# 保存图像（可选）
-plt.savefig('item_daily_sales_plot.png', dpi=300, bbox_inches='tight')
-
-# 显示图像
-plt.show()
+# import seaborn as sns
+# import matplotlib.pyplot as plt
+#
+# # 设置Seaborn样式
+# sns.set_style("whitegrid")
+# sns.set_palette("bright")  # 设置亮色调色板
+#
+# # 创建图像
+# fig, ax = plt.subplots(figsize=(10, 6))  # 设置图像大小
+#
+# # 绘制折线图
+# sns.lineplot(data=daily_sales, x='date', y='sales', ax=ax)
+#
+# # 设置标题和轴标签
+# ax.set_title('Daily Sales', fontsize=16)
+# ax.set_xlabel('Date', fontsize=12)
+# ax.set_ylabel('Sales', fontsize=12)
+#
+# # 调整刻度标签字体大小
+# ax.tick_params(axis='x', labelsize=10)
+# ax.tick_params(axis='y', labelsize=10)
+#
+# # 调整图例样式和位置
+# ax.legend(['Sales'], loc='upper left', fontsize=10)
+#
+# # 保存图像（可选）
+# plt.savefig('daily_sales_plot.png', dpi=300, bbox_inches='tight')
+#
+# # 显示图像
+# plt.show()
+#
+#
+# # 设置Seaborn样式
+# sns.set_style("whitegrid")
+# sns.set_palette("bright")  # 设置亮色调色板
+#
+# # 创建图像
+# fig, ax = plt.subplots(figsize=(10, 6))  # 设置图像大小
+#
+# # 遍历每个店铺的销售数据
+# for store in store_daily_sales['store'].unique():
+#     current_store_daily_sales = store_daily_sales[store_daily_sales['store'] == store]
+#
+#     # 绘制折线图
+#     sns.lineplot(data=current_store_daily_sales, x='date', y='sales', label=f"Store {store}", ax=ax)
+#
+# # 设置标题和轴标签
+# ax.set_title('Store Daily Sales', fontsize=16)
+# ax.set_xlabel('Date', fontsize=12)
+# ax.set_ylabel('Sales', fontsize=12)
+#
+# # 调整刻度标签字体大小
+# ax.tick_params(axis='x', labelsize=10)
+# ax.tick_params(axis='y', labelsize=10)
+#
+# # 调整图例样式和位置
+# ax.legend(loc='upper left', fontsize=10)
+#
+# # 保存图像（可选）
+# plt.savefig('store_daily_sales_plot.png', dpi=300, bbox_inches='tight')
+#
+# # 显示图像
+# plt.show()
+#
+#
+# # 设置Seaborn样式
+# sns.set_style("whitegrid")
+# sns.set_palette("bright")  # 设置亮色调色板
+#
+# # 创建图像
+# fig, ax = plt.subplots(figsize=(10, 6))  # 设置图像大小
+#
+# # 遍历每个商品的销售数据
+# max_legend_items = 5  # 最多显示的图例项数
+# num_legend_items = 0  # 当前已显示的图例项数
+#
+# for item in item_daily_sales['item'].unique():
+#     current_item_daily_sales = item_daily_sales[item_daily_sales['item'] == item]
+#
+#     # 只绘制前 max_legend_items 个图例项
+#     if num_legend_items < max_legend_items:
+#         # 绘制折线图
+#         sns.lineplot(data=current_item_daily_sales, x='date', y='sales', label=f"Item {item}", ax=ax)
+#         num_legend_items += 1
+#     else:
+#         break
+#
+# # 添加省略号标识
+# if num_legend_items < len(item_daily_sales['item'].unique()):
+#     ax.plot([], [], ' ', label='...')
+#
+# # 设置标题和轴标签
+# ax.set_title('Item Daily Sales', fontsize=16)
+# ax.set_xlabel('Date', fontsize=12)
+# ax.set_ylabel('Sales', fontsize=12)
+#
+# # 调整刻度标签字体大小
+# ax.tick_params(axis='x', labelsize=10)
+# ax.tick_params(axis='y', labelsize=10)
+#
+# # 调整图例样式和位置
+# ax.legend(loc='upper left', fontsize=10)
+#
+# # 保存图像（可选）
+# plt.savefig('item_daily_sales_plot.png', dpi=300, bbox_inches='tight')
+#
+# # 显示图像
+# plt.show()
 
 
 
