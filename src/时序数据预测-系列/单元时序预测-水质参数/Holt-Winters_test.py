@@ -1,7 +1,7 @@
 import warnings
 warnings.filterwarnings('ignore')
 import pandas as pd
-from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
 import matplotlib.pyplot as plt
 
 
@@ -11,7 +11,7 @@ data = pd.read_csv('international-airline-passengers.csv')
 data['Month'] = pd.to_datetime(data['Month'])
 # 将日期列设置为索引
 data.set_index('Month', inplace=True)
-print(data.head())
+
 
 # 拆分数据集为训练集和测试集
 train_data = data.iloc[:-12]
@@ -27,14 +27,13 @@ plt.title('International Airline Passengers - Training and Testing Data')
 plt.legend()
 plt.show()
 
-print(test_data.index)
-print(test_data.index[0])
-# 拟合ARIMA模型
-model = ARIMA(train_data, order=(2, 1, 2))
+
+# 拟合Holt-Winters模型
+model = ExponentialSmoothing(train_data, trend="add", seasonal="add", seasonal_periods=12)
 model_fit = model.fit()
 # 进行预测
 predictions = model_fit.predict(start=test_data.index[0], end=test_data.index[-1])
-# predictions = model_fit.forecasts(len(test_data))
+
 
 # 绘制测试集预测结果的折线图
 plt.figure(figsize=(10, 6))

@@ -11,7 +11,7 @@ data = pd.read_csv('international-airline-passengers.csv')
 data['Month'] = pd.to_datetime(data['Month'])
 # 将日期列设置为索引
 data.set_index('Month', inplace=True)
-print(data.head())
+
 
 # 拆分数据集为训练集和测试集
 train_data = data.iloc[:-12]
@@ -27,10 +27,9 @@ plt.title('International Airline Passengers - Training and Testing Data')
 plt.legend()
 plt.show()
 
-print(test_data.index)
-print(test_data.index[0])
-# 拟合ARIMA模型
-model = ARIMA(train_data, order=(2, 1, 2))
+
+# 拟合ARMA模型
+model = ARIMA(train_data, order=(2, 0, 2))
 model_fit = model.fit()
 # 进行预测
 predictions = model_fit.predict(start=test_data.index[0], end=test_data.index[-1])
