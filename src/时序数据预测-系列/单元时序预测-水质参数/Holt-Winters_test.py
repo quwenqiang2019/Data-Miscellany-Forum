@@ -6,11 +6,19 @@ import matplotlib.pyplot as plt
 
 
 # 读取数据集
-data = pd.read_csv('international-airline-passengers.csv')
+data = pd.read_excel('样点5.xlsx')
+data = pd.DataFrame(data)
 # 将日期列转换为日期时间类型
-data['Month'] = pd.to_datetime(data['Month'])
+data['日期'] = pd.to_datetime(data['日期'], format='%Y%m')
+# 使用插值法填充缺失值
+data['TSM值'] = data['TSM值'].interpolate()
 # 将日期列设置为索引
-data.set_index('Month', inplace=True)
+data.set_index('日期', inplace=True)
+# 构造规律的时间间隔
+data = data.resample('MS').asfreq()
+# 使用插值法填充缺失值
+data['TSM值'] = data['TSM值'].interpolate()
+print(data)
 
 
 # 拆分数据集为训练集和测试集

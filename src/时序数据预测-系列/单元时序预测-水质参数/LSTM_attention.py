@@ -1,19 +1,46 @@
 # 单变量，3---》1
 
 import numpy
+import pandas as pd
 import matplotlib.pyplot as plt
 from pandas import read_csv
 import math
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
+from keras.layers import Attention
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 #matplotlib inline
 
-# load the dataset
-dataframe = read_csv('international-airline-passengers.csv', usecols=[1], engine='python')
-# print(dataframe)
+# # load the dataset
+# dataframe = read_csv('international-airline-passengers.csv', usecols=[1], engine='python')
+# # print(dataframe)
+# print("数据集的长度：",len(dataframe))
+# dataset = dataframe.values
+# # 将整型变为float
+# dataset = dataset.astype('float32')
+#
+# plt.plot(dataset)
+# plt.show()
+
+
+# 读取数据集
+data = pd.read_excel('样点5.xlsx')
+data = pd.DataFrame(data)
+# 将日期列转换为日期时间类型
+data['日期'] = pd.to_datetime(data['日期'], format='%Y%m')
+# 使用插值法填充缺失值
+data['TSM值'] = data['TSM值'].interpolate()
+# 将日期列设置为索引
+data.set_index('日期', inplace=True)
+# 构造规律的时间间隔
+data = data.resample('MS').asfreq()
+# 使用插值法填充缺失值
+data['TSM值'] = data['TSM值'].interpolate()
+print(data)
+
+dataframe = data
 print("数据集的长度：",len(dataframe))
 dataset = dataframe.values
 # 将整型变为float
@@ -71,7 +98,7 @@ testX = numpy.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 print('构造得到模型的输入数据(训练数据已有标签trainY): ',trainX.shape,testX.shape)
 
 # create and fit the LSTM network
-from attention import Attention
+# from attention import Attention
 model = Sequential()
 # model.add(LSTM(4, input_shape=(1, look_back)))
 model.add(LSTM(4, input_shape=(look_back,1)))  # 与上面的重构格式对应，要改都改，才能跑通代码

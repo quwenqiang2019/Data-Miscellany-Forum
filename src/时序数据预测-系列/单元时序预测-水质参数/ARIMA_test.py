@@ -18,8 +18,6 @@ data.set_index('日期', inplace=True)
 data = data.resample('MS').asfreq()
 # 使用插值法填充缺失值
 data['TSM值'] = data['TSM值'].interpolate()
-
-
 print(data)
 
 
@@ -37,10 +35,6 @@ plt.ylabel('Passenger Count')
 plt.title('International Airline Passengers - Training and Testing Data')
 plt.legend()
 plt.show()
-
-print(test_data.index)
-print(test_data.index[0])
-print(test_data.index[-1])
 
 # 拟合ARIMA模型
 model = ARIMA(train_data, order=(2, 1, 2))

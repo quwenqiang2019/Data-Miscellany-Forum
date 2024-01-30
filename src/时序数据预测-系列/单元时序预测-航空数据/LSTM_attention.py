@@ -7,6 +7,7 @@ import math
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
+from keras.layers import Attention
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 #matplotlib inline
@@ -71,7 +72,7 @@ testX = numpy.reshape(testX, (testX.shape[0], testX.shape[1], 1))
 print('构造得到模型的输入数据(训练数据已有标签trainY): ',trainX.shape,testX.shape)
 
 # create and fit the LSTM network
-from attention import Attention
+# from attention import Attention
 model = Sequential()
 # model.add(LSTM(4, input_shape=(1, look_back)))
 model.add(LSTM(4, input_shape=(look_back,1)))  # 与上面的重构格式对应，要改都改，才能跑通代码

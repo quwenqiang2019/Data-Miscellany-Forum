@@ -3,6 +3,7 @@
 import numpy
 import matplotlib.pyplot as plt
 from pandas import read_csv
+from pandas import read_excel
 import math
 from keras.models import Sequential
 from keras.layers import Dense
@@ -13,9 +14,15 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 #matplotlib inline
 
+
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # load the dataset
-dataframe = read_csv('international-airline-passengers.csv', usecols=[1], engine='python')
+dataframe = read_excel('样点5.xlsx', usecols=[1])
 # print(dataframe)
+# 使用插值法填充缺失值
+dataframe['TSM值'] = dataframe['TSM值'].interpolate()
 print("数据集的长度：",len(dataframe))
 dataset = dataframe.values
 # 将整型变为float

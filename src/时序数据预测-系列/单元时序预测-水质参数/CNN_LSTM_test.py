@@ -13,7 +13,9 @@ from keras.layers import Flatten
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 
+import os
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # 采用的CNN + LSTM网络对其进行预测。
 #单变量单步预测
 
