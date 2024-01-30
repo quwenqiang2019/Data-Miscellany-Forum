@@ -51,8 +51,6 @@ y_pred_m = model.predict(X_test_m)
 y_scores = model.predict_proba(X_test_m)
 y_pred = mm2.inverse_transform(np.reshape(y_pred_m, (-1, 1)))
 
-y_pred = model.predict(X_test)
-y_scores = model.predict_proba(X_test)
 acc = accuracy_score(y_test, y_pred) # 准确率acc
 cm = confusion_matrix(y_test, y_pred) # 混淆矩阵
 cr = classification_report(y_test, y_pred) # 分类报告
