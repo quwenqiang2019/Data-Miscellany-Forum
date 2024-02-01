@@ -3,8 +3,8 @@ warnings.filterwarnings('ignore')
 import pandas as pd
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 import matplotlib.pyplot as plt
-
-
+import math
+from sklearn.metrics import mean_squared_error
 # 读取数据集
 data = pd.read_excel('样点5.xlsx')
 data = pd.DataFrame(data)
@@ -63,3 +63,10 @@ plt.ylabel('Passenger Count')
 plt.title('International Airline Passengers - Actual vs Predicted')
 plt.legend()
 plt.show()
+
+
+# 计算误差
+trainScore = math.sqrt(mean_squared_error(train_data, model_fit.fittedvalues))
+print('Train Score: %.2f RMSE' % (trainScore))
+testScore = math.sqrt(mean_squared_error(test_data, predictions))
+print('Test Score: %.2f RMSE' % (testScore))
