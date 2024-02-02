@@ -11,6 +11,24 @@ import math
 # 读取数据集
 data = pd.read_excel('样点5.xlsx')
 data = pd.DataFrame(data)
+print(data)
+
+# # 计算均值和标准差
+# mean = data.mean()
+# std = data.std()
+# # 设置阈值
+# threshold = mean + 2 * std
+# # 检测异常值
+# outliers = data[data > threshold]
+# # 输出异常值
+# print(outliers)
+
+
+
+
+
+
+
 # 使用插值法填充缺失值
 data['TSM值'] = data['TSM值'].interpolate()
 # 将日期列转换为日期时间类型
