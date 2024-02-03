@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from statsmodels.tsa.statespace.sarimax import SARIMAX
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
@@ -71,21 +71,21 @@ data = fill_missing_data(data)
 dates = data.index
 data = data['TSM值'].values
 # train_size = int(len(data) * 0.8)
-train_size = len(data) - 15
+train_size = len(data) - 12
 train_data = data[:train_size]
 test_data = data[train_size:]
 print(train_data, len(train_data))
 
-# 拟合 SARIMA 模型并提取残差
-sarima_model = SARIMAX(train_data, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12))
-sarima_model_fit = sarima_model.fit()
-sarima_train_predictions = sarima_model_fit.predict(start=0, end=train_size-1)
+# 拟合 holtwinters 模型并提取残差
+holtwinters_model = ExponentialSmoothing(train_data, trend="add", seasonal="add", seasonal_periods=12)
+holtwinters_model_fit = holtwinters_model.fit()
+holtwinters_train_predictions = holtwinters_model_fit.predict(start=0, end=train_size-1)
 # 训练集预测的第一个值是0
-sarima_train_predictions[0] = train_data[0]
-print(sarima_train_predictions, len(sarima_train_predictions))
+# holtwinters_train_predictions[0] = train_data[0]
+print(holtwinters_train_predictions, len(holtwinters_train_predictions))
 
 # 计算残差序列
-train_residuals = train_data - sarima_train_predictions
+train_residuals = train_data - holtwinters_train_predictions
 print(train_residuals, len(train_residuals))
 
 # 归一化残差序列
@@ -114,8 +114,8 @@ lstm_train_residuals = lstm_model.predict(train_X)
 lstm_train_residuals = scaler.inverse_transform(lstm_train_residuals)
 print(lstm_train_residuals, len(lstm_train_residuals))
 
-# SARIMA模型预测值与LSTM模型预测残差值相加得到最终训练集的预测值
-train_predictions = sarima_train_predictions[1:] + lstm_train_residuals.flatten()
+# holtwinters模型预测值与LSTM模型预测残差值相加得到最终训练集的预测值
+train_predictions = holtwinters_train_predictions[1:] + lstm_train_residuals.flatten()
 print("最终训练集的预测值:", train_predictions)
 
 # 绘制训练集预测结果的折线图
@@ -131,15 +131,15 @@ plt.show()
 
 
 
-# SARIMA模型测试集预测值
-sarima_test_predictions = sarima_model_fit.predict(start=len(train_data), end=len(train_data) + len(test_data) - 1)
-print(sarima_test_predictions, len(sarima_test_predictions))
+# holtwinters模型测试集预测值
+holtwinters_test_predictions = holtwinters_model_fit.predict(start=len(train_data), end=len(train_data) + len(test_data) - 1)
+print(holtwinters_test_predictions, len(holtwinters_test_predictions))
 
 # 计算残差序列
-sarima_test_residuals = test_data - sarima_test_predictions
+holtwinters_test_residuals = test_data - holtwinters_test_predictions
 
 # 归一化残差序列
-scaled_test_residuals = scaler.transform(sarima_test_residuals.reshape(-1, 1))
+scaled_test_residuals = scaler.transform(holtwinters_test_residuals.reshape(-1, 1))
 
 # 构造残差数据集
 test_X, test_Y = create_dataset(scaled_test_residuals, look_back)
@@ -149,8 +149,8 @@ lstm_test_residuals = lstm_model.predict(test_X)
 lstm_test_residuals = scaler.inverse_transform(lstm_test_residuals)
 print(lstm_test_residuals, len(lstm_test_residuals))
 
-# SARIMA模型预测值与LSTM模型预测残差值相加得到最终测试集的预测值
-test_predictions = sarima_test_predictions[1:] + lstm_test_residuals.flatten()
+# holtwinters模型预测值与LSTM模型预测残差值相加得到最终测试集的预测值
+test_predictions = holtwinters_test_predictions[1:] + lstm_test_residuals.flatten()
 print("最终测试集的预测值:", test_predictions)
 
 # 绘制测试集预测结果的折线图
