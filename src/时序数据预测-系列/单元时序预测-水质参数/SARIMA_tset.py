@@ -18,7 +18,7 @@ data.set_index('日期', inplace=True)
 data = data.resample('MS').asfreq()
 # 使用插值法填充缺失值
 data['TSM值'] = data['TSM值'].interpolate()
-print(data)
+print(data.index)
 
 
 # 拆分数据集为训练集和测试集
