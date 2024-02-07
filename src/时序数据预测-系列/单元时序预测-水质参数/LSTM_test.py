@@ -8,14 +8,21 @@ from tensorflow.keras.layers import LSTM, Dense
 # 读取数据集
 data = pd.read_excel('样点5.xlsx')
 data = pd.DataFrame(data)
+data = data[['日期', 'TSM']]
 # 将日期列转换为日期时间类型
 data['日期'] = pd.to_datetime(data['日期'], format='%Y%m')
 # 使用插值法填充缺失值
-data['TSM值'] = data['TSM值'].interpolate()
+data['TSM'] = data['TSM'].interpolate()
 
-#%%
 
-# 将日期列设置为索引
+# data = pd.read_excel('5样点.xlsx', sheet_name='Sheet2')
+# data = data[['日期', 'TSM']]
+# data = pd.DataFrame(data)
+# data['日期'] = pd.to_datetime(data['日期'], format='%Y%m')# 将日期列转换为日期时间类型
+# data['TSM'] = data['TSM'].interpolate()   # 使用插值法填充缺失值
+
+
+
 data.set_index('日期', inplace=True)
 print(data.head())
 

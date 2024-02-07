@@ -27,8 +27,6 @@ sarima_train_predictions = sarima_model_fit.predict(start=0, end=train_size-1)
 sarima_train_predictions[0] = train_data[0]
 print(sarima_train_predictions, len(sarima_train_predictions))
 
-
-
 # 计算残差序列
 train_residuals = train_data - sarima_train_predictions
 print(train_residuals, len(train_residuals))
@@ -72,9 +70,6 @@ plt.ylabel('Passengers')
 plt.title('Actual vs Predicted')
 plt.legend()
 plt.show()
-
-
-
 
 # SARIMA模型测试集预测值
 sarima_test_predictions = sarima_model_fit.predict(start=len(train_data), end=len(train_data) + len(test_data) - 1)

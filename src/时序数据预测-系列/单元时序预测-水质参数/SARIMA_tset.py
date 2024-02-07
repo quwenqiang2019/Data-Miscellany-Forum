@@ -6,20 +6,48 @@ import matplotlib.pyplot as plt
 import math
 from sklearn.metrics import mean_squared_error
 # 读取数据集
-data = pd.read_excel('样点5.xlsx')
+# data = pd.read_excel('样点5.xlsx')
+data = pd.read_excel('5样点 - 副本 - 副本.xlsx')
 data = pd.DataFrame(data)
+
+data = data[['日期', 'TSMvalue']]
+
 # 将日期列转换为日期时间类型
 data['日期'] = pd.to_datetime(data['日期'], format='%Y%m')
-# 使用插值法填充缺失值
-data['TSM值'] = data['TSM值'].interpolate()
+
+# # 使用插值法填充缺失值
+# data['TSM值'] = data['TSM值'].interpolate()
 # 将日期列设置为索引
 data.set_index('日期', inplace=True)
-# 构造规律的时间间隔
-data = data.resample('MS').asfreq()
-# 使用插值法填充缺失值
-data['TSM值'] = data['TSM值'].interpolate()
-print(data.index)
+# # 构造规律的时间间隔
+# data = data.resample('MS').asfreq()
+# # 使用插值法填充缺失值
+# data['TSM值'] = data['TSM值'].interpolate()
+# print(data.index)
 
+#====================异常值处理========================
+def replace_outliers(series):
+    # 计算均值和标准差
+    mean = series.mean().values[0]
+    std = series.std().values[0]
+    # 设置阈值
+    threshold = mean + 2 * std
+
+    threshold = 150
+
+    for date in series.index:
+        year = date.year
+        month = date.month
+
+        if series.loc[date].values[0] > threshold:
+            same_month_data = series[(series.index.year != year) & (series.index.month == month)]
+            month_mean = same_month_data.mean()
+            series.loc[date] = month_mean
+    return series
+
+data = replace_outliers(data)
+
+print(data.head(10))
 
 # 拆分数据集为训练集和测试集
 train_data = data.iloc[:-12]

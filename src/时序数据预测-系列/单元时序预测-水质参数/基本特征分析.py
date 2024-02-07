@@ -5,11 +5,13 @@ import matplotlib.pyplot as plt
 
 
 # 读取数据集
-data = pd.read_csv('international-airline-passengers.csv')
+data = pd.read_excel('5样点 - 副本 - 副本.xlsx')
+data = pd.DataFrame(data)
 # 将日期列转换为日期时间类型
-data['Month'] = pd.to_datetime(data['Month'])
+data['日期'] = pd.to_datetime(data['日期'], format='%Y%m', infer_datetime_format=True)
+data = data[['日期', 'TSMvalue']]
 # 将日期列设置为索引
-data.set_index('Month', inplace=True)
+data.set_index('日期', inplace=True)
 
 
 # 时序数据分解
