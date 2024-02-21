@@ -51,6 +51,10 @@ plt.tight_layout()
 plt.savefig(os.path.join(base_dir, 'result', 'DT-ROC.jpg'), bbox_inches='tight')
 plt.show()
 
+
+
+
+
 # 提取特征重要性
 feature_importance = model.feature_importances_
 feature_names = features
@@ -68,3 +72,5 @@ plt.ylabel('Feature')
 plt.tight_layout()
 plt.savefig(os.path.join(base_dir, 'result', 'DT-feature-imprtance-top20.jpg'), bbox_inches='tight')
 plt.show()
+
+

@@ -11,13 +11,12 @@ import math
 # 读取数据集
 data = pd.read_excel(r'data/样点10.xlsx')
 data = pd.DataFrame(data)
-
 # 将日期列转换为日期时间类型
 data['日期'] = pd.to_datetime(data['日期'], format='%Y%m')
 # 将日期列设置为索引
 data.set_index('日期', inplace=True)
-print(data)
-
+cols = list(data.columns)
+print(cols)
 
 #====================异常值处理========================
 def replace_outliers(series):
@@ -37,10 +36,8 @@ def replace_outliers(series):
             series.loc[date] = month_mean
     return series
 
-data = replace_outliers(data)
-
-print(data.head(10))
-
+for i in cols:
+    data[[i]] = replace_outliers(data[[i]])
 
 #====================缺失值处理========================
 def fill_missing_data(series):
@@ -54,24 +51,22 @@ def fill_missing_data(series):
             series.loc[date] = month_mean
     return series
 
-data = fill_missing_data(data)
-print(data)
 
+for i in cols:
+    data[[i]] = fill_missing_data(data[[i]])
 
 # =====================================构造规律的时间间隔=============================================
 data = data.resample('MS').asfreq()
-print(data)
-# 使用插值法填充缺失值
-# data['TSM值'] = data['TSM值'].interpolate()
-data = fill_missing_data(data)
-
-# 拆分数据集为训练集和测试集
+data = pd.DataFrame(data)
 dates = data.index
-data = data['TSM'].values
+data_fz = data.drop(['TSM'], axis=1)
+data_key = data['TSM'].values
+
+
 # train_size = int(len(data) * 0.8)
 train_size = len(data) - 15
-train_data = data[:train_size]
-test_data = data[train_size:]
+train_data = data_key[:train_size]
+test_data = data_key[train_size:]
 print(train_data, len(train_data))
 
 # 拟合 SARIMA 模型并提取残差
