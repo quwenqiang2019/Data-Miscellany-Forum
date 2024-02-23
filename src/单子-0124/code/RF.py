@@ -23,7 +23,7 @@ num_cols = [col for col in df.columns if df[col].dtype != "object"] # 数值型�
 target = 'class'
 features = df.columns.drop(target)
 print(df['class'].value_counts()) # 顺便查看一下样本是否平衡
-X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, shuffle=True, random_state=0)
 
 # 模型的构建与训练
 model = RandomForestClassifier()
@@ -33,10 +33,12 @@ model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 y_scores = model.predict_proba(X_test)
 acc = accuracy_score(y_test, y_pred) # 准确率acc
+print(acc)
 cm = confusion_matrix(y_test, y_pred) # 混淆矩阵
 cr = classification_report(y_test, y_pred) # 分类报告
 fpr, tpr, thresholds = roc_curve(y_test, y_scores[:, 1], pos_label=1) # 计算ROC曲线和AUC值,绘制ROC曲线
 roc_auc = auc(fpr, tpr)
+print(roc_auc)
 plt.figure()
 plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
 plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')

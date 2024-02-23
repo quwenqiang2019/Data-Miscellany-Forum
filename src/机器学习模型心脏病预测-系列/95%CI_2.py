@@ -42,7 +42,7 @@ for _ in range(n_bootstraps):
     indices = np.random.choice(len(y_test), len(y_test), replace=True)
     y_test_bootstrap = y_test.iloc[indices]
     y_pred_proba_bootstrap = y_pred_proba[indices]
-    y_pred_bootstrap = (y_pred_proba_bootstrap > 0.5).astype(int)
+    y_pred_bootstrap = y_pred[indices]
 
     auc_bootstrap.append(roc_auc_score(y_test_bootstrap, y_pred_proba_bootstrap))
     accuracy_bootstrap.append(accuracy_score(y_test_bootstrap, y_pred_bootstrap))
