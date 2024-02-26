@@ -12,7 +12,7 @@ import seaborn as sns
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 import numpy as np
 import numpy as np
-import pandas as pd
+import os
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
@@ -23,6 +23,7 @@ import math
 from sklearn.metrics import mean_absolute_error #平方绝对误差
 from sklearn.metrics import r2_score#R square
 from sklearn.metrics import mean_absolute_percentage_error
+
 
 #=======================================异常值处理========================
 def replace_outliers(series):
@@ -76,8 +77,7 @@ def data_preprocess(file):
 
     return data
 
-
-def data_analysis(data):
+def seasonal_decompose(data):
     sns.set_style('darkgrid')
     font1 = {'family': ['Times New Roman', 'SimSun'], 'weight': 'normal', 'size': 14}
     plt.rc('font', **font1)
@@ -86,18 +86,41 @@ def data_analysis(data):
     from statsmodels.tsa.seasonal import seasonal_decompose
     result = seasonal_decompose(data)
     result.plot()
+
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
+
+    plt.savefig(f'result/{point}/时序数据分解.jpg', bbox_inches='tight', dpi = 600)
+
     plt.show()
 
+def plot_acf(data):
     # ACF：自相关函数
     from statsmodels.graphics.tsaplots import plot_acf
-    plot_acf(data).show()
+    plot_acf(data)
+
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
+
+    plt.savefig(f'result/{point}/acf.jpg', bbox_inches='tight', dpi=600)
     plt.show()
 
+
+def plot_pacf(data):
     # PACF：偏自相关函数
     from statsmodels.graphics.tsaplots import plot_pacf
-    plot_pacf(data).show()
+    plot_pacf(data)
+
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
+
+    plt.savefig(f'result/{point}/pacf.jpg', bbox_inches='tight', dpi=600)
     plt.show()
 
+def data_analysis(data):
+    seasonal_decompose(data)
+    plot_acf(data)
+    plot_pacf(data)
     # 平稳性检验：Dickey-Fuller检验
     from statsmodels.tsa.stattools import adfuller
     adf, pval, usedlag, nobs, crit_vals, icbest = adfuller(data)
@@ -115,6 +138,10 @@ def TestStationaryPlot(df):
     rol_mean = df.rolling(window=12, center=False).mean()
     rol_std = df.rolling(window=12, center=False).std()
 
+    sns.set_style('darkgrid')
+    font1 = {'family': ['Times New Roman', 'SimSun'], 'weight': 'normal', 'size': 14}
+    plt.rc('font', **font1)
+    plt.rcParams["axes.unicode_minus"] = False
     # plt.plot(figsize=(15, 8))
     plt.plot(df, color='blue', label='Original')
     plt.plot(rol_mean, color='red', linestyle='-.', label='Moving Average')
@@ -123,9 +150,14 @@ def TestStationaryPlot(df):
     plt.yticks(fontsize=14)
 
     plt.xlabel('Time', fontsize=14)
-    plt.ylabel('TSM', fontsize=14)
+    plt.ylabel(f'{parameters}-{point}', fontsize=14)
     plt.legend(loc='best', fontsize=14)
     plt.title('Moving Average and Standard Deviation', fontsize=14)
+
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
+
+    plt.savefig(f'result/{point}/移动平均值和标准差.jpg', bbox_inches='tight', dpi=600)
     plt.show(block=True)
 
 
@@ -146,8 +178,6 @@ def TestStationaryAdfuller(df, cutoff = 0.01):
 
 
 
-
-
 def data_split(data):
     # ========================== 划分数据集 ==================================
     train_size = len(data) - 15
@@ -155,10 +185,10 @@ def data_split(data):
     test_data = data[train_size:]
 
     dates = data.index
-    train_data_key = train_data['TSM']
-    train_data_fz = train_data.drop(['TSM'], axis=1)
-    test_data_key = test_data['TSM']
-    test_data_fz = test_data.drop(['TSM'], axis=1)
+    train_data_key = train_data[f'{parameters}']
+    train_data_fz = train_data.drop([f'{parameters}'], axis=1)
+    test_data_key = test_data[f'{parameters}']
+    test_data_fz = test_data.drop([f'{parameters}'], axis=1)
 
     # 绘制训练集和测试集的折线图
     # 绘图风格设置,使用seaborn库的API来设置样式
@@ -168,15 +198,19 @@ def data_split(data):
     plt.rcParams["axes.unicode_minus"] = False
 
     plt.figure(figsize=(10, 6))
-    plt.plot(train_data_key, label='Training Data')
-    plt.plot(test_data_key, label='Testing Data')
-    plt.xlabel('Year')
-    plt.ylabel('TSM')
-    plt.title('TSM-value - Training and Testing Data')
+    plt.plot(train_data_key, label='训练集')
+    plt.plot(test_data_key, label='测试集')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'{point} - 训练集和测试集')
     plt.legend()
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
+    plt.savefig(f'result/{point}/Training and Testing Data.jpg', bbox_inches='tight', dpi=600)
     plt.show()
 
     return train_data_key, train_data_fz, test_data_key, test_data_fz
+
 
 def create_dataset(data, look_back=1):
     X, Y = [], []
@@ -187,57 +221,72 @@ def create_dataset(data, look_back=1):
 
 
 
+
 def holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz):
     model = ExponentialSmoothing(train_data_key, trend="add", seasonal="add", seasonal_periods=12)
     model_fit = model.fit()
     predictions = model_fit.predict(start=test_data_key.index[0], end=test_data_key.index[-1])# 进行预测
 
-    # 绘制测试集预测结果的折线图
     # 绘图风格设置,使用seaborn库的API来设置样式
     sns.set_style('darkgrid')
     font1 = {'family': ['Times New Roman', 'SimSun'], 'weight': 'normal', 'size': 14}
     plt.rc('font', **font1)
     plt.rcParams["axes.unicode_minus"] = False
+
+    # 绘制训练集预测结果折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(test_data_key.index, test_data_key, label='Actual')
-    plt.plot(predictions.index, predictions, label='Predicted')
-    plt.xlabel('Month')
-    plt.ylabel('TSM')
-    plt.title('Actual vs Predicted')
+    plt.plot(train_data_key.index, train_data_key, label='真实值')
+    plt.plot(train_data_key.index, model_fit.fittedvalues, label='预测值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'holt winters: {point}训练集')
     plt.legend()
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
+    plt.savefig(f'result/{point}/holt_winters_taian.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
-    # 绘制原始数据、训练集预测结果和测试集预测结果的折线图
+    # 绘制测试集预测结果折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(data['TSM'], label='Actual')
-    plt.plot(train_data_key.index, model_fit.fittedvalues, label='Training Predictions')
-    plt.plot(test_data_key.index, predictions, label='Testing Predictions')
-    plt.xlabel('Year')
-    plt.ylabel('TSM')
-    plt.title('TSM value - Actual vs Predicted')
+    plt.plot(test_data_key.index, test_data_key, label='真实值')
+    plt.plot(predictions.index, predictions, label='预测值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'holt_winters: {point}测试集')
     plt.legend()
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
+    plt.savefig(f'result/{point}/holt_winters_test.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
     # 计算误差
-    trainScore = math.sqrt(mean_squared_error(train_data_key[1:], model_fit.fittedvalues[1:]))
-    print('Train Score: %.2f RMSE' % (trainScore))
-    testScore = math.sqrt(mean_squared_error(test_data_key[1:], predictions[1:]))
-    print('Test Score: %.2f RMSE' % (testScore))
+    trainScore1 = math.sqrt(mean_squared_error(train_data_key[1:], model_fit.fittedvalues[1:]))
+    print('Train Score: %.2f RMSE' % (trainScore1))
+    testScore1 = math.sqrt(mean_squared_error(test_data_key[1:], predictions[1:]))
+    print('Test Score: %.2f RMSE' % (testScore1))
 
-    trainScore = mean_absolute_error(train_data_key[1:], model_fit.fittedvalues[1:])
-    print('Train Score: %.2f MAE' % (trainScore))
-    testScore = mean_absolute_error(test_data_key[1:], predictions[1:])
-    print('Test Score: %.2f MAE' % (testScore))
+    trainScore2 = mean_absolute_error(train_data_key[1:], model_fit.fittedvalues[1:])
+    print('Train Score: %.2f MAE' % (trainScore2))
+    testScore2 = mean_absolute_error(test_data_key[1:], predictions[1:])
+    print('Test Score: %.2f MAE' % (testScore2))
 
-    trainScore = r2_score(train_data_key[1:], model_fit.fittedvalues[1:])
-    print('Train Score: %.2f R2' % (trainScore))
-    testScore = r2_score(test_data_key[1:], predictions[1:])
-    print('Test Score: %.2f R2' % (testScore))
+    trainScore3 = r2_score(train_data_key[1:], model_fit.fittedvalues[1:])
+    print('Train Score: %.2f R2' % (trainScore3))
+    testScore3 = r2_score(test_data_key[1:], predictions[1:])
+    print('Test Score: %.2f R2' % (testScore3))
 
-    trainScore = mean_absolute_percentage_error(train_data_key[1:], model_fit.fittedvalues[1:])
-    print('Train Score: %.2f MAPE' % (trainScore))
-    testScore = mean_absolute_percentage_error(test_data_key[1:], predictions[1:])
-    print('Test Score: %.2f MAPE' % (testScore))
+    trainScore4 = mean_absolute_percentage_error(train_data_key[1:], model_fit.fittedvalues[1:])
+    print('Train Score: %.2f MAPE' % (trainScore4))
+    testScore4 = mean_absolute_percentage_error(test_data_key[1:], predictions[1:])
+    print('Test Score: %.2f MAPE' % (testScore4))
+
+    df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
+                       'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
+                       'Train Score: %.2f R2': [trainScore3], 'Train Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Train Score: %.2f MAPE': [testScore4]})
+
+
+    df.to_excel(writer, sheet_name='holt_winters', index=False)
 
     return predictions
 
@@ -250,96 +299,97 @@ def holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz
     # 训练集预测的第一个值是0
     holt_winters_train_predictions[0] = train_data_key[0]
     print(holt_winters_train_predictions, len(holt_winters_train_predictions))
-
     # 计算残差序列
     train_residuals = train_data_key - holt_winters_train_predictions
     print(train_residuals, len(train_residuals))
-
     # 归一化残差序列
     scaler = MinMaxScaler()
     scaled_train_residuals = scaler.fit_transform(np.array(train_residuals).reshape(-1, 1))
-
     # LSTM模型训练和预测
     look_back = 1
     train_X, train_Y = create_dataset(scaled_train_residuals, look_back)
-
     lstm_model = Sequential()
     lstm_model.add(LSTM(4, input_shape=(look_back, 1)))
     lstm_model.add(Dense(1))
     lstm_model.compile(loss='mean_squared_error', optimizer='adam')
     lstm_model.fit(train_X, train_Y, epochs=100, batch_size=1, verbose=0)
-
     # LSTM模型预测整个训练集的残差值
     lstm_train_residuals = lstm_model.predict(train_X)
     lstm_train_residuals = scaler.inverse_transform(lstm_train_residuals)
     print(lstm_train_residuals, len(lstm_train_residuals))
-
     # SARIMA模型预测值与LSTM模型预测残差值相加得到最终训练集的预测值
     train_predictions = holt_winters_train_predictions[1:] + lstm_train_residuals.flatten()
     print("最终训练集的预测值:", train_predictions)
-
     # 绘制训练集预测结果的折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(train_predictions, label='Predicted')
-    plt.plot(train_data_key[1:], label='Actual')
-    plt.xlabel('Month')
-    plt.ylabel('TSM')
-    plt.title('Actual vs Predicted')
+    plt.plot(train_predictions, label='预测值')
+    plt.plot(train_data_key[1:], label='真实值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'holt winters + lstm: {point}训练集')
     plt.legend()
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
+    plt.savefig(f'result/{point}/holt_winters_lstm_taian.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
     # SARIMA模型测试集预测值
     sarima_test_predictions = holt_winters_model_fit.predict(start=test_data_key.index[0], end=test_data_key.index[-1])
     print(sarima_test_predictions, len(sarima_test_predictions))
-
     # 计算残差序列
     sarima_test_residuals = test_data_key - sarima_test_predictions
-
     # 归一化残差序列
     scaled_test_residuals = scaler.transform(np.array(sarima_test_residuals).reshape(-1, 1))
-
     # 构造残差数据集
     test_X, test_Y = create_dataset(scaled_test_residuals, look_back)
-
     # LSTM模型预测整个测试集的残差值
     lstm_test_residuals = lstm_model.predict(test_X)
     lstm_test_residuals = scaler.inverse_transform(lstm_test_residuals)
     print(lstm_test_residuals, len(lstm_test_residuals))
-
     # SARIMA模型预测值与LSTM模型预测残差值相加得到最终测试集的预测值
     test_predictions = sarima_test_predictions[1:] + lstm_test_residuals.flatten()
     print("最终测试集的预测值:", test_predictions)
-
     # 绘制测试集预测结果的折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(test_predictions, label='Predicted')
-    plt.plot(test_data_key[1:], label='Actual')
-    plt.xlabel('Month')
-    plt.ylabel('Passengers')
-    plt.title('Actual vs Predicted')
+    plt.plot(test_predictions, label='预测值')
+    plt.plot(test_data_key[1:], label='真实值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'holt winters + lstm: {point}测试集')
     plt.legend()
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
+    plt.savefig(f'result/{point}/holt_winters_lstm_test.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
     # 计算误差
-    trainScore = math.sqrt(mean_squared_error(train_data_key[1:], train_predictions))
-    print('Train Score: %.2f RMSE' % (trainScore))
-    testScore = math.sqrt(mean_squared_error(test_data_key[1:], test_predictions))
-    print('Test Score: %.2f RMSE' % (testScore))
+    trainScore1 = math.sqrt(mean_squared_error(train_data_key[1:], train_predictions))
+    print('Train Score: %.2f RMSE' % (trainScore1))
+    testScore1 = math.sqrt(mean_squared_error(test_data_key[1:], test_predictions))
+    print('Test Score: %.2f RMSE' % (testScore1))
 
-    trainScore = mean_absolute_error(train_data_key[1:], train_predictions)
-    print('Train Score: %.2f MAE' % (trainScore))
-    testScore = mean_absolute_error(test_data_key[1:], test_predictions)
-    print('Test Score: %.2f MAE' % (testScore))
+    trainScore2 = mean_absolute_error(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f MAE' % (trainScore2))
+    testScore2 = mean_absolute_error(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f MAE' % (testScore2))
 
-    trainScore = r2_score(train_data_key[1:], train_predictions)
-    print('Train Score: %.2f R2' % (trainScore))
-    testScore = r2_score(test_data_key[1:], test_predictions)
-    print('Test Score: %.2f R2' % (testScore))
+    trainScore3 = r2_score(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f R2' % (trainScore3))
+    testScore3 = r2_score(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f R2' % (testScore3))
 
-    trainScore = mean_absolute_percentage_error(train_data_key[1:], train_predictions)
-    print('Train Score: %.2f MAPE' % (trainScore))
-    testScore = mean_absolute_percentage_error(test_data_key[1:], test_predictions)
-    print('Test Score: %.2f MAPE' % (testScore))
+    trainScore4 = mean_absolute_percentage_error(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f MAPE' % (trainScore4))
+    testScore4 = mean_absolute_percentage_error(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f MAPE' % (testScore4))
+
+    df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
+                       'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
+                       'Train Score: %.2f R2': [trainScore3], 'Train Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Train Score: %.2f MAPE': [testScore4]})
+
+    df.to_excel(writer, sheet_name='holt_winters_lstm', index=False)
+
 
     return test_predictions
 
@@ -351,54 +401,68 @@ def sarima(train_data_key, train_data_fz, test_data_key, test_data_fz):
     # 进行预测
     predictions = model_fit.predict(start=test_data_key.index[0], end=test_data_key.index[-1])
 
-
-    # 绘制测试集预测结果的折线图
     # 绘图风格设置,使用seaborn库的API来设置样式
     sns.set_style('darkgrid')
     font1 = {'family': ['Times New Roman', 'SimSun'], 'weight': 'normal', 'size': 14}
     plt.rc('font', **font1)
     plt.rcParams["axes.unicode_minus"] = False
-    plt.figure(figsize=(10, 6))
-    plt.plot(test_data_key.index, test_data_key, label='Actual')
-    plt.plot(predictions.index, predictions, label='Predicted')
-    plt.xlabel('Month')
-    plt.ylabel('TSM')
-    plt.title('Actual vs Predicted')
-    plt.legend()
-    plt.show()
+
 
     # 绘制原始数据、训练集预测结果和测试集预测结果的折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(data['TSM'], label='Actual')
-    plt.plot(train_data_key.index, model_fit.fittedvalues, label='Training Predictions')
-    plt.plot(test_data_key.index, predictions, label='Testing Predictions')
-    plt.xlabel('Year')
-    plt.ylabel('TSM')
-    plt.title('TSM value - Actual vs Predicted')
+    plt.plot(train_data_key.index, train_data_key, label='真实值')
+    plt.plot(train_data_key.index, model_fit.fittedvalues, label='预测值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'sarima: {point}训练集')
     plt.legend()
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
+    plt.savefig(f'result/{point}/sarima_taian.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
+    plt.figure(figsize=(10, 6))
+    plt.plot(test_data_key.index, test_data_key, label='真实值')
+    plt.plot(predictions.index, predictions, label='预测值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'sarima: {point}测试集')
+    plt.legend()
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
+    plt.savefig(f'result/{point}/sarima_test.jpg', bbox_inches='tight', dpi = 600)
+    plt.show()
 
     # 计算误差
-    trainScore = math.sqrt(mean_squared_error(train_data_key[1:], model_fit.fittedvalues[1:]))
-    print('Train Score: %.2f RMSE' % (trainScore))
-    testScore = math.sqrt(mean_squared_error(test_data_key[1:], predictions[1:]))
-    print('Test Score: %.2f RMSE' % (testScore))
+    trainScore1 = math.sqrt(mean_squared_error(train_data_key[1:], model_fit.fittedvalues[1:]))
+    print('Train Score: %.2f RMSE' % (trainScore1))
+    testScore1 = math.sqrt(mean_squared_error(test_data_key[1:], predictions[1:]))
+    print('Test Score: %.2f RMSE' % (testScore1))
 
-    trainScore = mean_absolute_error(train_data_key[1:], model_fit.fittedvalues[1:])
-    print('Train Score: %.2f MAE' % (trainScore))
-    testScore = mean_absolute_error(test_data_key[1:], predictions[1:])
-    print('Test Score: %.2f MAE' % (testScore))
+    trainScore2 = mean_absolute_error(train_data_key[1:], model_fit.fittedvalues[1:])
+    print('Train Score: %.2f MAE' % (trainScore2))
+    testScore2 = mean_absolute_error(test_data_key[1:], predictions[1:])
+    print('Test Score: %.2f MAE' % (testScore2))
 
-    trainScore = r2_score(train_data_key[1:], model_fit.fittedvalues[1:])
-    print('Train Score: %.2f R2' % (trainScore))
-    testScore = r2_score(test_data_key[1:], predictions[1:])
-    print('Test Score: %.2f R2' % (testScore))
+    trainScore3 = r2_score(train_data_key[1:], model_fit.fittedvalues[1:])
+    print('Train Score: %.2f R2' % (trainScore3))
+    testScore3 = r2_score(test_data_key[1:], predictions[1:])
+    print('Test Score: %.2f R2' % (testScore3))
 
-    trainScore = mean_absolute_percentage_error(train_data_key[1:], model_fit.fittedvalues[1:])
-    print('Train Score: %.2f MAPE' % (trainScore))
-    testScore = mean_absolute_percentage_error(test_data_key[1:], predictions[1:])
-    print('Test Score: %.2f MAPE' % (testScore))
+    trainScore4 = mean_absolute_percentage_error(train_data_key[1:], model_fit.fittedvalues[1:])
+    print('Train Score: %.2f MAPE' % (trainScore4))
+    testScore4 = mean_absolute_percentage_error(test_data_key[1:], predictions[1:])
+    print('Test Score: %.2f MAPE' % (testScore4))
+
+
+    df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
+                       'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
+                       'Train Score: %.2f R2': [trainScore3], 'Train Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Train Score: %.2f MAPE': [testScore4]})
+
+    print(df)
+
+    df.to_excel(writer, sheet_name='sarima', index=False)
 
     return predictions
 
@@ -441,12 +505,15 @@ def sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     # 绘制训练集预测结果的折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(train_predictions, label='Predicted')
-    plt.plot(train_data_key[1:], label='Actual')
-    plt.xlabel('Month')
-    plt.ylabel('TSM')
-    plt.title('Actual vs Predicted')
+    plt.plot(train_predictions, label='预测值')
+    plt.plot(train_data_key[1:], label='真实值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'sarima + lstm: {point}训练集')
     plt.legend()
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
+    plt.savefig(f'result/{point}/sarima_lstm_taian.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
     # SARIMA模型测试集预测值
@@ -473,54 +540,66 @@ def sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     # 绘制测试集预测结果的折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(test_predictions, label='Predicted')
-    plt.plot(test_data_key[1:], label='Actual')
-    plt.xlabel('Month')
-    plt.ylabel('Passengers')
-    plt.title('Actual vs Predicted')
+    plt.plot(test_predictions, label='预测值')
+    plt.plot(test_data_key[1:], label='真实值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'sarima + lstm: {point}测试集')
     plt.legend()
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
+    plt.savefig(f'result/{point}/sarima_lstm_test.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
     # 计算误差
-    trainScore = math.sqrt(mean_squared_error(train_data_key[1:], train_predictions))
-    print('Train Score: %.2f RMSE' % (trainScore))
-    testScore = math.sqrt(mean_squared_error(test_data_key[1:], test_predictions))
-    print('Test Score: %.2f RMSE' % (testScore))
+    trainScore1 = math.sqrt(mean_squared_error(train_data_key[1:], train_predictions))
+    print('Train Score: %.2f RMSE' % (trainScore1))
+    testScore1 = math.sqrt(mean_squared_error(test_data_key[1:], test_predictions))
+    print('Test Score: %.2f RMSE' % (testScore1))
 
-    trainScore = mean_absolute_error(train_data_key[1:], train_predictions)
-    print('Train Score: %.2f MAE' % (trainScore))
-    testScore = mean_absolute_error(test_data_key[1:], test_predictions)
-    print('Test Score: %.2f MAE' % (testScore))
+    trainScore2 = mean_absolute_error(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f MAE' % (trainScore2))
+    testScore2 = mean_absolute_error(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f MAE' % (testScore2))
 
-    trainScore = r2_score(train_data_key[1:], train_predictions)
-    print('Train Score: %.2f R2' % (trainScore))
-    testScore = r2_score(test_data_key[1:], test_predictions)
-    print('Test Score: %.2f R2' % (testScore))
+    trainScore3 = r2_score(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f R2' % (trainScore3))
+    testScore3 = r2_score(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f R2' % (testScore3))
 
-    trainScore = mean_absolute_percentage_error(train_data_key[1:], train_predictions)
-    print('Train Score: %.2f MAPE' % (trainScore))
-    testScore = mean_absolute_percentage_error(test_data_key[1:], test_predictions)
-    print('Test Score: %.2f MAPE' % (testScore))
+    trainScore4 = mean_absolute_percentage_error(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f MAPE' % (trainScore4))
+    testScore4 = mean_absolute_percentage_error(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f MAPE' % (testScore4))
+
+
+    df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
+                       'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
+                       'Train Score: %.2f R2': [trainScore3], 'Train Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Train Score: %.2f MAPE': [testScore4]})
+
+    print(df)
+
+    df.to_excel(writer, sheet_name='sarima_lstm', index=False)
 
     return test_predictions
 
 
+
 def compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions):
-
-
     # 创建一个新的图形
-    plt.figure(figsize=(20, 6))
+    plt.figure(figsize=(18, 6))
 
     # 绘制折线图
     plt.plot(test_data_key.index, test_data_key, label='Actual', marker='+')
-    plt.plot(test_data_key.index, holt_winters_predictions, label='holt_winters', marker='o')
+    plt.plot(test_data_key.index, holt_winters_predictions, label='holt winters', marker='o')
     plt.plot(test_data_key.index, sarima_predictions, label='sarima', marker='s')
-    plt.plot(test_data_key.index[1:], holt_winters_lstm_predictions, label='holt_winters_lstm', marker='^')
-    plt.plot(test_data_key.index[1:], sarima_lstm_predictions, label='sarima_lstm', marker='*')
+    plt.plot(test_data_key.index[1:], holt_winters_lstm_predictions, label='holt winters+lstm', marker='^')
+    plt.plot(test_data_key.index[1:], sarima_lstm_predictions, label='sarima+lstm', marker='*')
 
     # 添加标题和标签
-    plt.xlabel('Month')
-    plt.ylabel('Passengers')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
     plt.title('Actual vs Predicted')
 
     # 添加图例
@@ -529,31 +608,76 @@ def compare_test_prediction(test_data_key, holt_winters_predictions, sarima_pred
     # 显示图形
     plt.show()
 
+def cor_analysis(data):
 
+    # 绘制散点图
+    data = pd.DataFrame(data)
+    sns.set_style('darkgrid')
+    font1 = {'family': ['Times New Roman', 'SimSun'], 'weight': 'normal', 'size': 14}
+    plt.rc('font', **font1)
+    plt.rcParams["axes.unicode_minus"] = False
+    for i in range(1, 5):
+        x = data.iloc[:, i]
+        y = data.iloc[:, 0]
+        plt.scatter(x, y, color='blue')
+
+        # 进行线性拟合
+        slope, intercept = np.polyfit(x, y, 1)
+        trendline = intercept + slope * x
+        print(trendline)
+        # 计算拟合误差
+        residuals = y - (slope * x + intercept)
+        std_error = np.sqrt(np.sum(residuals ** 2) / (len(x) - 2))
+        trendline_upper = trendline + 1.96 * std_error
+        trendline_lower = trendline - 1.96 * std_error
+
+        # 绘制趋势线
+        plt.plot(x, trendline, color='red', label='趋势线')
+        # 添加误差阴影
+        plt.fill_between(x, trendline_upper, trendline_lower, color='red', alpha=0.2, label='Error Range')
+
+        # 添加标签和图例
+        plt.xlabel(data.columns[i])
+        plt.ylabel(f'{parameters}')
+        plt.title(f'{point}')
+        plt.legend()
+
+        if not os.path.exists(f'result/{point}'):
+            os.makedirs(f'result/{point}')
+
+        plt.savefig(f'result/{point}/{data.columns[i]}.jpg', bbox_inches='tight', dpi=600)
+        # 显示图形
+        plt.show()
 
 if __name__  == '__main__':
 
     point = '样点8'
     parameters = 'TSM'
     data = data_preprocess(rf'data/{point}.xlsx')
+    writer = pd.ExcelWriter(f'result/{point}/{point}.xlsx')
 
     data_analysis(data[parameters])
 
-    #对TSM进行平稳性检验
-    # TestStationaryPlot(data[parameters])
-    # TestStationaryAdfuller(data[parameters])
-
-
-
+    #平稳性检验
+    TestStationaryPlot(data[parameters])
+    TestStationaryAdfuller(data[parameters])
+    #
     train_data_key, train_data_fz, test_data_key, test_data_fz = data_split(data)
-
-
+    #
     holt_winters_predictions = holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz)
-    sarima_predictions = sarima(train_data_key, train_data_fz, test_data_key, test_data_fz)
     holt_winters_lstm_predictions = holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
+    sarima_predictions = sarima(train_data_key, train_data_fz, test_data_key, test_data_fz)
     sarima_lstm_predictions = sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
-    print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
-    compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions)
+
+
+    # cor_analysis(data)
+
+
+
+    # print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
+    # compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions)
+
+    writer.save()
 
 
 
