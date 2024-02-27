@@ -1,29 +1,123 @@
 import warnings
 warnings.filterwarnings('ignore')
 import pandas as pd
-from statsmodels.tsa.statespace.sarimax import SARIMAX
-import matplotlib.pyplot as plt
-import math
-from sklearn.metrics import mean_squared_error
 import itertools
 import statsmodels.api as sm
 from statsmodels.tsa.stattools import adfuller
 import seaborn as sns
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 import numpy as np
-import numpy as np
 import os
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
-from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 import math
 from sklearn.metrics import mean_absolute_error #平方绝对误差
 from sklearn.metrics import r2_score#R square
 from sklearn.metrics import mean_absolute_percentage_error
+import statsmodels.api
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+from sklearn.metrics import mean_squared_error
+from keras.layers import Dropout
+from keras.layers import Activation
+from keras.callbacks import EarlyStopping
 
+
+class ACO:
+    def __init__(self, parameters):
+        """
+        Ant Colony Optimization
+        parameter: a list type, like [NGEN, pop_size, var_num_min, var_num_max]
+        """
+        # 初始化
+        self.NGEN = parameters[0]  # 迭代的代数
+        self.pop_size = parameters[1]  # 种群大小
+        self.var_num = len(parameters[2])  # 变量个数
+        self.bound = []  # 变量的约束范围
+        self.bound.append(parameters[2])
+        self.bound.append(parameters[3])
+
+        self.pop_x = np.zeros((self.pop_size, self.var_num))  # 所有蚂蚁的位置
+        self.g_best = np.zeros((1, self.var_num))  # 全局蚂蚁最优的位置
+
+        # 初始化第0代初始全局最优解
+        temp = -1
+        for i in range(self.pop_size):
+            for j in range(self.var_num):
+                self.pop_x[i][j] = np.random.uniform(self.bound[0][j], self.bound[1][j])
+            fit = self.fitness(self.pop_x[i])
+            if fit > temp:
+                self.g_best = self.pop_x[i]
+                temp = fit
+
+    def fitness(self, ind_var):
+        """
+        个体适应值计算
+        """
+        x1 = ind_var[0]
+        x2 = ind_var[1]
+        x3 = ind_var[2]
+        x4 = ind_var[3]
+        y = x1 ** 2 + x2 ** 2 + x3 ** 3 + x4 ** 4
+        return y
+
+    def update_operator(self, gen, t, t_max):
+        """
+        更新算子：根据概率更新下一时刻的位置
+        """
+        rou = 0.8  # 信息素挥发系数
+        Q = 1  # 信息释放总量
+        lamda = 1 / gen
+        pi = np.zeros(self.pop_size)
+        for i in range(self.pop_size):
+            for j in range(self.var_num):
+                pi[i] = (t_max - t[i]) / t_max
+                # 更新位置
+                if pi[i] < np.random.uniform(0, 1):
+                    self.pop_x[i][j] = self.pop_x[i][j] + np.random.uniform(-1, 1) * lamda
+                else:
+                    self.pop_x[i][j] = self.pop_x[i][j] + np.random.uniform(-1, 1) * (
+                            self.bound[1][j] - self.bound[0][j]) / 2
+                # 越界保护
+                if self.pop_x[i][j] < self.bound[0][j]:
+                    self.pop_x[i][j] = self.bound[0][j]
+                if self.pop_x[i][j] > self.bound[1][j]:
+                    self.pop_x[i][j] = self.bound[1][j]
+            # 更新t值
+            t[i] = (1 - rou) * t[i] + Q * self.fitness(self.pop_x[i])
+            # 更新全局最优值
+            if self.fitness(self.pop_x[i]) > self.fitness(self.g_best):
+                self.g_best = self.pop_x[i]
+        t_max = np.max(t)
+        return t_max, t
+
+    def main(self):
+        popobj = []
+        best = np.zeros((1, self.var_num))[0]
+        for gen in range(1, self.NGEN + 1):
+            if gen == 1:
+                tmax, t = self.update_operator(gen, np.array(list(map(self.fitness, self.pop_x))),
+                                               np.max(np.array(list(map(self.fitness, self.pop_x)))))
+            else:
+                tmax, t = self.update_operator(gen, t, tmax)
+            popobj.append(self.fitness(self.g_best))
+            print('############ Generation {} ############'.format(str(gen)))
+            print(self.g_best)
+            print(self.fitness(self.g_best))
+            if self.fitness(self.g_best) > self.fitness(best):
+                best = self.g_best.copy()
+            print('最好的位置：{}'.format(best))
+            print('最大的函数值：{}'.format(self.fitness(best)))
+        print("---- End of (successful) Searching ----")
+
+        plt.figure()
+        plt.title("Figure1")
+        plt.xlabel("iterators", size=14)
+        plt.ylabel("fitness", size=14)
+        t = [t for t in range(1, self.NGEN + 1)]
+        plt.plot(t, popobj, color='b', linewidth=2)
+        plt.show()
 
 #=======================================异常值处理========================
 def replace_outliers(series):
@@ -86,22 +180,13 @@ def seasonal_decompose(data):
     from statsmodels.tsa.seasonal import seasonal_decompose
     result = seasonal_decompose(data)
     result.plot()
-
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
-
     plt.savefig(f'result/{point}/时序数据分解.jpg', bbox_inches='tight', dpi = 600)
-
     plt.show()
 
 def plot_acf(data):
     # ACF：自相关函数
     from statsmodels.graphics.tsaplots import plot_acf
     plot_acf(data)
-
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
-
     plt.savefig(f'result/{point}/acf.jpg', bbox_inches='tight', dpi=600)
     plt.show()
 
@@ -110,10 +195,6 @@ def plot_pacf(data):
     # PACF：偏自相关函数
     from statsmodels.graphics.tsaplots import plot_pacf
     plot_pacf(data)
-
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
-
     plt.savefig(f'result/{point}/pacf.jpg', bbox_inches='tight', dpi=600)
     plt.show()
 
@@ -153,16 +234,11 @@ def TestStationaryPlot(df):
     plt.ylabel(f'{parameters}-{point}', fontsize=14)
     plt.legend(loc='best', fontsize=14)
     plt.title('Moving Average and Standard Deviation', fontsize=14)
-
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
-
     plt.savefig(f'result/{point}/移动平均值和标准差.jpg', bbox_inches='tight', dpi=600)
     plt.show(block=True)
 
 
 #方法二：ADF检验
-
 def TestStationaryAdfuller(df, cutoff = 0.01):
     df_test = adfuller(df, autolag = 'AIC')
     df_test_output = pd.Series(df_test[0:4], index=['Test Statistic','p-value','#Lags Used','Number of Observations Used'])
@@ -204,8 +280,6 @@ def data_split(data):
     plt.ylabel(f'{parameters}')
     plt.title(f'{point} - 训练集和测试集')
     plt.legend()
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
     plt.savefig(f'result/{point}/Training and Testing Data.jpg', bbox_inches='tight', dpi=600)
     plt.show()
 
@@ -219,8 +293,48 @@ def create_dataset(data, look_back=1):
         Y.append(data[i + look_back])
     return np.array(X), np.array(Y)
 
+def sarima_grid_search(data):
+    # 首先定义 p、d、q 的参数值范围，这里取 0 - 2.
+    p = d = q = range(0, 2)
+    # 然后用itertools函数生成不同的参数组合
+    pdq = list(itertools.product(p, d, q))
+    # 同理处理季节周期性参数，也生成相应的多个组合
+    seasonal_pdq = [(x[0], x[1], x[2], 12) for x in list(itertools.product(p, d, q))]
+    print('Examples of parameter combinations for Seasonal ARIMA...')
+    print('SARIMAX: {} x {}'.format(pdq[1], seasonal_pdq[1]))
+    print('SARIMAX: {} x {}'.format(pdq[1], seasonal_pdq[2]))
+    print('SARIMAX: {} x {}'.format(pdq[2], seasonal_pdq[3]))
+    print('SARIMAX: {} x {}'.format(pdq[2], seasonal_pdq[4]))
 
+    dic = {}
 
+    for param in pdq:
+        for param_seasonal in seasonal_pdq:
+            try:
+                mod = statsmodels.api.tsa.statespace.SARIMAX(data[f'{parameters}'],
+                                                             order=param,
+                                                             seasonal_order=param_seasonal,
+                                                             enforce_stationarity=False,
+                                                             enforce_invertibility=False)
+
+                results = mod.fit()
+
+                print('SARIMAX{}x{}12 - AIC:{}'.format(param, param_seasonal, results.aic))
+                dic.update({results.aic: [param, param_seasonal]})
+            except:
+                continue
+
+    print(dic)
+    # ===================================================SARIMA最优模型的参数===============================
+    mod = statsmodels.api.tsa.statespace.SARIMAX(data['TSM'],
+                                                 order=(1, 1, 1),
+                                                 seasonal_order=(1, 1, 1, 12),
+                                                 enforce_stationarity=False,
+                                                 enforce_invertibility=False)
+    results = mod.fit()
+    results.plot_diagnostics(figsize=(12, 10))
+    plt.show()
+    print(results.summary().tables[1])
 
 def holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz):
     model = ExponentialSmoothing(train_data_key, trend="add", seasonal="add", seasonal_periods=12)
@@ -241,8 +355,6 @@ def holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz):
     plt.ylabel(f'{parameters}')
     plt.title(f'holt winters: {point}训练集')
     plt.legend()
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
     plt.savefig(f'result/{point}/holt_winters_taian.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
@@ -254,8 +366,6 @@ def holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz):
     plt.ylabel(f'{parameters}')
     plt.title(f'holt_winters: {point}测试集')
     plt.legend()
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
     plt.savefig(f'result/{point}/holt_winters_test.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
@@ -328,8 +438,6 @@ def holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz
     plt.ylabel(f'{parameters}')
     plt.title(f'holt winters + lstm: {point}训练集')
     plt.legend()
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
     plt.savefig(f'result/{point}/holt_winters_lstm_taian.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
@@ -357,8 +465,6 @@ def holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz
     plt.ylabel(f'{parameters}')
     plt.title(f'holt winters + lstm: {point}测试集')
     plt.legend()
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
     plt.savefig(f'result/{point}/holt_winters_lstm_test.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
@@ -416,8 +522,6 @@ def sarima(train_data_key, train_data_fz, test_data_key, test_data_fz):
     plt.ylabel(f'{parameters}')
     plt.title(f'sarima: {point}训练集')
     plt.legend()
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
     plt.savefig(f'result/{point}/sarima_taian.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
@@ -428,8 +532,6 @@ def sarima(train_data_key, train_data_fz, test_data_key, test_data_fz):
     plt.ylabel(f'{parameters}')
     plt.title(f'sarima: {point}测试集')
     plt.legend()
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
     plt.savefig(f'result/{point}/sarima_test.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
@@ -511,8 +613,6 @@ def sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz):
     plt.ylabel(f'{parameters}')
     plt.title(f'sarima + lstm: {point}训练集')
     plt.legend()
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
     plt.savefig(f'result/{point}/sarima_lstm_taian.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
@@ -546,8 +646,6 @@ def sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz):
     plt.ylabel(f'{parameters}')
     plt.title(f'sarima + lstm: {point}测试集')
     plt.legend()
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
     plt.savefig(f'result/{point}/sarima_lstm_test.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
@@ -581,6 +679,273 @@ def sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz):
     print(df)
 
     df.to_excel(writer, sheet_name='sarima_lstm', index=False)
+
+    return test_predictions
+
+def sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz):
+    # =================拟合 SARIMA 模型并提取残差==========================
+    sarima_model = SARIMAX(train_data_key, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12))
+    sarima_model_fit = sarima_model.fit()
+    sarima_train_predictions = sarima_model_fit.predict(start=train_data_key.index[0], end=train_data_key.index[-1])
+    sarima_train_predictions[0] = train_data_key[0]  # 训练集预测的第一个值是0
+    print(sarima_train_predictions, len(sarima_train_predictions))
+
+    # 计算残差序列
+    train_residuals = train_data_key - sarima_train_predictions
+    print(train_residuals, len(train_residuals))
+
+    # # 归一化残差序列和辅助数据
+    mm1 = MinMaxScaler()
+    scaled_train_residuals = mm1.fit_transform(np.array(train_residuals).reshape(-1, 1))
+    mm2 = MinMaxScaler()
+    scaled_train_data_fz = mm2.fit_transform(train_data_fz.values)
+    scaled_train_residuals_fz = np.concatenate((scaled_train_residuals, scaled_train_data_fz), axis=1)
+    print(scaled_train_residuals_fz, scaled_train_residuals_fz.shape)
+
+    # LSTM模型训练和预测
+    look_back = 1
+    train_X, train_Y = create_dataset(scaled_train_residuals_fz, look_back)
+    # 训练模型  使用ssa找到的最好的神经元个数
+    lstm_model = Sequential()
+    lstm_model.add(LSTM(4, input_shape=(look_back, 5)))
+    lstm_model.add(Dense(1))
+    lstm_model.compile(loss='mean_squared_error', optimizer='adam')
+    lstm_model.fit(train_X, train_Y, epochs=100, batch_size=1, verbose=0)
+    # LSTM模型预测整个训练集的残差值
+    lstm_train_residuals = lstm_model.predict(train_X)
+    lstm_train_residuals = mm1.inverse_transform(lstm_train_residuals)
+    print(lstm_train_residuals, len(lstm_train_residuals))
+    # SARIMA模型预测值与LSTM模型预测残差值相加得到最终训练集的预测值
+    train_predictions = sarima_train_predictions[1:] + lstm_train_residuals.flatten()
+    print("最终训练集的预测值:", train_predictions)
+    # 绘制训练集预测结果的折线图
+    plt.figure(figsize=(10, 6))
+    plt.plot(train_predictions, label='预测值')
+    plt.plot(train_data_key[1:], label='真实值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'sarima + lstm(协变量): {point}训练集')
+    plt.legend()
+    plt.savefig(f'result/{point}/sarima_lstm_v1_taian.jpg', bbox_inches='tight', dpi = 600)
+    plt.show()
+
+    # SARIMA模型测试集预测值
+    sarima_test_predictions = sarima_model_fit.predict(start=test_data_key.index[0], end=test_data_key.index[-1])
+    print(sarima_test_predictions, len(sarima_test_predictions))
+
+    # 计算残差序列
+    sarima_test_residuals = test_data_key - sarima_test_predictions
+
+    # 归一化残差序列
+    scaled_test_residuals = mm1.transform(np.array(sarima_test_residuals).reshape(-1, 1))
+    scaled_test_data_fz = mm2.transform(test_data_fz.values)
+
+    scaled_test_residuals_fz = np.concatenate((scaled_test_residuals, scaled_test_data_fz), axis=1)
+    print(scaled_test_residuals_fz, scaled_test_residuals_fz.shape)
+
+    # 构造残差数据集
+    test_X, test_Y = create_dataset(scaled_test_residuals_fz, look_back)
+
+    # LSTM模型预测整个测试集的残差值
+    lstm_test_residuals = lstm_model.predict(test_X)
+    lstm_test_residuals = mm1.inverse_transform(lstm_test_residuals)
+    print(lstm_test_residuals, len(lstm_test_residuals))
+
+    # SARIMA模型预测值与LSTM模型预测残差值相加得到最终测试集的预测值
+    test_predictions = sarima_test_predictions[1:] + lstm_test_residuals.flatten()
+    print("最终测试集的预测值:", test_predictions)
+
+    # 绘制测试集预测结果的折线图
+    plt.figure(figsize=(10, 6))
+    plt.plot(test_predictions, label='预测值')
+    plt.plot(test_data_key[1:], label='真实值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'sarima + lstm(协变量): {point}测试集')
+    plt.legend()
+    plt.savefig(f'result/{point}/sarima_lstm_v1_test.jpg', bbox_inches='tight', dpi = 600)
+    plt.show()
+
+    # 计算误差(预测精度)
+
+    trainScore1 = math.sqrt(mean_squared_error(train_data_key[1:], train_predictions))
+    print('Train Score: %.2f RMSE' % (trainScore1))
+    testScore1 = math.sqrt(mean_squared_error(test_data_key[1:], test_predictions))
+    print('Test Score: %.2f RMSE' % (testScore1))
+
+    trainScore2 = mean_absolute_error(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f MAE' % (trainScore2))
+    testScore2 = mean_absolute_error(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f MAE' % (testScore2))
+
+    trainScore3 = r2_score(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f R2' % (trainScore3))
+    testScore3 = r2_score(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f R2' % (testScore3))
+
+    trainScore4 = mean_absolute_percentage_error(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f MAPE' % (trainScore4))
+    testScore4 = mean_absolute_percentage_error(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f MAPE' % (testScore4))
+
+    df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
+                       'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
+                       'Train Score: %.2f R2': [trainScore3], 'Train Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Train Score: %.2f MAPE': [testScore4]})
+
+    print(df)
+
+    df.to_excel(writer, sheet_name='sarima_lstm_v1', index=False)
+
+    return test_predictions
+
+
+def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
+    # =================拟合 SARIMA 模型并提取残差==========================
+    sarima_model = SARIMAX(train_data_key, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12))
+    sarima_model_fit = sarima_model.fit()
+    sarima_train_predictions = sarima_model_fit.predict(start=train_data_key.index[0], end=train_data_key.index[-1])
+    sarima_train_predictions[0] = train_data_key[0]  # 训练集预测的第一个值是0
+    print(sarima_train_predictions, len(sarima_train_predictions))
+
+    # 计算残差序列
+    train_residuals = train_data_key - sarima_train_predictions
+    print(train_residuals, len(train_residuals))
+
+    # # 归一化残差序列和辅助数据
+    mm1 = MinMaxScaler()
+    scaled_train_residuals = mm1.fit_transform(np.array(train_residuals).reshape(-1, 1))
+    mm2 = MinMaxScaler()
+    scaled_train_data_fz = mm2.fit_transform(train_data_fz.values)
+    scaled_train_residuals_fz = np.concatenate((scaled_train_residuals, scaled_train_data_fz), axis=1)
+    print(scaled_train_residuals_fz, scaled_train_residuals_fz.shape)
+
+    # LSTM模型训练和预测
+    look_back = 1
+    train_X, train_Y = create_dataset(scaled_train_residuals_fz, look_back)
+
+    # ==================================
+    UP = [51, 6, 0.055, 9]
+    DOWN = [50, 5, 0.05, 8]
+    NGEN = 100
+    popsize = 100
+    parameters = [NGEN, popsize, DOWN, UP]
+    # 开始优化
+    aco = ACO(parameters)
+    aco.main()
+
+    # 训练模型  使用ssa找到的最好的神经元个数
+    neurons1 = int(aco.g_best[0])
+    neurons2 = int(aco.g_best[1])
+    dropout = aco.g_best[2]
+    batch_size = int(aco.g_best[3])
+
+    lstm_model = Sequential()
+    lstm_model.add(LSTM(
+        input_shape=(look_back, 5),
+        units=neurons1,
+        return_sequences=True))
+    lstm_model.add(Dropout(dropout))
+
+    lstm_model.add(LSTM(
+        units=neurons2,
+        return_sequences=False))
+    lstm_model.add(Dropout(dropout))
+
+    lstm_model.add(Dense(units=1))
+    lstm_model.add(Activation("linear"))
+    lstm_model.compile(loss='mse', optimizer='Adam', metrics='mae')
+    lstm_model.fit(train_X, train_Y, epochs=150, batch_size=batch_size, validation_split=0.2, verbose=1,
+                   callbacks=[EarlyStopping(monitor='val_loss', patience=9, restore_best_weights=True)])
+    # =============================================
+    # LSTM模型预测整个训练集的残差值
+    lstm_train_residuals = lstm_model.predict(train_X)
+    lstm_train_residuals = mm1.inverse_transform(lstm_train_residuals)
+    print(lstm_train_residuals, len(lstm_train_residuals))
+    #
+    # SARIMA模型预测值与LSTM模型预测残差值相加得到最终训练集的预测值
+    train_predictions = sarima_train_predictions[1:] + lstm_train_residuals.flatten()
+    print("最终训练集的预测值:", train_predictions)
+    #
+    # 绘制训练集预测结果的折线图
+    plt.figure(figsize=(10, 6))
+    plt.plot(train_predictions, label='预测值')
+    plt.plot(train_data_key[1:], label='真实值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'sarima + lstm(优化): {point}训练集')
+    plt.legend()
+    plt.savefig(f'result/{point}/sarima_lstm_v2_taian.jpg', bbox_inches='tight', dpi = 600)
+    plt.show()
+
+    # SARIMA模型测试集预测值
+    sarima_test_predictions = sarima_model_fit.predict(start=test_data_key.index[0], end=test_data_key.index[-1])
+    print(sarima_test_predictions, len(sarima_test_predictions))
+
+    # 计算残差序列
+    sarima_test_residuals = test_data_key - sarima_test_predictions
+
+    # 归一化残差序列
+    scaled_test_residuals = mm1.transform(np.array(sarima_test_residuals).reshape(-1, 1))
+    scaled_test_data_fz = mm2.transform(test_data_fz.values)
+
+    scaled_test_residuals_fz = np.concatenate((scaled_test_residuals, scaled_test_data_fz), axis=1)
+    print(scaled_test_residuals_fz, scaled_test_residuals_fz.shape)
+
+    # 构造残差数据集
+    test_X, test_Y = create_dataset(scaled_test_residuals_fz, look_back)
+
+    # LSTM模型预测整个测试集的残差值
+    lstm_test_residuals = lstm_model.predict(test_X)
+    lstm_test_residuals = mm1.inverse_transform(lstm_test_residuals)
+    print(lstm_test_residuals, len(lstm_test_residuals))
+
+    # SARIMA模型预测值与LSTM模型预测残差值相加得到最终测试集的预测值
+    test_predictions = sarima_test_predictions[1:] + lstm_test_residuals.flatten()
+    print("最终测试集的预测值:", test_predictions)
+
+    # 绘制测试集预测结果的折线图
+    plt.figure(figsize=(10, 6))
+    plt.plot(test_predictions, label='预测值')
+    plt.plot(test_data_key[1:], label='真实值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'sarima + lstm(优化): {point}测试集')
+    plt.legend()
+    plt.savefig(f'result/{point}/sarima_lstm_v2_test.jpg', bbox_inches='tight', dpi = 600)
+    plt.show()
+
+    # 计算误差(预测精度)
+
+    trainScore1 = math.sqrt(mean_squared_error(train_data_key[1:], train_predictions))
+    print('Train Score: %.2f RMSE' % (trainScore1))
+    testScore1 = math.sqrt(mean_squared_error(test_data_key[1:], test_predictions))
+    print('Test Score: %.2f RMSE' % (testScore1))
+
+    trainScore2 = mean_absolute_error(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f MAE' % (trainScore2))
+    testScore2 = mean_absolute_error(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f MAE' % (testScore2))
+
+    trainScore3 = r2_score(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f R2' % (trainScore3))
+    testScore3 = r2_score(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f R2' % (testScore3))
+
+    trainScore4 = mean_absolute_percentage_error(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f MAPE' % (trainScore4))
+    testScore4 = mean_absolute_percentage_error(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f MAPE' % (testScore4))
+
+
+    df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
+                       'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
+                       'Train Score: %.2f R2': [trainScore3], 'Train Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Train Score: %.2f MAPE': [testScore4]})
+
+    print(df)
+
+    df.to_excel(writer, sheet_name='sarima_lstm_v2', index=False)
 
     return test_predictions
 
@@ -641,41 +1006,43 @@ def cor_analysis(data):
         plt.ylabel(f'{parameters}')
         plt.title(f'{point}')
         plt.legend()
-
-        if not os.path.exists(f'result/{point}'):
-            os.makedirs(f'result/{point}')
-
         plt.savefig(f'result/{point}/{data.columns[i]}.jpg', bbox_inches='tight', dpi=600)
         # 显示图形
         plt.show()
+
+
+
 
 if __name__  == '__main__':
 
     point = '样点8'
     parameters = 'TSM'
     data = data_preprocess(rf'data/{point}.xlsx')
+    if not os.path.exists(f'result/{point}'):
+        os.makedirs(f'result/{point}')
     writer = pd.ExcelWriter(f'result/{point}/{point}.xlsx')
 
     data_analysis(data[parameters])
-
-    #平稳性检验
     TestStationaryPlot(data[parameters])
     TestStationaryAdfuller(data[parameters])
-    #
+
     train_data_key, train_data_fz, test_data_key, test_data_fz = data_split(data)
-    #
+
+    sarima_grid_search(data)
     holt_winters_predictions = holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz)
     holt_winters_lstm_predictions = holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
     sarima_predictions = sarima(train_data_key, train_data_fz, test_data_key, test_data_fz)
     sarima_lstm_predictions = sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
 
 
-    # cor_analysis(data)
+    cor_analysis(data)
+    sarima_lstm_v1_predictions = sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz)
+    sarima_lstm_v2_predictions = sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz)
 
 
 
-    # print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
-    # compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions)
+    print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
+    compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions)
 
     writer.save()
 
