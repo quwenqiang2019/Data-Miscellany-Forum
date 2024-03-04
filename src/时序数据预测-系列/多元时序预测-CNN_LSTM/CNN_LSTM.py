@@ -14,6 +14,7 @@ from sklearn.model_selection import train_test_split
 warnings.filterwarnings("ignore")
 from numpy.random import seed
 import os
+from numpy import array
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 #加载数据
@@ -145,10 +146,7 @@ item_daily_sales = train.groupby(['item', 'date'], as_index=False)['sales'].sum(
 
 
 
-train = train[(train['date'] >= '2017-01-01')]
-train_gp = train.sort_values('date').groupby(['item', 'store', 'date'], as_index=False)
-train_gp = train_gp.agg({'sales':['mean']})
-train_gp.columns = ['item', 'store', 'date', 'sales']
+
 
 def series_to_supervised(data, window=1, lag=1, dropnan=True):
     cols, names = list(), list()
@@ -170,105 +168,136 @@ def series_to_supervised(data, window=1, lag=1, dropnan=True):
         agg.dropna(inplace=True)
     return agg
 
-window = 29
-lag = lag_size
-series = series_to_supervised(train_gp.drop('date', axis=1), window=window, lag=lag)
-series.head()
+# 对训练集进行子取样，只获取最后一年的数据，缩短训练时间
+train = train[(train['date'] >= '2016-01-01')]
+print(train)
+train_gp = train.groupby(['item', 'store'], as_index=False)
+print(train_gp.head())
+# train_gp = train_gp.agg({'sales':['mean']})
+# print(train_gp.head())
+# train_gp.columns = ['item', 'store', 'date', 'sales']
+# print(train_gp.head())
 
-last_item = 'item(t-%d)' % window
-last_store = 'store(t-%d)' % window
-series = series[(series['store(t)'] == series[last_store])]
-series = series[(series['item(t)'] == series[last_item])]
-
-
-
-columns_to_drop = [('%s(t+%d)' % (col, lag)) for col in ['item', 'store']]
-for i in range(window, 0, -1):
-    columns_to_drop += [('%s(t-%d)' % (col, i)) for col in ['item', 'store']]
-series.drop(columns_to_drop, axis=1, inplace=True)
-series.drop(['item(t)', 'store(t)'], axis=1, inplace=True)
-
-
-
-# Label
-labels_col = 'sales(t+%d)' % lag_size
-labels = series[labels_col]
-series = series.drop(labels_col, axis=1)
-
-X_train, X_valid, Y_train, Y_valid = train_test_split(series, labels.values, test_size=0.4, random_state=0)
-print('Train set shape', X_train.shape)
-print('Validation set shape', X_valid.shape)
-X_train.head()
-
-X_train_series = X_train.values.reshape((X_train.shape[0], X_train.shape[1], 1))
-X_valid_series = X_valid.values.reshape((X_valid.shape[0], X_valid.shape[1], 1))
-print('Train set shape', X_train_series.shape)
-print('Validation set shape', X_valid_series.shape)
-
-
-subsequences = 2
-timesteps = X_train_series.shape[1]//subsequences
-X_train_series_sub = X_train_series.reshape((X_train_series.shape[0], subsequences, timesteps, 1))
-X_valid_series_sub = X_valid_series.reshape((X_valid_series.shape[0], subsequences, timesteps, 1))
-print('Train set shape', X_train_series_sub.shape)
-print('Validation set shape', X_valid_series_sub.shape)
-
-
-
-model_cnn_lstm = Sequential()
-model_cnn_lstm.add(TimeDistributed(Conv1D(filters=64, kernel_size=1, activation='relu'), input_shape=(None, X_train_series_sub.shape[2], X_train_series_sub.shape[3])))
-model_cnn_lstm.add(TimeDistributed(MaxPooling1D(pool_size=2)))
-model_cnn_lstm.add(TimeDistributed(Flatten()))
-model_cnn_lstm.add(LSTM(50, activation='relu'))
-model_cnn_lstm.add(Dense(1))
-optimizer = tf.keras.optimizers.Adam() 
-print("OK")
-
-model_cnn_lstm.compile(loss='mse', optimizer=optimizer)
-
-
-cnn_lstm_history = model_cnn_lstm.fit(X_train_series_sub, Y_train, validation_data=(X_valid_series_sub, Y_valid), epochs=50, verbose=2)
-
-# 设置样式和配色方案
-sns.set_style("whitegrid")
-sns.set_palette("bright")
-
-# 创建一个子图对象
-fig, ax4 = plt.subplots()
-
-# 绘制训练损失和验证损失
-ax4.plot(cnn_lstm_history.history['loss'], label='Train loss')
-ax4.plot(cnn_lstm_history.history['val_loss'], label='Validation loss')
-ax4.legend(loc='best')
-ax4.set_title('CNN-LSTM')
-ax4.set_xlabel('Epochs')
-ax4.set_ylabel('MSE')
-
-# 设置坐标轴标签的字体大小
-ax4.xaxis.label.set_size(12)
-ax4.yaxis.label.set_size(12)
-
-# 设置图例的字体大小
-ax4.legend(loc='best', fontsize='medium')
-
-# 设置标题的字体大小
-ax4.set_title('CNN-LSTM', fontsize=16)
-
-# 增加网格线的透明度
-ax4.grid(alpha=0.5)
-
-# 显示图形
-plt.tight_layout()
-plt.show()
+#
+# window = 29
+# lag = lag_size
+# series = series_to_supervised(train_gp.drop('date', axis=1), window=window, lag=lag)
+# print(series.head())
+#
+# last_item = 'item(t-%d)' % window
+# last_store = 'store(t-%d)' % window
+# print(last_item, last_store)
+# series = series[(series['store(t)'] == series[last_store])]
+# print(series.head())
+# series = series[(series['item(t)'] == series[last_item])]
+# print(series.head())
+#
+#
+# columns_to_drop = [('%s(t+%d)' % (col, lag)) for col in ['item', 'store']]
+# for i in range(window, 0, -1):
+#     columns_to_drop += [('%s(t-%d)' % (col, i)) for col in ['item', 'store']]
+# series.drop(columns_to_drop, axis=1, inplace=True)
+# series.drop(['item(t)', 'store(t)'], axis=1, inplace=True)
+#
+# print(series.head())
+#
+#
+# # Train/Validation Split
+#
+# # label
+# labels_col = 'sales(t+%d)' % lag_size  # sales(t+90)
+# labels = series[labels_col]
+# series = series.drop(labels_col, axis=1)
+#
+# X_train, X_valid, Y_train, Y_valid = train_test_split(series,
+#                                                      labels.values,
+#                                                      test_size=0.4,
+#                                                      random_state=0)
+#
+# print('Train set shape', X_train.shape)
+# print('Validation set shape', X_valid.shape)
+# print(X_train)
+# print(X_valid)
+#
+# def split_sequence(sequence, n_steps_in, n_steps_out):
+#     X, y = list(), list()
+#     for i in range(len(sequence)):
+#         # find the end of this pattern
+#         end_ix = i + n_steps_in
+#         out_end_ix = end_ix + n_steps_out
+#         # check if we are beyond the sequence
+#         if out_end_ix > len(sequence):
+#             break
+#         # gather input and output parts of the pattern
+#         seq_x, seq_y = sequence[i:end_ix], sequence[end_ix:out_end_ix]
+#         X.append(seq_x)
+#         y.append(seq_y)
+#     return array(X), array(y)
+#
+#
+# n_steps_in, n_steps_out = 3, 2
+# n_features = 1
+# X_train_series = X_train.values.reshape((X_train.shape[0], X_train.shape[1], 1))
+# X_valid_series = X_valid.values.reshape((X_valid.shape[0], X_valid.shape[1], 1))
+# print(X_train_series)
+# print(X_valid_series)
 
 
-
-cnn_lstm_train_pred = model_cnn_lstm.predict(X_train_series_sub)
-cnn_lstm_valid_pred = model_cnn_lstm.predict(X_valid_series_sub)
-print('Train rmse:', np.sqrt(mean_squared_error(Y_train, cnn_lstm_train_pred)))
-print('Validation rmse:', np.sqrt(mean_squared_error(Y_valid, cnn_lstm_valid_pred)))
-
-
-
-
+#
+# model_cnn_lstm = Sequential()
+# model_cnn_lstm.add(TimeDistributed(Conv1D(filters=64, kernel_size=1, activation='relu'), input_shape=(None, X_train_series_sub.shape[2], X_train_series_sub.shape[3])))
+# model_cnn_lstm.add(TimeDistributed(MaxPooling1D(pool_size=2)))
+# model_cnn_lstm.add(TimeDistributed(Flatten()))
+# model_cnn_lstm.add(LSTM(50, activation='relu'))
+# model_cnn_lstm.add(Dense(1))
+# optimizer = tf.keras.optimizers.Adam()
+# print("OK")
+#
+# model_cnn_lstm.compile(loss='mse', optimizer=optimizer)
+#
+#
+# cnn_lstm_history = model_cnn_lstm.fit(X_train_series_sub, Y_train, validation_data=(X_valid_series_sub, Y_valid), epochs=50, verbose=2)
+#
+# # 设置样式和配色方案
+# sns.set_style("whitegrid")
+# sns.set_palette("bright")
+#
+# # 创建一个子图对象
+# fig, ax4 = plt.subplots()
+#
+# # 绘制训练损失和验证损失
+# ax4.plot(cnn_lstm_history.history['loss'], label='Train loss')
+# ax4.plot(cnn_lstm_history.history['val_loss'], label='Validation loss')
+# ax4.legend(loc='best')
+# ax4.set_title('CNN-LSTM')
+# ax4.set_xlabel('Epochs')
+# ax4.set_ylabel('MSE')
+#
+# # 设置坐标轴标签的字体大小
+# ax4.xaxis.label.set_size(12)
+# ax4.yaxis.label.set_size(12)
+#
+# # 设置图例的字体大小
+# ax4.legend(loc='best', fontsize='medium')
+#
+# # 设置标题的字体大小
+# ax4.set_title('CNN-LSTM', fontsize=16)
+#
+# # 增加网格线的透明度
+# ax4.grid(alpha=0.5)
+#
+# # 显示图形
+# plt.tight_layout()
+# plt.show()
+#
+#
+#
+# cnn_lstm_train_pred = model_cnn_lstm.predict(X_train_series_sub)
+# cnn_lstm_valid_pred = model_cnn_lstm.predict(X_valid_series_sub)
+# print('Train rmse:', np.sqrt(mean_squared_error(Y_train, cnn_lstm_train_pred)))
+# print('Validation rmse:', np.sqrt(mean_squared_error(Y_valid, cnn_lstm_valid_pred)))
+#
+#
+#
+#
 

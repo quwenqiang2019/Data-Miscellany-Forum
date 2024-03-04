@@ -1,9 +1,8 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
@@ -29,7 +28,6 @@ features = df.columns.drop(target)
 print(data["target"].value_counts()) # 顺便查看一下样本是否平衡
 
 # 划分训练集和测试集
-# df = shuffle(df)
 X_train, X_test, y_train, y_test = train_test_split(df[features], df[[target]], test_size=0.2, random_state=0)
 
 
@@ -41,42 +39,15 @@ y_train_m = mm2.fit_transform(y_train)
 
 
 # 模型的构建与训练
-training_accuracy = []
-test_accuracy = []
-# try n_neighbors from 1 to 10
-neighbors_settings = range(1, 11)
-for n_neighbors in neighbors_settings:
-    knn = KNeighborsClassifier(n_neighbors=n_neighbors)  # build the models
-    knn.fit(X_train_m, y_train_m)  # use x_train as train data and y_train as target value
-    training_accuracy.append(knn.score(X_train_m, y_train_m))  # record training set accuracy
-
-    # 对测试集特征进行相同规则mm1的归一化处理，然后输入到模型进行预测
-    X_test_m = mm1.transform(X_test)  # 注意fit_transform() 和 transform()的区别
-    y_test_m = mm2.transform(y_test)
-
-    test_accuracy.append(knn.score(X_test_m, y_test_m))  # record test set accuracy
-
-'''
-The relationship between the training set and the test set on the model prediction
-accuracy (Y-axis) and the number of nearest neighbors (X-axis) is demonstrated
-'''
-plt.figure()
-plt.plot(neighbors_settings, training_accuracy, label="training accuracy")
-plt.plot(neighbors_settings, test_accuracy, label="test accuracy")
-plt.ylabel("Accuracy")
-plt.xlabel("n_neighbors")
-plt.legend()
-
-model = KNeighborsClassifier(n_neighbors=5)
+model = MLPClassifier()
 model.fit(X_train_m, y_train_m)
 
 # 模型推理与评价
 # 对测试集特征进行相同规则mm1的归一化处理，然后输入到模型进行预测
 X_test_m = mm1.transform(X_test) #注意fit_transform() 和 transform()的区别
-y_pred_m = model.predict(X_test_m)
+y_pred_m = model.predict(X_test_m) #利用输入特征input1和input2测试模型
 y_scores = model.predict_proba(X_test_m)
 y_pred = mm2.inverse_transform(np.reshape(y_pred_m, (-1, 1)))
-
 
 acc = accuracy_score(y_test, y_pred) # 准确率acc
 cm = confusion_matrix(y_test, y_pred) # 混淆矩阵

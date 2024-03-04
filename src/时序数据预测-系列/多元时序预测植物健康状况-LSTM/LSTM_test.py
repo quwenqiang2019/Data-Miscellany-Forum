@@ -7,8 +7,8 @@ from sklearn.preprocessing import MinMaxScaler
 
 dataset = read_csv('sate.csv', header=0, index_col=0)
 df = pd.DataFrame(dataset)
-print(dataset.head())
-print(dataset.shape)
+# print(dataset.head())
+# print(dataset.shape)
 
 
 # 拆分数据集为训练集和测试集
@@ -53,9 +53,35 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
         agg=agg.fillna(0)
     return agg
 
+def series_to_supervised_1(data, window=1, lag=1, dropnan=True):
+    cols, names = list(), list()
+    # Input sequence (t-n, ... t-1)
+    for i in range(window, 0, -1):
+        cols.append(data.shift(i))
+        names += [('%s(t-%d)' % (col, i)) for col in data.columns]
+    # Current timestep (t=0)
+    cols.append(data)
+    names += [('%s(t)' % (col)) for col in data.columns]
+    # Target timestep (t=lag)
+    cols.append(data.shift(-lag))
+    names += [('%s(t+%d)' % (col, lag)) for col in data.columns]
+    # Put it all together
+    agg = pd.concat(cols, axis=1)
+    agg.columns = names
+    # Drop rows with NaN values
+    if dropnan:
+        agg.dropna(inplace=True)
+    return agg
 
 
-train = series_to_supervised(df_for_training, 2, 2)
+#显示所有列
+pd.set_option('display.max_columns', None)
+#显示所有行
+pd.set_option('display.max_rows', None)
+train = series_to_supervised(df_for_training, 3, 3)
+print(train.shape)
+print(train.head())
+train = series_to_supervised_1(df_for_training, 3, 3)
 # train_X, train_y = train[:, :-1], train[:, -1]
 print(train.shape)
 print(train.head())
