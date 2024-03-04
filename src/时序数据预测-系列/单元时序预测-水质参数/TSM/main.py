@@ -112,11 +112,12 @@ class ACO:
         print("---- End of (successful) Searching ----")
 
         plt.figure()
-        plt.title("Figure1")
+        plt.title(f"{point}")
         plt.xlabel("iterators", size=14)
         plt.ylabel("fitness", size=14)
         t = [t for t in range(1, self.NGEN + 1)]
         plt.plot(t, popobj, color='b', linewidth=2)
+        plt.savefig(f'result/{point}/aco.jpg', bbox_inches='tight', dpi=600)
         plt.show()
 
 #=======================================异常值处理========================
@@ -432,8 +433,8 @@ def holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz
     print("最终训练集的预测值:", train_predictions)
     # 绘制训练集预测结果的折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(train_predictions, label='预测值')
     plt.plot(train_data_key[1:], label='真实值')
+    plt.plot(train_predictions, label='预测值')
     plt.xlabel('年/月')
     plt.ylabel(f'{parameters}')
     plt.title(f'holt winters + lstm: {point}训练集')
@@ -459,8 +460,8 @@ def holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz
     print("最终测试集的预测值:", test_predictions)
     # 绘制测试集预测结果的折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(test_predictions, label='预测值')
     plt.plot(test_data_key[1:], label='真实值')
+    plt.plot(test_predictions, label='预测值')
     plt.xlabel('年/月')
     plt.ylabel(f'{parameters}')
     plt.title(f'holt winters + lstm: {point}测试集')
@@ -607,8 +608,8 @@ def sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     # 绘制训练集预测结果的折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(train_predictions, label='预测值')
     plt.plot(train_data_key[1:], label='真实值')
+    plt.plot(train_predictions, label='预测值')
     plt.xlabel('年/月')
     plt.ylabel(f'{parameters}')
     plt.title(f'sarima + lstm: {point}训练集')
@@ -640,8 +641,8 @@ def sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     # 绘制测试集预测结果的折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(test_predictions, label='预测值')
     plt.plot(test_data_key[1:], label='真实值')
+    plt.plot(test_predictions, label='预测值')
     plt.xlabel('年/月')
     plt.ylabel(f'{parameters}')
     plt.title(f'sarima + lstm: {point}测试集')
@@ -697,10 +698,19 @@ def sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz):
     # # 归一化残差序列和辅助数据
     mm1 = MinMaxScaler()
     scaled_train_residuals = mm1.fit_transform(np.array(train_residuals).reshape(-1, 1))
+    print(scaled_train_residuals)
     mm2 = MinMaxScaler()
+
+    print(train_data_fz)
+    print(train_data_fz.shape)
     scaled_train_data_fz = mm2.fit_transform(train_data_fz.values)
+    print(scaled_train_data_fz)
+    print(scaled_train_data_fz.shape)
+
+
     scaled_train_residuals_fz = np.concatenate((scaled_train_residuals, scaled_train_data_fz), axis=1)
     print(scaled_train_residuals_fz, scaled_train_residuals_fz.shape)
+
 
     # LSTM模型训练和预测
     look_back = 1
@@ -720,8 +730,8 @@ def sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz):
     print("最终训练集的预测值:", train_predictions)
     # 绘制训练集预测结果的折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(train_predictions, label='预测值')
     plt.plot(train_data_key[1:], label='真实值')
+    plt.plot(train_predictions, label='预测值')
     plt.xlabel('年/月')
     plt.ylabel(f'{parameters}')
     plt.title(f'sarima + lstm(协变量): {point}训练集')
@@ -757,8 +767,8 @@ def sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     # 绘制测试集预测结果的折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(test_predictions, label='预测值')
     plt.plot(test_data_key[1:], label='真实值')
+    plt.plot(test_predictions, label='预测值')
     plt.xlabel('年/月')
     plt.ylabel(f'{parameters}')
     plt.title(f'sarima + lstm(协变量): {point}测试集')
@@ -869,8 +879,8 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     #
     # 绘制训练集预测结果的折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(train_predictions, label='预测值')
     plt.plot(train_data_key[1:], label='真实值')
+    plt.plot(train_predictions, label='预测值')
     plt.xlabel('年/月')
     plt.ylabel(f'{parameters}')
     plt.title(f'sarima + lstm(优化): {point}训练集')
@@ -906,8 +916,8 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     # 绘制测试集预测结果的折线图
     plt.figure(figsize=(10, 6))
-    plt.plot(test_predictions, label='预测值')
     plt.plot(test_data_key[1:], label='真实值')
+    plt.plot(test_predictions, label='预测值')
     plt.xlabel('年/月')
     plt.ylabel(f'{parameters}')
     plt.title(f'sarima + lstm(优化): {point}测试集')
@@ -953,7 +963,7 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
 def compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions):
     # 创建一个新的图形
-    plt.figure(figsize=(18, 6))
+    plt.figure(figsize=(12, 6))
 
     # 绘制折线图
     plt.plot(test_data_key.index, test_data_key, label='Actual', marker='+')
@@ -970,7 +980,7 @@ def compare_test_prediction(test_data_key, holt_winters_predictions, sarima_pred
     # 添加图例
     plt.legend()
 
-    # 显示图形
+    plt.savefig(f'result/{point}/compare_test_prediction.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
 
 def cor_analysis(data):
@@ -1015,36 +1025,39 @@ def cor_analysis(data):
 
 if __name__  == '__main__':
 
-    point = '样点8'
-    parameters = 'TSM'
-    data = data_preprocess(rf'data/{point}.xlsx')
-    if not os.path.exists(f'result/{point}'):
-        os.makedirs(f'result/{point}')
-    writer = pd.ExcelWriter(f'result/{point}/{point}.xlsx')
+    for i in range(14, 21):
 
-    data_analysis(data[parameters])
-    TestStationaryPlot(data[parameters])
-    TestStationaryAdfuller(data[parameters])
+        point = f'样点{i}'
+        parameters = 'TSM'
+        data = data_preprocess(rf'data/{point}.xlsx')
+        if not os.path.exists(f'result/{point}'):
+            os.makedirs(f'result/{point}')
+        writer = pd.ExcelWriter(f'result/{point}/{point}.xlsx')
 
-    train_data_key, train_data_fz, test_data_key, test_data_fz = data_split(data)
+        data_analysis(data[parameters])
+        TestStationaryPlot(data[parameters])
+        TestStationaryAdfuller(data[parameters])
 
-    sarima_grid_search(data)
-    holt_winters_predictions = holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz)
-    holt_winters_lstm_predictions = holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
-    sarima_predictions = sarima(train_data_key, train_data_fz, test_data_key, test_data_fz)
-    sarima_lstm_predictions = sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        train_data_key, train_data_fz, test_data_key, test_data_fz = data_split(data)
 
-
-    cor_analysis(data)
-    sarima_lstm_v1_predictions = sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz)
-    sarima_lstm_v2_predictions = sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        sarima_grid_search(data)
+        holt_winters_predictions = holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        holt_winters_lstm_predictions = holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        sarima_predictions = sarima(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        sarima_lstm_predictions = sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
 
 
+        cor_analysis(data)
+        print('开始建模：')
+        sarima_lstm_v1_predictions = sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        sarima_lstm_v2_predictions = sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz)
 
-    print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
-    compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions)
 
-    writer.save()
+
+        print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
+        compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions)
+
+        writer.save()
 
 
 
