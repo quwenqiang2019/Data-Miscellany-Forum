@@ -1025,7 +1025,7 @@ def cor_analysis(data):
 
 if __name__  == '__main__':
 
-    for i in range(14, 21):
+    for i in range(1, 21):
 
         point = f'样点{i}'
         parameters = 'TSM'
