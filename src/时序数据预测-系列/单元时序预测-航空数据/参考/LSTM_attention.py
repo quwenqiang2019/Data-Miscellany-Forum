@@ -13,7 +13,7 @@ from sklearn.metrics import mean_squared_error
 #matplotlib inline
 
 # load the dataset
-dataframe = read_csv('international-airline-passengers.csv', usecols=[1], engine='python')
+dataframe = read_csv('data.csv', usecols=[1], engine='python')
 # print(dataframe)
 print("数据集的长度：",len(dataframe))
 dataset = dataframe.values
