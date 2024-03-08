@@ -22,19 +22,23 @@ feature = ["Sensitivity","Specificity","Accuracy","AUC"]
 angles=np.linspace(0, 2*np.pi,len(feature), endpoint=False)
 angles=np.concatenate((angles,[angles[0]]))
 feature = np.concatenate((feature, [feature[0]]))
+
 # 绘图
 fig=plt.figure(figsize=(8,8))
 # 设置为极坐标格式
 ax = fig.add_subplot(111, polar=True)
+
 for values in [values1, values2,values3]:
 # 拼接数据首尾，使图形中线条封闭
     values=np.concatenate((values,[values[0]]))
     # 绘制折线图
     ax.plot(angles, values, 'o-', linewidth=2)
+
 for values in [values1, values2,values3]:
     values=np.concatenate((values,[values[0]]))
     # 填充颜色
     ax.fill(angles, values, alpha=0.25)
+
 # 设置图标上的角度划分刻度，为每个数据点处添加标签
 ax.set_thetagrids(angles * 180/np.pi, feature,fontsize=14,style='italic')
 # 设置雷达图的范围
