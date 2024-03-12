@@ -14,7 +14,7 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import ConfusionMatrixDisplay
 
 
-def calibration_plot(true, pred, n):
+def calibration_plot(true, pred, n, type):
     """
     参数说明：
     true: 实际标签值
@@ -24,10 +24,18 @@ def calibration_plot(true, pred, n):
         然后绘图，可以选择是否带误差棒
     """
     df_cal = pd.DataFrame({'y_true': true, 'y_pred': pred})  # 现将实际值和预测值拼接成一个dataframe
+    print(df_cal)
     df_cal = df_cal.sort_values(by='y_pred')  ## 根据预测概率值进行排序
     df_cal['group'], cut_bin = pd.qcut(df_cal['y_pred'], q=n, retbins=True, labels=list(range(1, n + 1)))  ## 将数据进行分箱
     output_list = list()
+    print(df_cal)
+    # print(df_cal.loc[df_cal['group'] == i, 'y_true'])
     for i in range(1, n + 1):
+        print(i)
+        temp = df_cal.loc[df_cal['group'] == i, 'y_true']
+        print(temp)
+        print(temp.value_counts(1))
+        print(temp.value_counts(1)[0])
         true_pos_rate = 1 - df_cal.loc[df_cal['group'] == i, 'y_true'].value_counts(1)[0]
         y_pred_mean = df_cal.loc[df_cal['group'] == i, 'y_pred'].mean()
         y_pred_sd = df_cal.loc[df_cal['group'] == i, 'y_pred'].std()
@@ -59,8 +67,11 @@ def calibration_plot(true, pred, n):
     # plt.legend(handles=[line],labels=['HL P-value: > 0.05'], loc='best')
     plt.legend(handles=[line], labels=['Calibration slope: {}'.format(calibration_slop)], loc='best')  # 'lower right'
     plt.grid(axis="y")  # 设置横向网格线
-    plt.savefig(os.path.join(base_dir, 'result', 'calibration.jpg'), bbox_inches='tight', dpi=600)
+    plt.savefig(os.path.join(base_dir, 'result', f'calibration{type}.jpg'), bbox_inches='tight', dpi=600)
     plt.show()
+
+
+
 
 
 def feature_importance(model):
@@ -85,7 +96,7 @@ def feature_importance(model):
     plt.show()
 
 
-def model_evalution(model, X_test, y_test):
+def model_evalution_test(model, X_test, y_test):
     # 模型推理与评价
     y_pred = model.predict(X_test)
     y_scores = model.predict_proba(X_test)
@@ -111,7 +122,38 @@ def model_evalution(model, X_test, y_test):
     plt.show()
 
 
-    calibration_plot(y_test, y_scores[:, 1], 8)
+    calibration_plot(y_test, y_scores[:, 1], 4, 'test')
+
+
+def model_evalution_train(model, X_train, y_train):
+    # 模型推理与评价
+    y_pred = model.predict(X_train)
+    y_scores = model.predict_proba(X_train)
+    acc = accuracy_score(y_train, y_pred) # 准确率acc
+    cm = confusion_matrix(y_train, y_pred) # 混淆矩阵
+    cm_display = ConfusionMatrixDisplay(cm).plot()
+    plt.savefig(os.path.join(base_dir, 'result', 'ConfusionMatrix.jpg'), bbox_inches='tight', dpi=600)
+
+    cr = classification_report(y_train, y_pred) # 分类报告
+    print('测试集分类报告\n', cr)
+    fpr, tpr, thresholds = roc_curve(y_train, y_scores[:, 1], pos_label=1) # 计算ROC曲线和AUC值,绘制ROC曲线
+    roc_auc = auc(fpr, tpr)
+    plt.figure()
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic')
+    plt.legend(loc="lower right")
+    plt.savefig(os.path.join(base_dir, 'result', 'roc_train.jpg'), bbox_inches='tight', dpi=600)
+    plt.show()
+
+
+    calibration_plot(y_train, y_scores[:, 1], 2, 'train')
+
+
 
 
 if __name__ == "__main__":
@@ -136,8 +178,8 @@ if __name__ == "__main__":
     # 训练结果
     print("训练集准确率:", model.score(X_train, y_train))
     print("测试集准确率:", model.score(X_test, y_test))
-    # model_evalution(model, X_train, y_train)
-    model_evalution(model, X_test, y_test)
+    model_evalution_train(model, X_train, y_train)
+    model_evalution_test(model, X_test, y_test)
 
     # 特征重要性
     feature_importance(model)
