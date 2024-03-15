@@ -22,7 +22,7 @@ from sklearn.metrics import mean_squared_error
 from keras.layers import Dropout
 from keras.layers import Activation
 from keras.callbacks import EarlyStopping
-
+from keras.layers import Bidirectional
 
 class ACO:
     def __init__(self, parameters):
@@ -851,15 +851,10 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     batch_size = int(aco.g_best[3])
 
     lstm_model = Sequential()
-    lstm_model.add(LSTM(
-        input_shape=(look_back, 5),
-        units=neurons1,
-        return_sequences=True))
+    lstm_model.add(Bidirectional(LSTM(input_shape=(look_back, 5), units=neurons1, return_sequences=True)))
     lstm_model.add(Dropout(dropout))
 
-    lstm_model.add(LSTM(
-        units=neurons2,
-        return_sequences=False))
+    lstm_model.add(Bidirectional(LSTM(units=neurons2, return_sequences=False)))
     lstm_model.add(Dropout(dropout))
 
     lstm_model.add(Dense(units=1))
@@ -1041,21 +1036,21 @@ if __name__  == '__main__':
         train_data_key, train_data_fz, test_data_key, test_data_fz = data_split(data)
 
         sarima_grid_search(data)
-        holt_winters_predictions = holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz)
-        holt_winters_lstm_predictions = holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
-        sarima_predictions = sarima(train_data_key, train_data_fz, test_data_key, test_data_fz)
-        sarima_lstm_predictions = sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        # holt_winters_predictions = holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        # holt_winters_lstm_predictions = holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        # sarima_predictions = sarima(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        # sarima_lstm_predictions = sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
 
 
-        cor_analysis(data)
+        # cor_analysis(data)
         print('开始建模：')
-        sarima_lstm_v1_predictions = sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        # sarima_lstm_v1_predictions = sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz)
         sarima_lstm_v2_predictions = sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz)
 
 
 
-        print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
-        compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions)
+        # print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
+        # compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions)
 
         writer.save()
 
