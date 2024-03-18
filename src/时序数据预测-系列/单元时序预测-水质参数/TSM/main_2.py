@@ -878,7 +878,7 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     plt.plot(train_predictions, label='预测值')
     plt.xlabel('年/月')
     plt.ylabel(f'{parameters}')
-    plt.title(f'sarima + lstm(优化): {point}训练集')
+    plt.title(f'sarima + 双向lstm(优化): {point}训练集')
     plt.legend()
     plt.savefig(f'result/{point}/sarima_lstm_v2_taian.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
@@ -915,7 +915,7 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     plt.plot(test_predictions, label='预测值')
     plt.xlabel('年/月')
     plt.ylabel(f'{parameters}')
-    plt.title(f'sarima + lstm(优化): {point}测试集')
+    plt.title(f'sarima + 双向lstm(优化): {point}测试集')
     plt.legend()
     plt.savefig(f'result/{point}/sarima_lstm_v2_test.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
@@ -1036,21 +1036,21 @@ if __name__  == '__main__':
         train_data_key, train_data_fz, test_data_key, test_data_fz = data_split(data)
 
         sarima_grid_search(data)
-        # holt_winters_predictions = holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz)
-        # holt_winters_lstm_predictions = holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
-        # sarima_predictions = sarima(train_data_key, train_data_fz, test_data_key, test_data_fz)
-        # sarima_lstm_predictions = sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        holt_winters_predictions = holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        holt_winters_lstm_predictions = holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        sarima_predictions = sarima(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        sarima_lstm_predictions = sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
 
 
-        # cor_analysis(data)
+        cor_analysis(data)
         print('开始建模：')
-        # sarima_lstm_v1_predictions = sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        sarima_lstm_v1_predictions = sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz)
         sarima_lstm_v2_predictions = sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz)
 
 
 
-        # print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
-        # compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions)
+        print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
+        compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions)
 
         writer.save()
 

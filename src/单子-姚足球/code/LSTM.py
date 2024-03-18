@@ -19,8 +19,14 @@ base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__name__)))
 df = pd.read_csv(os.path.join(base_dir, 'data', "螺纹钢加权.csv"), encoding = 'gb2312')
 
 df = pd.DataFrame(df)
-df = df.iloc[:, 1:9]
-df.set_index('时间', inplace = True)
+df = df.iloc[:, 0:9]
+# 合并日期和时间列为一个DateTime列
+df['DateTime'] = pd.to_datetime(df['日期'] + ' ' + df['时间'])
+# 删除日期和时间两列
+df.drop(['日期', '时间'], axis=1, inplace=True)
+df.set_index('DateTime', inplace = True)
+print(df.head())
+df.insert(6, '收盘', df.pop('收盘'))
 print(df.shape)
 print(df.head())
 
@@ -28,19 +34,22 @@ print(df.head())
 test_split=round(len(df)*0.20)
 df_for_training=df[:-test_split]
 df_for_testing=df[-test_split:]
+
+
 # 绘制训练集和测试集的折线图
 sns.set_style('darkgrid')
-font1 = {'family': ['SimSun'], 'weight': 'normal', 'size': 14}
+font1 = {'family': ['Times New Roman','SimSun'], 'weight': 'normal', 'size': 14}
 plt.rc('font', **font1)
 plt.rcParams["axes.unicode_minus"] = False
 plt.figure(figsize=(10, 6))
-plt.plot(df_for_training, label='Training Data')
-plt.plot(df_for_testing, label='Testing Data')
-plt.xlabel('Day')
-plt.ylabel('Open value')
-plt.title('Training and Testing Data')
+plt.plot(df_for_training['收盘'], label='Training Data')
+plt.plot(df_for_testing['收盘'], label='Testing Data')
+plt.xlabel('时间')
+plt.xticks(rotation=45)
+plt.ylabel('收盘价')
+plt.title('训练集和测试集')
 plt.legend()
-plt.savefig(os.path.join(base_dir, 'result', 'Train_and_Test.jpg'), bbox_inches='tight')
+plt.savefig(os.path.join(base_dir, 'result', 'Train_and_Test.jpg'), bbox_inches='tight', dpi = 600)
 plt.show()
 
 scaler = MinMaxScaler(feature_range=(0,1))
@@ -113,13 +122,14 @@ print("Pred Values-- ", pred)
 print("\nOriginal Values-- ", original)
 
 
-plt.plot(original, color = 'red', label = '真实值')
-plt.plot(pred, color = 'blue', label = '预测值')
+plt.plot(df_for_testing.index[window_size:,], original, color = 'red', label = '真实值')
+plt.plot(df_for_testing.index[window_size:,], pred, color = 'blue', label = '预测值')
 plt.title('收盘价预测')
-plt.xlabel('Time')
+plt.xlabel('时间')
+plt.xticks(rotation=45)
 plt.ylabel('收盘价')
 plt.legend()
-plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred.jpg'), bbox_inches='tight')
+plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred.jpg'), bbox_inches='tight', dpi = 600)
 plt.show()
 
 # 计算误差
