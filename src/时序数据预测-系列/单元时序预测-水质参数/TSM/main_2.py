@@ -22,7 +22,7 @@ from sklearn.metrics import mean_squared_error
 from keras.layers import Dropout
 from keras.layers import Activation
 from keras.callbacks import EarlyStopping
-
+from keras.layers import Bidirectional
 
 class ACO:
     def __init__(self, parameters):
@@ -851,15 +851,10 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     batch_size = int(aco.g_best[3])
 
     lstm_model = Sequential()
-    lstm_model.add(LSTM(
-        input_shape=(look_back, 5),
-        units=neurons1,
-        return_sequences=True))
+    lstm_model.add(Bidirectional(LSTM(input_shape=(look_back, 5), units=neurons1, return_sequences=True)))
     lstm_model.add(Dropout(dropout))
 
-    lstm_model.add(LSTM(
-        units=neurons2,
-        return_sequences=False))
+    lstm_model.add(Bidirectional(LSTM(units=neurons2, return_sequences=False)))
     lstm_model.add(Dropout(dropout))
 
     lstm_model.add(Dense(units=1))
@@ -883,7 +878,7 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     plt.plot(train_predictions, label='预测值')
     plt.xlabel('年/月')
     plt.ylabel(f'{parameters}')
-    plt.title(f'sarima + lstm(优化): {point}训练集')
+    plt.title(f'sarima + 双向lstm(优化): {point}训练集')
     plt.legend()
     plt.savefig(f'result/{point}/sarima_lstm_v2_taian.jpg', bbox_inches='tight', dpi = 600)
     plt.show()
@@ -920,7 +915,7 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     plt.plot(test_predictions, label='预测值')
     plt.xlabel('年/月')
     plt.ylabel(f'{parameters}')
-    plt.title(f'sarima + lstm(优化): {point}测试集')
+    plt.title(f'sarima + 双向lstm(优化): {point}测试集')
     plt.legend()
     plt.savefig(f'result/{point}/sarima_lstm_v2_test.jpg', bbox_inches='tight', dpi = 600)
     plt.show()

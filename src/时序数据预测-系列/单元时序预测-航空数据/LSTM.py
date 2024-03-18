@@ -41,7 +41,7 @@ def create_sliding_windows(data, window_size):
     return np.array(X), np.array(Y)
 
 # 定义滑动窗口大小
-window_size = 2
+window_size = 12
 
 # 创建滑动窗口数据集
 X_train, Y_train = create_sliding_windows(train_data_scaler, window_size)
@@ -52,16 +52,16 @@ X_train = np.reshape(X_train, (X_train.shape[0], window_size, 1))
 X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
 
 
-# 构建 多层LSTM 模型
+# 构建 LSTM 模型
 model = Sequential()
-model.add(LSTM(4, input_shape=(window_size, 1), return_sequences=True))
-model.add(LSTM(4))
+model.add(LSTM(50, activation='relu', input_shape=(window_size, 1)))
 model.add(Dense(1))
-model.compile(loss='mean_squared_error', optimizer='adam')
-# 训练 多层LSTM 模型
+model.compile(optimizer='adam', loss='mse')
+
+# 训练 LSTM 模型
 model.fit(X_train, Y_train, epochs=100, batch_size=32)
 
-# 使用 多层LSTM 模型进行预测
+# 使用 LSTM 模型进行预测
 train_predictions = model.predict(X_train)
 test_predictions = model.predict(X_test)
 

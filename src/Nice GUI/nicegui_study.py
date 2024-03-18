@@ -88,7 +88,7 @@ def updateUIText():
     pass
 
 
-if __name__ == "__main__":
+if __name__ in {"__main__", "__mp_main__"}:
     build_ui()
-    ui.run(host="127.0.0.1", port=8080,
+    ui.run(host="127.0.0.1", port=8081,
     title='Upstream-Observer GUI', favicon='🍜', language='zh-CN')
