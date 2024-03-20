@@ -38,7 +38,7 @@ df_for_testing=df[-test_split:]
 
 # 绘制训练集和测试集的折线图
 sns.set_style('darkgrid')
-font1 = {'family': ['Times New Roman','SimSun'], 'weight': 'normal', 'size': 14}
+font1 = {'family': ['SimSun'], 'weight': 'normal', 'size': 14}
 plt.rc('font', **font1)
 plt.rcParams["axes.unicode_minus"] = False
 plt.figure(figsize=(10, 6))
@@ -133,7 +133,6 @@ plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred.jpg'), bbox_inches='tigh
 plt.show()
 
 # 计算误差
-writer = pd.ExcelWriter(os.path.join(base_dir, 'result', '测试集评价指标.xlsx'))
 testScore1 = math.sqrt(mean_squared_error(original, pred))
 print('Test Score: %.2f RMSE' % (testScore1))
 
@@ -151,5 +150,4 @@ df = pd.DataFrame({'Test Score: %.2f RMSE': [testScore1],
                    'Train Score: %.2f R2': [testScore3],
                    'Train Score: %.2f MAPE': [testScore4]})
 
-df.to_excel(writer, sheet_name='lstm', index=False)
-writer.save()
+df.to_excel(os.path.join(base_dir, 'result', 'lstm.xlsx'), index=False)

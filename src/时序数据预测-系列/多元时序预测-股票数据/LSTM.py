@@ -6,11 +6,12 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 import seaborn as sns
+from keras.wrappers.scikit_learn import KerasRegressor
+from sklearn.model_selection import GridSearchCV
 
 df=pd.read_csv("data.csv", parse_dates=["Date"], index_col=[0])
 print(df.shape)
 print(df.head())
-
 
 test_split=round(len(df)*0.20)
 df_for_training=df[:-test_split]
@@ -52,8 +53,7 @@ print("trainY Shape-- ",trainY.shape)
 print("testX Shape-- ",testX.shape)
 print("testY Shape-- ",testY.shape)
 
-from keras.wrappers.scikit_learn import KerasRegressor
-from sklearn.model_selection import GridSearchCV
+
 def build_model(optimizer):
     grid_model = Sequential()
     grid_model.add(LSTM(50,return_sequences=True,input_shape=(30,5)))
@@ -77,21 +77,18 @@ print(grid_search.best_params_)
 my_model=grid_search.best_estimator_.model
 
 
-
-
 prediction=my_model.predict(testX)
 print("prediction\n", prediction)
 print("\nPrediction Shape-",prediction.shape)
 
 prediction_copies_array = np.repeat(prediction, 5, axis=-1)
-print(prediction_copies_array.shape)
 pred=scaler.inverse_transform(np.reshape(prediction_copies_array,(len(prediction),5)))[:,0]
+
 original_copies_array = np.repeat(testY, 5, axis=-1)
-print(original_copies_array.shape)
 original=scaler.inverse_transform(np.reshape(original_copies_array,(len(testY),5)))[:,0]
 print("Pred Values-- ", pred)
 print("\nOriginal Values-- ", original)
-import matplotlib.pyplot as plt
+
 plt.plot(original, color = 'red', label = 'Real  Stock Price')
 plt.plot(pred, color = 'blue', label = 'Predicted  Stock Price')
 plt.title(' Stock Price Prediction')
