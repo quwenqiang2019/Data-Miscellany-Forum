@@ -16,17 +16,18 @@ from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
 
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__name__)))
-df = pd.read_csv(os.path.join(base_dir, 'data', "螺纹钢加权.csv"), encoding = 'gb2312')
+df = pd.read_csv(os.path.join(base_dir, 'data', "螺纹.csv"), encoding = 'gb2312')
 
 df = pd.DataFrame(df)
-df = df.iloc[:, 0:9]
+df = df.iloc[:, 0:9].join(df.iloc[:, 10])
 # 合并日期和时间列为一个DateTime列
 df['DateTime'] = pd.to_datetime(df['日期'] + ' ' + df['时间'])
 # 删除日期和时间两列
 df.drop(['日期', '时间'], axis=1, inplace=True)
 df.set_index('DateTime', inplace = True)
-print(df.head())
-df.insert(0, '收盘', df.pop('收盘'))
+df.insert(0, '前5根K线收益率', df.pop('前5根K线收益率'))
+df = df.dropna()
+df['前5根K线收益率'] = df['前5根K线收益率'].str.rstrip('%').astype(float)/100
 print(df.shape)
 print(df.head())
 
@@ -42,14 +43,14 @@ font1 = {'family': ['Times New Roman','SimSun'], 'weight': 'normal', 'size': 14}
 plt.rc('font', **font1)
 plt.rcParams["axes.unicode_minus"] = False
 plt.figure(figsize=(10, 6))
-plt.plot(df_for_training['收盘'], label='Training Data')
-plt.plot(df_for_testing['收盘'], label='Testing Data')
+plt.plot(df_for_training['前5根K线收益率'], label='Training Data')
+plt.plot(df_for_testing['前5根K线收益率'], label='Testing Data')
 plt.xlabel('时间')
 plt.xticks(rotation=45)
-plt.ylabel('收盘价')
+plt.ylabel('前5根K线收益率')
 plt.title('训练集和测试集')
 plt.legend()
-plt.savefig(os.path.join(base_dir, 'result', 'Train_and_Test.jpg'), bbox_inches='tight', dpi = 600)
+plt.savefig(os.path.join(base_dir, 'result', 'Train_and_Test_v2.jpg'), bbox_inches='tight', dpi = 600)
 plt.show()
 
 scaler = MinMaxScaler(feature_range=(0,1))
@@ -65,15 +66,15 @@ def createXY(dataset,n_past):
             dataY.append(dataset[i,0])
     return np.array(dataX),np.array(dataY)
 
-window_size = 30
+window_size = 5
 trainX,trainY=createXY(df_for_training_scaled,window_size)
 testX,testY=createXY(df_for_testing_scaled,window_size)
 print(trainY[0])
 print(trainY[0])
 
 # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
-trainX = np.reshape(trainX, (trainX.shape[0], window_size, 7))
-testX = np.reshape(testX, (testX.shape[0], window_size, 7))
+trainX = np.reshape(trainX, (trainX.shape[0], window_size, 8))
+testX = np.reshape(testX, (testX.shape[0], window_size, 8))
 
 print("trainX Shape-- ",trainX.shape)
 print("trainY Shape-- ",trainY.shape)
@@ -83,7 +84,7 @@ print("testY Shape-- ",testY.shape)
 
 def build_model(optimizer):
     grid_model = Sequential()
-    grid_model.add(LSTM(50,return_sequences=True,input_shape=(30,7)))
+    grid_model.add(LSTM(50,return_sequences=True,input_shape=(window_size,8)))
     grid_model.add(LSTM(50))
     grid_model.add(Dropout(0.2))
     grid_model.add(Dense(1))
@@ -112,24 +113,24 @@ print("\nPrediction Shape-",prediction.shape)
 
 
 
-prediction_copies_array = np.repeat(prediction,7, axis=-1)
+prediction_copies_array = np.repeat(prediction,8, axis=-1)
 print(prediction_copies_array.shape)
-pred=scaler.inverse_transform(np.reshape(prediction_copies_array,(len(prediction),7)))[:,0]
-original_copies_array = np.repeat(testY, 7, axis=-1)
+pred=scaler.inverse_transform(np.reshape(prediction_copies_array,(len(prediction),8)))[:,0]
+original_copies_array = np.repeat(testY, 8, axis=-1)
 print(original_copies_array.shape)
-original=scaler.inverse_transform(np.reshape(original_copies_array,(len(testY),7)))[:,0]
+original=scaler.inverse_transform(np.reshape(original_copies_array,(len(testY),8)))[:,0]
 print("Pred Values-- ", pred)
 print("\nOriginal Values-- ", original)
 
 
 plt.plot(df_for_testing.index[window_size:,], original, color = 'red', label = '真实值')
 plt.plot(df_for_testing.index[window_size:,], pred, color = 'blue', label = '预测值')
-plt.title('收盘价预测')
+plt.title('当根K线收益率预测')
 plt.xlabel('时间')
 plt.xticks(rotation=45)
-plt.ylabel('收盘价')
+plt.ylabel('当根K线收益率')
 plt.legend()
-plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred.jpg'), bbox_inches='tight', dpi = 600)
+plt.savefig(os.path.join(base_dir, 'result', 'lstm_v2_pred.jpg'), bbox_inches='tight', dpi = 600)
 plt.show()
 
 # 计算误差
@@ -151,5 +152,5 @@ df = pd.DataFrame({'Test Score: %.2f RMSE': [testScore1],
                    'Train Score: %.2f R2': [testScore3],
                    'Train Score: %.2f MAPE': [testScore4]})
 
-df.to_excel(writer, sheet_name='lstm', index=False)
+df.to_excel(writer, sheet_name='lstm_v2', index=False)
 writer.save()

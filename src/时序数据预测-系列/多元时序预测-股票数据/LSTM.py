@@ -42,11 +42,10 @@ window_size = 30
 trainX,trainY=createXY(df_for_training_scaled,window_size)
 testX,testY=createXY(df_for_testing_scaled,window_size)
 print(trainY[0])
-print(trainY[0])
 
-# 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
-trainX = np.reshape(trainX, (trainX.shape[0], window_size, 5))
-testX = np.reshape(testX, (testX.shape[0], window_size, 5))
+# # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
+# trainX = np.reshape(trainX, (trainX.shape[0], window_size, 5))
+# testX = np.reshape(testX, (testX.shape[0], window_size, 5))
 
 print("trainX Shape-- ",trainX.shape)
 print("trainY Shape-- ",trainY.shape)
