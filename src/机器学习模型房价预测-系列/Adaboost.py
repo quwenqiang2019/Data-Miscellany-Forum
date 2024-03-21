@@ -1,9 +1,11 @@
 import pandas as pd
 import math
+import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.preprocessing import MinMaxScaler
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.ensemble import AdaBoostRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import r2_score
@@ -26,10 +28,22 @@ target = ['MEDV']
 #  划分数据集
 X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, random_state=0)
 
-# 决策树建模预测
-model = DecisionTreeRegressor(random_state=0).fit(X_train, y_train)
-y_train_pred = model.predict(X_train)
-y_test_pred = model.predict(X_test)
+# 数据归一化
+mm1 = MinMaxScaler()   # 特征进行归一化
+X_train_m = mm1.fit_transform(X_train)
+mm2 = MinMaxScaler()     # 标签进行归一化
+y_train_m = mm2.fit_transform(y_train)
+
+X_test_m = mm1.transform(X_test) #注意fit_transform() 和 transform()的区别
+
+# 建模预测
+model = AdaBoostRegressor(n_estimators=100, random_state=0).fit(X_train_m, y_train_m)
+y_train_pred_m = model.predict(X_train_m)
+y_train_pred = mm2.inverse_transform(np.reshape(y_train_pred_m, (-1, 1)))
+# 对测试集特征进行相同规则mm1的归一化处理，然后输入到模型进行预测
+
+y_test_pred_m = model.predict(X_test_m)
+y_test_pred = mm2.inverse_transform(np.reshape(y_test_pred_m, (-1, 1)))
 
 # 可视化部分
 sns.set(font_scale=1.2)
