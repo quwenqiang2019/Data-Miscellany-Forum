@@ -30,7 +30,7 @@ X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], te
 model = RandomForestClassifier()
 model.fit(X_train, y_train)
 
-# 使用 pickle 保存模型
+# 使用 joblib 保存模型
 with open('./random_forest_model.joblib', 'wb') as file:
     joblib.dump(model, file)
 
