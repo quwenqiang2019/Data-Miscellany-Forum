@@ -64,7 +64,7 @@ def createXY(dataset,n_past):
             dataY.append(dataset[i,0])
     return np.array(dataX),np.array(dataY)
 
-window_size = 5
+window_size = 1
 trainX,trainY=createXY(df_for_training_scaled,window_size)
 testX,testY=createXY(df_for_testing_scaled,window_size)
 
@@ -99,45 +99,69 @@ grid_search  = GridSearchCV(estimator = grid_model,
 grid_search = grid_search.fit(trainX,trainY)
 print(grid_search.best_params_)
 my_model=grid_search.best_estimator_.model
-prediction=my_model.predict(testX)
-print("prediction\n", prediction)
-print("\nPrediction Shape-",prediction.shape)
 
-prediction_copies_array = np.repeat(prediction,fea_num, axis=-1)
-print(prediction_copies_array.shape)
-pred=scaler.inverse_transform(np.reshape(prediction_copies_array,(len(prediction),fea_num)))[:,0]
-original_copies_array = np.repeat(testY, fea_num, axis=-1)
-print(original_copies_array.shape)
-original=scaler.inverse_transform(np.reshape(original_copies_array,(len(testY),fea_num)))[:,0]
-print("Pred Values-- ", pred)
-print("\nOriginal Values-- ", original)
 
-plt.plot(df_for_testing.index[window_size:,], original, color = 'red', label = '真实值')
-plt.plot(df_for_testing.index[window_size:,], pred, color = 'blue', label = '预测值')
+prediction_test=my_model.predict(testX)
+prediction_train=my_model.predict(trainX)
+
+prediction_train_copies_array = np.repeat(prediction_train,fea_num, axis=-1)
+pred_train=scaler.inverse_transform(np.reshape(prediction_train_copies_array,(len(prediction_train),fea_num)))[:,0]
+original_train_copies_array = np.repeat(trainY, fea_num, axis=-1)
+original_train=scaler.inverse_transform(np.reshape(original_train_copies_array,(len(trainY),fea_num)))[:,0]
+print("train Pred Values-- ", pred_train)
+print("\ntrain Original Values-- ", original_train)
+plt.plot(df_for_training.index[window_size:,], original_train, color = 'red', label = '真实值')
+plt.plot(df_for_training.index[window_size:,], pred_train, color = 'blue', label = '预测值')
 plt.title('开盘预测')
 plt.xlabel('时间')
 plt.xticks(rotation=45)
 plt.ylabel('开盘')
 plt.legend()
-plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred.jpg'), bbox_inches='tight', dpi = 600)
+plt.show()
+
+
+prediction_test_copies_array = np.repeat(prediction_test,fea_num, axis=-1)
+pred_test=scaler.inverse_transform(np.reshape(prediction_test_copies_array,(len(prediction_test),fea_num)))[:,0]
+original_test_copies_array = np.repeat(testY, fea_num, axis=-1)
+original_test=scaler.inverse_transform(np.reshape(original_test_copies_array,(len(testY),fea_num)))[:,0]
+print("test Pred Values-- ", pred_test)
+print("\ntest Original Values-- ", original_test)
+plt.plot(df_for_testing.index[window_size:,], original_test, color = 'red', label = '真实值')
+plt.plot(df_for_testing.index[window_size:,], pred_test, color = 'blue', label = '预测值')
+plt.title('开盘预测')
+plt.xlabel('时间')
+plt.xticks(rotation=45)
+plt.ylabel('开盘')
+plt.legend()
 plt.show()
 
 # 计算误差
-testScore1 = math.sqrt(mean_squared_error(original, pred))
+testScore1 = math.sqrt(mean_squared_error(original_test, pred_test))
 print('Test Score: %.2f RMSE' % (testScore1))
-
-testScore2 = mean_absolute_error(original, pred)
+testScore2 = mean_absolute_error(original_test, pred_test)
 print('Test Score: %.2f MAE' % (testScore2))
-
-testScore3 = r2_score(original, pred)
+testScore3 = r2_score(original_test, pred_test)
 print('Test Score: %.2f R2' % (testScore3))
-
-testScore4 = mean_absolute_percentage_error(original, pred)
+testScore4 = mean_absolute_percentage_error(original_test, pred_test)
 print('Test Score: %.2f MAPE' % (testScore4))
+
+trainScore1 = math.sqrt(mean_squared_error(original_train, pred_train))
+print('train Score: %.2f RMSE' % (trainScore1))
+trainScore2 = mean_absolute_error(original_train, pred_train)
+print('train Score: %.2f MAE' % (trainScore2))
+trainScore3 = r2_score(original_train, pred_train)
+print('train Score: %.2f R2' % (trainScore3))
+trainScore4 = mean_absolute_percentage_error(original_train, pred_train)
+print('train Score: %.2f MAPE' % (trainScore4))
 
 df = pd.DataFrame({'Test Score: %.2f RMSE': [testScore1],
                    'Test Score: %.2f MAE': [testScore2],
-                   'Train Score: %.2f R2': [testScore3],
-                   'Train Score: %.2f MAPE': [testScore4]})
+                   'Test Score: %.2f R2': [testScore3],
+                   'Test Score: %.2f MAPE': [testScore4],
+                   'Train Score: %.2f RMSE': [trainScore1],
+                   'Train Score: %.2f MAE': [trainScore2],
+                   'Train Score: %.2f R2': [trainScore3],
+                   'Train Score: %.2f MAPE': [trainScore4]
+                   })
 
 df.to_excel(os.path.join(base_dir, 'result', 'lstm.xlsx'), index=False)
