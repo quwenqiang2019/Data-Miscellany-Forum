@@ -28,7 +28,7 @@ df.set_index('DateTime', inplace = True)
 df.insert(0, '开盘', df.pop('开盘'))
 print(df.shape)
 print(df.head())
-
+fea_num = len(df.columns)
 
 test_split=round(len(df)*0.20)
 df_for_training=df[:-test_split]
@@ -67,12 +67,10 @@ def createXY(dataset,n_past):
 window_size = 5
 trainX,trainY=createXY(df_for_training_scaled,window_size)
 testX,testY=createXY(df_for_testing_scaled,window_size)
-print(trainY[0])
-print(trainY[0])
 
 # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
-trainX = np.reshape(trainX, (trainX.shape[0], window_size, 8))
-testX = np.reshape(testX, (testX.shape[0], window_size, 8))
+trainX = np.reshape(trainX, (trainX.shape[0], window_size, fea_num))
+testX = np.reshape(testX, (testX.shape[0], window_size, fea_num))
 
 print("trainX Shape-- ",trainX.shape)
 print("trainY Shape-- ",trainY.shape)
@@ -82,7 +80,7 @@ print("testY Shape-- ",testY.shape)
 
 def build_model(optimizer):
     grid_model = Sequential()
-    grid_model.add(LSTM(50,return_sequences=True,input_shape=(window_size,8)))
+    grid_model.add(LSTM(50,return_sequences=True,input_shape=(window_size,fea_num)))
     grid_model.add(LSTM(50))
     grid_model.add(Dropout(0.2))
     grid_model.add(Dense(1))
@@ -101,25 +99,18 @@ grid_search  = GridSearchCV(estimator = grid_model,
 grid_search = grid_search.fit(trainX,trainY)
 print(grid_search.best_params_)
 my_model=grid_search.best_estimator_.model
-
-
-
-
 prediction=my_model.predict(testX)
 print("prediction\n", prediction)
 print("\nPrediction Shape-",prediction.shape)
 
-
-
-prediction_copies_array = np.repeat(prediction,8, axis=-1)
+prediction_copies_array = np.repeat(prediction,fea_num, axis=-1)
 print(prediction_copies_array.shape)
-pred=scaler.inverse_transform(np.reshape(prediction_copies_array,(len(prediction),8)))[:,0]
-original_copies_array = np.repeat(testY, 8, axis=-1)
+pred=scaler.inverse_transform(np.reshape(prediction_copies_array,(len(prediction),fea_num)))[:,0]
+original_copies_array = np.repeat(testY, fea_num, axis=-1)
 print(original_copies_array.shape)
-original=scaler.inverse_transform(np.reshape(original_copies_array,(len(testY),8)))[:,0]
+original=scaler.inverse_transform(np.reshape(original_copies_array,(len(testY),fea_num)))[:,0]
 print("Pred Values-- ", pred)
 print("\nOriginal Values-- ", original)
-
 
 plt.plot(df_for_testing.index[window_size:,], original, color = 'red', label = '真实值')
 plt.plot(df_for_testing.index[window_size:,], pred, color = 'blue', label = '预测值')
@@ -149,4 +140,4 @@ df = pd.DataFrame({'Test Score: %.2f RMSE': [testScore1],
                    'Train Score: %.2f R2': [testScore3],
                    'Train Score: %.2f MAPE': [testScore4]})
 
-df.to_excel(os.path.join(base_dir, 'result', 'lstm_v2.xlsx'), index=False)
+df.to_excel(os.path.join(base_dir, 'result', 'lstm.xlsx'), index=False)
