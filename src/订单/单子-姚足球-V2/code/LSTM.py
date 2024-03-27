@@ -10,8 +10,8 @@ from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.model_selection import GridSearchCV
 import matplotlib.pyplot as plt
 import math
-from sklearn.metrics import mean_absolute_error #平方绝对误差
-from sklearn.metrics import r2_score#R square
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import r2_score
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
 
@@ -20,9 +20,7 @@ df = pd.read_csv(os.path.join(base_dir, 'data', "300股指加权(日线).csv"), 
 
 df = pd.DataFrame(df)
 df = df.iloc[:, 0:8]
-# 合并日期和时间列为一个DateTime列
 df['DateTime'] = pd.to_datetime(df['日期'])
-# 删除日期和时间两列
 df.drop(['日期'], axis=1, inplace=True)
 df.set_index('DateTime', inplace = True)
 df.insert(0, '开盘', df.pop('开盘'))

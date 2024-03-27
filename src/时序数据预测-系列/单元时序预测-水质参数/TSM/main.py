@@ -337,6 +337,8 @@ def sarima_grid_search(data):
     plt.show()
     print(results.summary().tables[1])
 
+
+
 def holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz):
     model = ExponentialSmoothing(train_data_key, trend="add", seasonal="add", seasonal_periods=12)
     model_fit = model.fit()
@@ -393,8 +395,8 @@ def holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
                        'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
-                       'Train Score: %.2f R2': [trainScore3], 'Train Score: %.2f R2': [testScore3],
-                       'Train Score: %.2f MAPE': [trainScore4], 'Train Score: %.2f MAPE': [testScore4]})
+                       'Train Score: %.2f R2': [trainScore3], 'Test Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Test Score: %.2f MAPE': [testScore4]})
 
 
     df.to_excel(writer, sheet_name='holt_winters', index=False)
@@ -492,8 +494,8 @@ def holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz
 
     df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
                        'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
-                       'Train Score: %.2f R2': [trainScore3], 'Train Score: %.2f R2': [testScore3],
-                       'Train Score: %.2f MAPE': [trainScore4], 'Train Score: %.2f MAPE': [testScore4]})
+                       'Train Score: %.2f R2': [trainScore3], 'Test Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Test Score: %.2f MAPE': [testScore4]})
 
     df.to_excel(writer, sheet_name='holt_winters_lstm', index=False)
 
@@ -560,8 +562,8 @@ def sarima(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
                        'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
-                       'Train Score: %.2f R2': [trainScore3], 'Train Score: %.2f R2': [testScore3],
-                       'Train Score: %.2f MAPE': [trainScore4], 'Train Score: %.2f MAPE': [testScore4]})
+                       'Train Score: %.2f R2': [trainScore3], 'Test Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Test Score: %.2f MAPE': [testScore4]})
 
     print(df)
 
@@ -674,12 +676,213 @@ def sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
                        'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
-                       'Train Score: %.2f R2': [trainScore3], 'Train Score: %.2f R2': [testScore3],
-                       'Train Score: %.2f MAPE': [trainScore4], 'Train Score: %.2f MAPE': [testScore4]})
+                       'Train Score: %.2f R2': [trainScore3], 'Test Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Test Score: %.2f MAPE': [testScore4]})
 
     print(df)
 
     df.to_excel(writer, sheet_name='sarima_lstm', index=False)
+
+    return test_predictions
+
+def create_sliding_windows(data, window_size):
+    X, Y = [], []
+    for i in range(len(data) - window_size):
+        X.append(data[i:i + window_size, 0:data.shape[1]])
+        Y.append(data[i + window_size, 0])
+    return np.array(X), np.array(Y)
+
+
+def lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz):
+    # 将数据归一化到 0~1 范围
+    scaler = MinMaxScaler()
+    train_data_scaler = scaler.fit_transform(train_data_key.values.reshape(-1, 1))
+    test_data_scaler = scaler.transform(test_data_key.values.reshape(-1, 1))
+
+    # 定义滑动窗口大小
+    window_size = 1
+
+    # 创建滑动窗口数据集
+    X_train, Y_train = create_sliding_windows(train_data_scaler, window_size)
+    X_test, Y_test = create_sliding_windows(test_data_scaler, window_size)
+
+    # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
+    X_train = np.reshape(X_train, (X_train.shape[0], window_size, 1))
+    X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
+
+    # 构建 LSTM 模型
+    model = Sequential()
+    model.add(LSTM(60, activation='relu', input_shape=(window_size, 1)))
+    model.add(Dense(1))
+    model.compile(optimizer='adam', loss='mse')
+    # 训练 LSTM 模型
+    model.fit(X_train, Y_train, epochs=100, batch_size=32)
+
+    # 使用 LSTM 模型进行预测
+    train_predictions = model.predict(X_train)
+    test_predictions = model.predict(X_test)
+
+    # 反归一化预测结果
+    train_predictions = scaler.inverse_transform(train_predictions)
+    test_predictions = scaler.inverse_transform(test_predictions)
+
+
+    # # 绘制原始数据、训练集预测结果和测试集预测结果的折线图
+    plt.figure(figsize=(10, 6))
+    plt.plot(train_data_key[window_size:], label='真实值')
+    plt.plot(list(train_data_key.index)[-len(train_predictions):], train_predictions, label='预测值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'lstm: {point}训练集')
+    plt.legend()
+    plt.show()
+
+
+    # 绘制测试集预测结果的折线图
+    plt.figure(figsize=(10, 6))
+    plt.plot(test_data_key[window_size:], label='真实值')
+    plt.plot(list(test_data_key.index)[-len(test_predictions):], test_predictions, label='预测值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'lstm: {point}测试集')
+    plt.legend()
+    plt.show()
+
+
+ # 计算误差(预测精度)
+    trainScore1 = math.sqrt(mean_squared_error(train_data_key[1:], train_predictions))
+    print('Train Score: %.2f RMSE' % (trainScore1))
+    testScore1 = math.sqrt(mean_squared_error(test_data_key[1:], test_predictions))
+    print('Test Score: %.2f RMSE' % (testScore1))
+
+    trainScore2 = mean_absolute_error(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f MAE' % (trainScore2))
+    testScore2 = mean_absolute_error(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f MAE' % (testScore2))
+
+    trainScore3 = r2_score(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f R2' % (trainScore3))
+    testScore3 = r2_score(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f R2' % (testScore3))
+
+    trainScore4 = mean_absolute_percentage_error(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f MAPE' % (trainScore4))
+    testScore4 = mean_absolute_percentage_error(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f MAPE' % (testScore4))
+
+    df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
+                       'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
+                       'Train Score: %.2f R2': [trainScore3], 'Test Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Test Score: %.2f MAPE': [testScore4]})
+
+    print(df)
+
+    # df.to_excel(writer, sheet_name='sarima_lstm_v1', index=False)
+
+    return test_predictions
+
+
+def lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
+    train_data_key = pd.DataFrame({f'{parameters}': train_data_key})
+    test_data_key = pd.DataFrame({f'{parameters}': test_data_key})
+
+    train_data = pd.concat([train_data_key, train_data_fz], axis=1)
+    test_data = pd.concat([test_data_key, test_data_fz], axis=1)
+
+    # 将数据归一化到 0~1 范围
+    scaler = MinMaxScaler()
+    train_data_scaler = scaler.fit_transform(train_data)
+    test_data_scaler = scaler.transform(test_data)
+
+    # 定义滑动窗口大小
+    window_size = 1
+    fea_num = 5
+
+    # 创建滑动窗口数据集
+    X_train, Y_train = create_sliding_windows(train_data_scaler, window_size)
+    X_test, Y_test = create_sliding_windows(test_data_scaler, window_size)
+
+    # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
+    X_train = np.reshape(X_train, (X_train.shape[0], window_size, fea_num))
+    X_test = np.reshape(X_test, (X_test.shape[0], window_size, fea_num))
+
+    # 构建 LSTM 模型
+    model = Sequential()
+    model.add(LSTM(60, activation='relu', input_shape=(window_size, fea_num)))
+    model.add(Dense(1))
+    model.compile(optimizer='adam', loss='mse')
+    # 训练 LSTM 模型
+    model.fit(X_train, Y_train, epochs=100, batch_size=32)
+
+    # 使用 LSTM 模型进行预测
+    train_predictions = model.predict(X_train)
+    test_predictions = model.predict(X_test)
+
+    # 反归一化预测结果
+    prediction_train_copies_array = np.repeat(train_predictions, fea_num, axis=-1)
+    pred_train = scaler.inverse_transform(np.reshape(prediction_train_copies_array, (len(train_predictions), fea_num)))[ :, 0]
+    original_train_copies_array = np.repeat(Y_train, fea_num, axis=-1)
+    original_train = scaler.inverse_transform(np.reshape(original_train_copies_array, (len(Y_train), fea_num)))[:, 0]
+
+    prediction_test_copies_array = np.repeat(test_predictions, fea_num, axis=-1)
+    pred_test = scaler.inverse_transform(np.reshape(prediction_test_copies_array, (len(test_predictions), fea_num)))[:, 0]
+    original_test_copies_array = np.repeat(Y_test, fea_num, axis=-1)
+    original_test = scaler.inverse_transform(np.reshape(original_test_copies_array, (len(Y_test), fea_num)))[:, 0]
+
+
+    print(train_data_key[window_size:])
+    print(original_train)
+
+    # # 绘制原始数据、训练集预测结果和测试集预测结果的折线图
+    plt.figure(figsize=(10, 6))
+    plt.plot(train_data_key[window_size:], label='真实值')
+    plt.plot(list(train_data_key.index)[-len(pred_train):], pred_train, label='预测值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'lstm(协变量): {point}训练集')
+    plt.legend()
+    plt.show()
+
+    # 绘制测试集预测结果的折线图
+    plt.figure(figsize=(10, 6))
+    plt.plot(test_data_key[window_size:], label='真实值')
+    plt.plot(list(test_data_key.index)[-len(pred_test):], pred_test, label='预测值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'lstm(协变量): {point}测试集')
+    plt.legend()
+    plt.show()
+
+
+ # 计算误差(预测精度)
+    trainScore1 = math.sqrt(mean_squared_error(train_data_key[1:], train_predictions))
+    print('Train Score: %.2f RMSE' % (trainScore1))
+    testScore1 = math.sqrt(mean_squared_error(test_data_key[1:], test_predictions))
+    print('Test Score: %.2f RMSE' % (testScore1))
+
+    trainScore2 = mean_absolute_error(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f MAE' % (trainScore2))
+    testScore2 = mean_absolute_error(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f MAE' % (testScore2))
+
+    trainScore3 = r2_score(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f R2' % (trainScore3))
+    testScore3 = r2_score(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f R2' % (testScore3))
+
+    trainScore4 = mean_absolute_percentage_error(train_data_key[1:], train_predictions)
+    print('Train Score: %.2f MAPE' % (trainScore4))
+    testScore4 = mean_absolute_percentage_error(test_data_key[1:], test_predictions)
+    print('Test Score: %.2f MAPE' % (testScore4))
+
+    df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
+                       'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
+                       'Train Score: %.2f R2': [trainScore3], 'Test Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Test Score: %.2f MAPE': [testScore4]})
+
+    print(df)
+
+    # df.to_excel(writer, sheet_name='sarima_lstm_v1', index=False)
 
     return test_predictions
 
@@ -800,8 +1003,8 @@ def sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
                        'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
-                       'Train Score: %.2f R2': [trainScore3], 'Train Score: %.2f R2': [testScore3],
-                       'Train Score: %.2f MAPE': [trainScore4], 'Train Score: %.2f MAPE': [testScore4]})
+                       'Train Score: %.2f R2': [trainScore3], 'Test Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Test Score: %.2f MAPE': [testScore4]})
 
     print(df)
 
@@ -839,9 +1042,9 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     DOWN = [50, 5, 0.05, 8]
     NGEN = 100
     popsize = 100
-    parameters = [NGEN, popsize, DOWN, UP]
+    parameter = [NGEN, popsize, DOWN, UP]
     # 开始优化
-    aco = ACO(parameters)
+    aco = ACO(parameter)
     aco.main()
 
     # 训练模型  使用ssa找到的最好的神经元个数
@@ -950,8 +1153,8 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
                        'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
-                       'Train Score: %.2f R2': [trainScore3], 'Train Score: %.2f R2': [testScore3],
-                       'Train Score: %.2f MAPE': [trainScore4], 'Train Score: %.2f MAPE': [testScore4]})
+                       'Train Score: %.2f R2': [trainScore3], 'Test Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Test Score: %.2f MAPE': [testScore4]})
 
     print(df)
 
@@ -959,29 +1162,6 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     return test_predictions
 
-
-
-def compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions):
-    # 创建一个新的图形
-    plt.figure(figsize=(12, 6))
-
-    # 绘制折线图
-    plt.plot(test_data_key.index, test_data_key, label='Actual', marker='+')
-    plt.plot(test_data_key.index, holt_winters_predictions, label='holt winters', marker='o')
-    plt.plot(test_data_key.index, sarima_predictions, label='sarima', marker='s')
-    plt.plot(test_data_key.index[1:], holt_winters_lstm_predictions, label='holt winters+lstm', marker='^')
-    plt.plot(test_data_key.index[1:], sarima_lstm_predictions, label='sarima+lstm', marker='*')
-
-    # 添加标题和标签
-    plt.xlabel('年/月')
-    plt.ylabel(f'{parameters}')
-    plt.title('Actual vs Predicted')
-
-    # 添加图例
-    plt.legend()
-
-    plt.savefig(f'result/{point}/compare_test_prediction.jpg', bbox_inches='tight', dpi = 600)
-    plt.show()
 
 def cor_analysis(data):
 
@@ -1020,44 +1200,67 @@ def cor_analysis(data):
         # 显示图形
         plt.show()
 
+def compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions):
+    # 创建一个新的图形
+    plt.figure(figsize=(12, 6))
+
+    # 绘制折线图
+    plt.plot(test_data_key.index, test_data_key, label='Actual', marker='+')
+    plt.plot(test_data_key.index, holt_winters_predictions, label='holt winters', marker='o')
+    plt.plot(test_data_key.index, sarima_predictions, label='sarima', marker='s')
+    plt.plot(test_data_key.index[1:], holt_winters_lstm_predictions, label='holt winters+lstm', marker='^')
+    plt.plot(test_data_key.index[1:], sarima_lstm_predictions, label='sarima+lstm', marker='*')
+
+    # 添加标题和标签
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title('Actual vs Predicted')
+
+    # 添加图例
+    plt.legend()
+
+    plt.savefig(f'result/{point}/compare_test_prediction.jpg', bbox_inches='tight', dpi = 600)
+    plt.show()
 
 
 
 if __name__  == '__main__':
 
-    for i in range(1, 21):
+    for i in range(1, 2):
 
         point = f'样点{i}'
         parameters = 'TSM'
         data = data_preprocess(rf'data/{point}.xlsx')
         if not os.path.exists(f'result/{point}'):
             os.makedirs(f'result/{point}')
-        writer = pd.ExcelWriter(f'result/{point}/{point}.xlsx')
+        # writer = pd.ExcelWriter(f'result/{point}/{point}.xlsx')
 
-        data_analysis(data[parameters])
-        TestStationaryPlot(data[parameters])
-        TestStationaryAdfuller(data[parameters])
+        # data_analysis(data[parameters])
+        # TestStationaryPlot(data[parameters])
+        # TestStationaryAdfuller(data[parameters])
 
         train_data_key, train_data_fz, test_data_key, test_data_fz = data_split(data)
+        # lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz)
 
-        sarima_grid_search(data)
-        holt_winters_predictions = holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz)
-        holt_winters_lstm_predictions = holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
-        sarima_predictions = sarima(train_data_key, train_data_fz, test_data_key, test_data_fz)
-        sarima_lstm_predictions = sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        # sarima_grid_search(data)
+        # holt_winters_predictions = holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        # holt_winters_lstm_predictions = holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        # sarima_predictions = sarima(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        # sarima_lstm_predictions = sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        #
+        #
+        # cor_analysis(data)
+        # print('开始建模：')
+        # sarima_lstm_v1_predictions = sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        # sarima_lstm_v2_predictions = sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        #
+        #
+        #
+        # print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
+        # compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions)
 
-
-        cor_analysis(data)
-        print('开始建模：')
-        sarima_lstm_v1_predictions = sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz)
-        sarima_lstm_v2_predictions = sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz)
-
-
-
-        print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
-        compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions)
-
-        writer.save()
+        # writer.save()
 
 
 
