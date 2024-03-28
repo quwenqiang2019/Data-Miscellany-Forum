@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -22,7 +21,6 @@ features = df.columns.drop(target)
 print(data["target"].value_counts()) # 顺便查看一下样本是否平衡
 
 # 划分训练集和测试集
-df = shuffle(df)
 X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, random_state=0)
 
 # 模型的构建与训练
@@ -37,13 +35,11 @@ shap_values = explainer.shap_values(X_test)
 shap_obj = explainer(X_test)
 
 
-# 图形1：全局条形图summary_plot
-shap.summary_plot(shap_values, X_test)
-# shap.plots.bar(shap_obj[:,:,0])
-# shap.plots.bar(shap_obj[:,:,1])
-# shap.plots.beeswarm(shap_obj[:,:,0])
-# shap.plots.beeswarm(shap_obj[:,:,1])
-
+# 特征分析
+shap.summary_plot(shap_values, X_test, show=True)
+shap.plots.bar(shap_obj[:,:,0], show=True)
+shap.plots.beeswarm(shap_obj[:,:,0], show=True)
+shap.plots.beeswarm(shap_obj[:,:,1], show=True)
 
 # # 模型推理与评价
 # y_pred = model.predict(X_test)
