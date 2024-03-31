@@ -6,8 +6,10 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import TimeDistributed
-from keras.layers.convolutional import Conv1D
-from keras.layers.convolutional import MaxPooling1D
+# from keras.layers.convolutional import Conv1D
+# from keras.layers.convolutional import MaxPooling1D
+from keras.layers import Conv1D
+from keras.layers import MaxPooling1D
 from keras.layers import Flatten
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
@@ -19,7 +21,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 #单变量单步预测
 
 # 读取数据集
-dataframe = read_csv('international-airline-passengers.csv', usecols=[1], engine='python')
+dataframe = read_csv('data.csv', usecols=[1], engine='python')
 print("数据集的长度：", len(dataframe))
 dataset = dataframe.values
 # 将整型变为float
