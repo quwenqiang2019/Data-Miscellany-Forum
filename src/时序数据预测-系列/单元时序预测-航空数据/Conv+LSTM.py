@@ -2,11 +2,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.layers import TimeDistributed
+from keras.layers import Conv1D
+from keras.layers import MaxPooling1D
+from keras.layers import Flatten
+from keras.layers import ConvLSTM2D
 
 # 读取数据集
-data = pd.read_csv('international-airline-passengers.csv')
+data = pd.read_csv('data.csv')
 # 将日期列转换为日期时间类型
 data['Month'] = pd.to_datetime(data['Month'])
 # 将日期列设置为索引
@@ -30,38 +36,40 @@ plt.show()
 # 将数据归一化到 0~1 范围
 scaler = MinMaxScaler()
 train_data_scaler = scaler.fit_transform(train_data.values.reshape(-1, 1))
+print(train_data_scaler)
 test_data_scaler = scaler.transform(test_data.values.reshape(-1, 1))
+print(test_data_scaler)
 
 # 定义滑动窗口函数
 def create_sliding_windows(data, window_size):
     X, Y = [], []
     for i in range(len(data) - window_size):
-        X.append(data[i:i+window_size])
-        Y.append(data[i+window_size])
+        X.append(data[i:i+window_size, 0:data.shape[1]])
+        Y.append(data[i+window_size,0])
     return np.array(X), np.array(Y)
 
 # 定义滑动窗口大小
-window_size = 12
+window_size = 3
 
 # 创建滑动窗口数据集
 X_train, Y_train = create_sliding_windows(train_data_scaler, window_size)
 X_test, Y_test = create_sliding_windows(test_data_scaler, window_size)
 
-# 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
-X_train = np.reshape(X_train, (X_train.shape[0], window_size, 1))
-X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
+# 数据重构为5D [samples, timesteps, rows, columns, features]
+X_train = np.reshape(X_train, (X_train.shape[0], window_size,1,1, 1))
+X_test = np.reshape(X_test, (X_test.shape[0],window_size, 1,1, 1))
 
-
-# 构建 LSTM 模型
+# 初始化顺序模型
 model = Sequential()
-model.add(LSTM(50, activation='relu', input_shape=(window_size, 1)))
+model.add(ConvLSTM2D(filters=64, kernel_size=(1,1), activation='relu', input_shape=(window_size, 1,1, 1)))
+model.add(Flatten())
 model.add(Dense(1))
-model.compile(optimizer='adam', loss='mse')
+model.compile(loss='mse', optimizer='adam')
+model.fit(X_train, Y_train, epochs=50)
+# 打印模型
+model.summary()
 
-# 训练 LSTM 模型
-model.fit(X_train, Y_train, epochs=100, batch_size=32)
-
-# 使用 LSTM 模型进行预测
+# 使用模型进行预测
 train_predictions = model.predict(X_train)
 test_predictions = model.predict(X_test)
 

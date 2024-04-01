@@ -39,6 +39,7 @@ train_data_scaler = scaler.fit_transform(train_data.values.reshape(-1, 1))
 print(train_data_scaler)
 test_data_scaler = scaler.transform(test_data.values.reshape(-1, 1))
 print(test_data_scaler)
+
 # 定义滑动窗口函数
 def create_sliding_windows(data, window_size):
     X, Y = [], []
@@ -46,8 +47,6 @@ def create_sliding_windows(data, window_size):
         X.append(data[i:i+window_size, 0:data.shape[1]])
         Y.append(data[i+window_size,0])
     return np.array(X), np.array(Y)
-
-
 
 # 定义滑动窗口大小
 window_size = 3

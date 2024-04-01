@@ -1,12 +1,12 @@
 import warnings
 warnings.filterwarnings('ignore')
 import pandas as pd
-from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
 import matplotlib.pyplot as plt
 
 
 # 读取数据集
-data = pd.read_csv('international-airline-passengers.csv')
+data = pd.read_csv('data.csv')
 # 将日期列转换为日期时间类型
 data['Month'] = pd.to_datetime(data['Month'])
 # 将日期列设置为索引
@@ -28,8 +28,8 @@ plt.legend()
 plt.show()
 
 
-# 拟合ARMA模型
-model = ARIMA(train_data, order=(2, 0, 2))
+# 拟合指数平滑模型
+model = ExponentialSmoothing(train_data, trend=None, seasonal=None)
 model_fit = model.fit()
 # 进行预测
 predictions = model_fit.predict(start=test_data.index[0], end=test_data.index[-1])

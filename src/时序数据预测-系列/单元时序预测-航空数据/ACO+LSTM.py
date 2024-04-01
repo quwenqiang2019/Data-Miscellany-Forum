@@ -114,10 +114,8 @@ def create_sliding_windows(data, window_size):
 
 
 
-def build_model(X_train, y_train, X_test, y_test, neurons1, neurons2, dropout):
+def build_model(X_train, neurons1, neurons2, dropout):
 
-    # X_train, y_train = create_dataset(X_train, y_train, steps)
-    # X_test, y_test = create_dataset(X_test, y_test, steps)
     nb_features = X_train.shape[2]
     input1 = X_train.shape[1]
     model1 = Sequential()
@@ -138,11 +136,6 @@ def build_model(X_train, y_train, X_test, y_test, neurons1, neurons2, dropout):
     return model1
 
 
-
-
-
-
-
 '''
 神经网络第一层神经元个数
 神经网络第二层神经元个数
@@ -156,7 +149,7 @@ batch_size
  batch_size
  '''
 # 读取数据集
-data = pd.read_csv('international-airline-passengers.csv')
+data = pd.read_csv('data.csv')
 # 将日期列转换为日期时间类型
 data['Month'] = pd.to_datetime(data['Month'])
 # 将日期列设置为索引
@@ -180,18 +173,31 @@ plt.show()
 # 将数据归一化到 0~1 范围
 scaler = MinMaxScaler()
 train_data_scaler = scaler.fit_transform(train_data.values.reshape(-1, 1))
+print(train_data_scaler)
 test_data_scaler = scaler.transform(test_data.values.reshape(-1, 1))
+print(test_data_scaler)
+
+# 定义滑动窗口函数
+def create_sliding_windows(data, window_size):
+    X, Y = [], []
+    for i in range(len(data) - window_size):
+        X.append(data[i:i+window_size, 0:data.shape[1]])
+        Y.append(data[i+window_size,0])
+    return np.array(X), np.array(Y)
+
 
 
 # 定义滑动窗口大小
-window_size = 12
+window_size = 3
+
 # 创建滑动窗口数据集
-X_train, y_train = create_sliding_windows(train_data_scaler, window_size)
-X_test, y_test = create_sliding_windows(test_data_scaler, window_size)
+X_train, Y_train = create_sliding_windows(train_data_scaler, window_size)
+X_test, Y_test = create_sliding_windows(test_data_scaler, window_size)
 
 # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
 X_train = np.reshape(X_train, (X_train.shape[0], window_size, 1))
 X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
+
 
 
 UP = [51, 6, 0.055, 9]
@@ -209,19 +215,18 @@ neurons2 = int(aco.g_best[1])
 dropout = aco.g_best[2]
 batch_size = int(aco.g_best[3])
 
-model = build_model(X_train, y_train, X_test, y_test, neurons1, neurons2, dropout)
-history1 = model.fit(X_train, y_train, epochs=150, batch_size=batch_size, validation_split=0.2, verbose=1,
+model = build_model(X_train, neurons1, neurons2, dropout)
+history1 = model.fit(X_train, Y_train, epochs=150, batch_size=batch_size, validation_split=0.2, verbose=1,
                      callbacks=[EarlyStopping(monitor='val_loss', patience=9, restore_best_weights=True)])
 
 
-# 测试集预测
-test_predictions = model.predict(X_test)
-# 反归一化
-test_predictions = scaler.inverse_transform(test_predictions.reshape(-1, 1))
-y_test = scaler.inverse_transform(y_test.reshape(-1, 1))
+# 使用 LSTM 模型进行预测
 train_predictions = model.predict(X_train)
-train_predictions = scaler.inverse_transform(train_predictions)
+test_predictions = model.predict(X_test)
 
+# 反归一化预测结果
+train_predictions = scaler.inverse_transform(train_predictions)
+test_predictions = scaler.inverse_transform(test_predictions)
 
 # 绘制测试集预测结果的折线图
 plt.figure(figsize=(10, 6))
@@ -243,14 +248,3 @@ plt.ylabel('Passenger Count')
 plt.title('International Airline Passengers - Actual vs Predicted')
 plt.legend()
 plt.show()
-
-
-print("==========evaluation==============\n")
-from sklearn.metrics import mean_squared_error
-from sklearn.metrics import mean_absolute_error  # 平方绝对误差
-import math
-
-MAE = mean_absolute_error(y_test, test_predictions)
-print('MAE: %.4f ' % MAE)
-RMSE = math.sqrt(mean_squared_error(y_test, test_predictions))
-print('RMSE: %.4f ' % (RMSE))

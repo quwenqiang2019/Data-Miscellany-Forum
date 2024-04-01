@@ -7,7 +7,7 @@ from tensorflow.keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
 
 # 读取数据集
-data = pd.read_csv('international-airline-passengers.csv')
+data = pd.read_csv('data.csv')
 data['Month'] = pd.to_datetime(data['Month'])   # 将日期列转换为日期时间类型
 data.set_index('Month', inplace=True)    # 将日期列设置为索引
 data = data['Passengers'].values
