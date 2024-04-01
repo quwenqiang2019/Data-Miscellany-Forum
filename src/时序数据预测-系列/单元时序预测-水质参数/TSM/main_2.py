@@ -1024,7 +1024,7 @@ if __name__  == '__main__':
 
         point = f'样点{i}'
         parameters = 'TSM'
-        data = data_preprocess(rf'data/{point}.xlsx')
+        data = data_preprocess(rf'data_/{point}.xlsx')
         if not os.path.exists(f'result/{point}'):
             os.makedirs(f'result/{point}')
         writer = pd.ExcelWriter(f'result/{point}/{point}.xlsx')

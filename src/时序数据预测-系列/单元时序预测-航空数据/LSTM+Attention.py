@@ -56,8 +56,9 @@ X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
 
 # 构建 LSTM 模型
 model = Sequential()
-model.add(LSTM(4, input_shape=(look_back,1)))  # 与上面的重构格式对应，要改都改，才能跑通代码
+model.add(LSTM(4, input_shape=(look_back,1)))
 Attention(name='attention_weight')
+# model.add(Attention())
 model.add(Dense(1))
 model.compile(loss='mean_squared_error', optimizer='adam')
 model.fit(X_train, Y_train, epochs=100, batch_size=1, verbose=2)
