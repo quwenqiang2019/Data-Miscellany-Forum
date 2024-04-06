@@ -6,11 +6,8 @@ import matplotlib.pyplot as plt
 
 # 读取数据集
 data = pd.read_csv('data.csv')
-# 将日期列转换为日期时间类型
-data['Month'] = pd.to_datetime(data['Month'])
-# 将日期列设置为索引
-data.set_index('Month', inplace=True)
-
+data['Month'] = pd.to_datetime(data['Month'])# 将日期列转换为日期时间类型
+data.set_index('Month', inplace=True)# 将日期列设置为索引
 
 # 时序数据分解
 from statsmodels.tsa.seasonal import seasonal_decompose
