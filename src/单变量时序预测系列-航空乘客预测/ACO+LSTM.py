@@ -132,7 +132,7 @@ def build_model(X_train, neurons1, neurons2, dropout):
 
     model1.add(Dense(units=1))
     model1.add(Activation("linear"))
-    model1.compile(loss='mse', optimizer='Adam', metrics='mae')
+    model1.compile(loss='mse', optimizer='Adam', metrics=['mae'])
     return model1
 
 
@@ -188,7 +188,7 @@ def create_sliding_windows(data, window_size):
 
 
 # 定义滑动窗口大小
-window_size = 3
+window_size = 1
 
 # 创建滑动窗口数据集
 X_train, Y_train = create_sliding_windows(train_data_scaler, window_size)
