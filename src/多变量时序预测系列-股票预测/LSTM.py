@@ -9,8 +9,8 @@ from keras.layers import LSTM
 from scikeras.wrappers import KerasRegressor
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import mean_absolute_error #平方绝对误差
-from sklearn.metrics import r2_score#R square
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import r2_score
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
 
