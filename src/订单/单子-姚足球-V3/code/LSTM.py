@@ -116,6 +116,7 @@ plt.xlabel('时间')
 plt.xticks(rotation=45)
 plt.ylabel('开盘')
 plt.legend()
+plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred_train.jpg'), bbox_inches='tight', dpi = 600)
 plt.show()
 
 
@@ -132,6 +133,7 @@ plt.xlabel('时间')
 plt.xticks(rotation=45)
 plt.ylabel('开盘')
 plt.legend()
+plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred_test.jpg'), bbox_inches='tight', dpi = 600)
 plt.show()
 
 # 计算误差
