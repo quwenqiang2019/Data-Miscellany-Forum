@@ -7,7 +7,7 @@ import numpy as np
 import seaborn as sns
 from keras.models import Sequential
 from keras.models import Model
-from keras.layers import Input, LSTM, Dense, Dropout
+from keras.layers import Input, LSTM, Dense, Dropout, Attention
 import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
@@ -27,8 +27,8 @@ fea_num = len(df.columns)
 test_split=round(len(df)*0.20)
 df_for_training=df[:-test_split]
 df_for_testing=df[-test_split:]
+
 # 绘制训练集和测试集的折线图
-# 可视化部分
 sns.set(font_scale=1.2)
 plt.rc('font', family=['Times New Roman', 'SimSun'], size=12)
 plt.figure(figsize=(10, 6))
@@ -44,7 +44,6 @@ scaler = MinMaxScaler(feature_range=(0,1))
 df_for_training_scaled = scaler.fit_transform(df_for_training)
 df_for_testing_scaled=scaler.transform(df_for_testing)
 
-
 def createXY(dataset,n_past):
     dataX = []
     dataY = []
@@ -56,7 +55,6 @@ def createXY(dataset,n_past):
 window_size = 30
 trainX,trainY=createXY(df_for_training_scaled,window_size)
 testX,testY=createXY(df_for_testing_scaled,window_size)
-print(trainY[0])
 
 # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
 trainX = np.reshape(trainX, (trainX.shape[0], window_size, fea_num))
@@ -67,18 +65,6 @@ print("trainY Shape-- ",trainY.shape)
 print("testX Shape-- ",testX.shape)
 print("testY Shape-- ",testY.shape)
 
-# my_model = Sequential()
-# my_model.add(Input(shape=(window_size, fea_num)))
-# my_model.add(LSTM(50,return_sequences=True))
-# my_model.add(LSTM(50))
-# my_model.add(Dropout(0.2))
-# my_model.add(Dense(1))
-
-# my_model = Sequential([Input(shape=(window_size, fea_num)),
-#                        LSTM(50,return_sequences=True),
-#                        LSTM(50),
-#                        Dropout(0.2),
-#                        Dense(1)])
 
 input1 = Input(shape=(window_size, fea_num))
 hidden1 = LSTM(50,return_sequences=True)(input1)
@@ -87,18 +73,32 @@ output = Dropout(0.2)(hidden2)
 output = Dense(1)(output)
 my_model = Model(inputs=input1, outputs=output)
 
+# # 创建输入层
+# input1 = Input(shape=(window_size, fea_num))
+# # LSTM 层
+# hidden1 = LSTM(50, return_sequences=True)(input1)
+# hidden2 = LSTM(50)(hidden1)
+# # 注意力层
+# attention = Attention()([hidden1, hidden2])
+# # Dropout 层
+# output = Dropout(0.2)(attention)
+# # 全连接层
+# output = Dense(1)(output)
+# # 创建模型
+# my_model = Model(inputs=input1, outputs=output)
+
+
 my_model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 my_model.summary()
 my_model.fit(trainX, trainY)
 
-
-
-
 prediction_test=my_model.predict(testX)
+print(prediction_test.shape)
 prediction_train=my_model.predict(trainX)
-
 prediction_train_copies_array = np.repeat(prediction_train,fea_num, axis=-1)
 pred_train=scaler.inverse_transform(np.reshape(prediction_train_copies_array,(len(prediction_train),fea_num)))[:,0]
+
+
 original_train_copies_array = np.repeat(trainY, fea_num, axis=-1)
 original_train=scaler.inverse_transform(np.reshape(original_train_copies_array,(len(trainY),fea_num)))[:,0]
 print("train Pred Values-- ", pred_train)
