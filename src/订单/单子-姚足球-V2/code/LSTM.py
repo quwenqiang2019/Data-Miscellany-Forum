@@ -28,7 +28,7 @@ print(df.shape)
 print(df.head())
 fea_num = len(df.columns)
 
-test_split=round(len(df)*0.20)
+test_split = round(len(df)*0.20)
 df_for_training=df[:-test_split]
 df_for_testing=df[-test_split:]
 
@@ -132,6 +132,17 @@ plt.xticks(rotation=45)
 plt.ylabel('开盘')
 plt.legend()
 plt.show()
+
+
+df0 = pd.DataFrame({'日期': df_for_testing.index[window_size:],'真实值': original_test, '预测值': pred_test})
+print(df0)
+# 计算预测股价和前一天真实股价的比较结果
+df0['比较结果'] = (df0['预测值'] > df0['真实值'].shift(1)).astype(int)
+# 填充第一行的比较结果为 0
+df.at[0, '比较结果'] = None
+print(df0)
+df0.to_excel(os.path.join(base_dir, 'result', '预测值对比前一天真实值.xlsx'), index=False)
+
 
 # 计算误差
 testScore1 = math.sqrt(mean_squared_error(original_test, pred_test))
