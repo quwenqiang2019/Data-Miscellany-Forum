@@ -73,10 +73,10 @@ print("testX Shape-- ",testX.shape)
 print("testY Shape-- ",testY.shape)
 
 
-def build_model():   # 这里采用sequential模型，也可以采用其他模型进行网络的搭建,模型的结构可以自行做调整
+def build_model(neurons_1=50, neurons_2=50):   # 这里采用sequential模型，也可以采用其他模型进行网络的搭建,模型的结构可以自行做调整
     grid_model = Sequential()
-    grid_model.add(LSTM(50,return_sequences=True,input_shape=(window_size,fea_num)))
-    grid_model.add(LSTM(50))
+    grid_model.add(LSTM(neurons_1,return_sequences=True,input_shape=(window_size,fea_num)))
+    grid_model.add(LSTM(neurons_2))
     grid_model.add(Dropout(0.2)) # 这一层为了防止过拟合
     grid_model.add(Dense(1))
 
@@ -86,7 +86,9 @@ def build_model():   # 这里采用sequential模型，也可以采用其他模�
 grid_model = KerasRegressor(model=build_model,verbose=1)  # 使用 Keras 中的 KerasRegressor 类来封装一个自定义的回归模型。使用了一个名为 build_model 的函数或模型作为参数传递给 KerasRegressor
 parameters = {'batch_size' : [16,20],
               'epochs' : [8,10],
-              'optimizer' : ['adam','Adadelta'] }   # parameters 是一个字典，其中包含了需要调优的超参数及其对应的备选取值。在这个例子中，'batch_size' 表示批量大小，备选取值为 [16, 20]；'epochs' 表示训练轮数，备选取值为 [8, 10]；'optimizer' 表示优化器的选择，备选取值为 ['adam', 'Adadelta']
+              'optimizer' : ['adam','Adadelta'],
+              'model__neurons_1': [50, 128, 256],
+              'model__neurons_2': [50, 128, 256]}    # parameters 是一个字典，其中包含了需要调优的超参数及其对应的备选取值。在这个例子中，'batch_size' 表示批量大小，备选取值为 [16, 20]；'epochs' 表示训练轮数，备选取值为 [8, 10]；'optimizer' 表示优化器的选择，备选取值为 ['adam', 'Adadelta']
 
 grid_search  = GridSearchCV(estimator = grid_model,
                             param_grid = parameters,
