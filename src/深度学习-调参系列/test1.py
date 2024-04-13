@@ -1,43 +1,47 @@
-import numpy as np
-from sklearn.datasets import make_classification
-import keras
-
+from keras.models import Sequential
+from keras.layers import Dense, Dropout
 from scikeras.wrappers import KerasClassifier
 from sklearn.model_selection import GridSearchCV
+import numpy as np
+import pandas as pd
 
-X, y = make_classification(1000, 20, n_informative=10, random_state=0)
-X = X.astype(np.float32)
-y = y.astype(np.int64)
 
-def get_model(hidden_layer_dim, meta):
-    # note that meta is a special argument that will be
-    # handed a dict containing input metadata
-    n_features_in_ = meta["n_features_in_"]
-    X_shape_ = meta["X_shape_"]
-    n_classes_ = meta["n_classes_"]
+# 构建模型的函数
+def create_model():
+    # 创建模型
+    model = Sequential()
+    model.add(Dense(50, input_shape=(8, ), kernel_initializer='uniform', activation='relu'))
+    model.add(Dropout(0.2))
+    model.add(Dense(1, kernel_initializer='uniform', activation='sigmoid'))
 
-    model = keras.models.Sequential()
-    model.add(keras.layers.Dense(n_features_in_, input_shape=X_shape_[1:]))
-    model.add(keras.layers.Activation("relu"))
-    model.add(keras.layers.Dense(hidden_layer_dim))
-    model.add(keras.layers.Activation("relu"))
-    model.add(keras.layers.Dense(n_classes_))
-    model.add(keras.layers.Activation("softmax"))
+    # 编译模型
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     return model
 
-clf = KerasClassifier(
-    get_model,
-    loss="sparse_categorical_crossentropy",
-    hidden_layer_dim=100,
-)
+# 加载数据
+dataset = pd.read_csv("pima-indians-diabetes.csv", header=None)
+dataset = pd.DataFrame(dataset)
+print(dataset)
+# 切分数据为输入 X 和输出 Y
+X = dataset.iloc[:,0:8]
+Y = dataset.iloc[:,8]
 
-params = {
-    "hidden_layer_dim": [50, 100, 200],
-    "loss": ["sparse_categorical_crossentropy"],
-    "optimizer": ["adam", "sgd"],
-    "optimizer__learning_rate": [0.0001, 0.001, 0.1],
-}
-gs = GridSearchCV(clf, params, refit=False, cv=3, scoring='accuracy')
+# 为了复现，设置随机种子
+seed = 7
+np.random.seed(seed)
 
-gs.fit(X, y)
-print(gs.best_score_, gs.best_params_)
+
+# 这里由于KerasClassifier没有定义隐含神经元的参数，需要自定义一个表示隐含层神经元的参数neurons_1，并赋默认值为1
+model = KerasClassifier(model=create_model)
+# 定义网格搜索参数，进行网格搜索
+param_grid = {"epochs":[20,50,100]}
+grid = GridSearchCV(estimator=model,  param_grid=param_grid)
+grid_result = grid.fit(X, Y)
+
+# 总结结果
+print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
+means = grid_result.cv_results_['mean_test_score']
+stds = grid_result.cv_results_['std_test_score']
+params = grid_result.cv_results_['params']
+for mean, stdev, param in zip(means, stds, params):
+    print("%f (%f) with: %r" % (mean, stdev, param))
