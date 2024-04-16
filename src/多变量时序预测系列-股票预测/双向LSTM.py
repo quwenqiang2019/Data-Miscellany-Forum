@@ -17,6 +17,9 @@ from sklearn.metrics import r2_score
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
 
+
+
+
 # 读取数据
 df=pd.read_csv("data.csv", parse_dates=["Date"], index_col=[0])
 print(df.shape)

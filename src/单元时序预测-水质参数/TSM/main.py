@@ -291,58 +291,6 @@ def data_split(data):
     return train_data_key, train_data_fz, test_data_key, test_data_fz
 
 
-def create_dataset(data, look_back=1):
-    X, Y = [], []
-    for i in range(len(data) - look_back):
-        X.append(data[i:i + look_back])
-        Y.append(data[i + look_back])
-    return np.array(X), np.array(Y)
-
-def sarima_grid_search(data, parameters):
-    # 首先定义 p、d、q 的参数值范围，这里取 0 - 2.
-    p = d = q = range(0, 2)
-    # 然后用itertools函数生成不同的参数组合
-    pdq = list(itertools.product(p, d, q))
-    # 同理处理季节周期性参数，也生成相应的多个组合
-    seasonal_pdq = [(x[0], x[1], x[2], 12) for x in list(itertools.product(p, d, q))]
-    print('Examples of parameter combinations for Seasonal ARIMA...')
-    print('SARIMAX: {} x {}'.format(pdq[1], seasonal_pdq[1]))
-    print('SARIMAX: {} x {}'.format(pdq[1], seasonal_pdq[2]))
-    print('SARIMAX: {} x {}'.format(pdq[2], seasonal_pdq[3]))
-    print('SARIMAX: {} x {}'.format(pdq[2], seasonal_pdq[4]))
-
-    dic = {}
-
-    for param in pdq:
-        for param_seasonal in seasonal_pdq:
-            try:
-                mod = statsmodels.api.tsa.statespace.SARIMAX(data[f'{parameters}'],
-                                                             order=param,
-                                                             seasonal_order=param_seasonal,
-                                                             enforce_stationarity=False,
-                                                             enforce_invertibility=False)
-
-                results = mod.fit()
-
-                print('SARIMAX{}x{}12 - AIC:{}'.format(param, param_seasonal, results.aic))
-                dic.update({results.aic: [param, param_seasonal]})
-            except:
-                continue
-
-    print(dic)
-    # ===================================================SARIMA最优模型的参数===============================
-    mod = statsmodels.api.tsa.statespace.SARIMAX(data[parameters],
-                                                 order=(1, 1, 1),
-                                                 seasonal_order=(1, 1, 1, 12),
-                                                 enforce_stationarity=False,
-                                                 enforce_invertibility=False)
-    results = mod.fit()
-    results.plot_diagnostics(figsize=(12, 10))
-    plt.show()
-    print(results.summary().tables[1])
-
-
-
 def holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz):
     model = ExponentialSmoothing(train_data_key, trend="add", seasonal="add", seasonal_periods=12)
     model_fit = model.fit()
@@ -406,6 +354,127 @@ def holt_winters(train_data_key, train_data_fz, test_data_key, test_data_fz):
     df.to_excel(writer, sheet_name='holt_winters', index=False)
 
     return predictions
+
+def create_dataset(data, look_back=1):
+    X, Y = [], []
+    for i in range(len(data) - look_back):
+        X.append(data[i:i + look_back])
+        Y.append(data[i + look_back])
+    return np.array(X), np.array(Y)
+
+
+def sarima(train_data_key, train_data_fz, test_data_key, test_data_fz):
+    # 拟合 SARIMA 模型
+    model = SARIMAX(train_data_key, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12))
+    model_fit = model.fit()
+    # 进行预测
+    predictions = model_fit.predict(start=test_data_key.index[0], end=test_data_key.index[-1])
+
+    # 绘图风格设置,使用seaborn库的API来设置样式
+    sns.set_style('darkgrid')
+    font1 = {'family': ['Times New Roman', 'SimSun'], 'weight': 'normal', 'size': 14}
+    plt.rc('font', **font1)
+    plt.rcParams["axes.unicode_minus"] = False
+
+
+    # 绘制原始数据、训练集预测结果和测试集预测结果的折线图
+    plt.figure(figsize=(10, 6))
+    plt.plot(train_data_key.index, train_data_key, label='真实值')
+    plt.plot(train_data_key.index, model_fit.fittedvalues, label='预测值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'sarima: {point}训练集')
+    plt.legend()
+    plt.savefig(f'result/{point}/sarima_taian.jpg', bbox_inches='tight', dpi = 600)
+    plt.show()
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(test_data_key.index, test_data_key, label='真实值')
+    plt.plot(predictions.index, predictions, label='预测值')
+    plt.xlabel('年/月')
+    plt.ylabel(f'{parameters}')
+    plt.title(f'sarima: {point}测试集')
+    plt.legend()
+    plt.savefig(f'result/{point}/sarima_test.jpg', bbox_inches='tight', dpi = 600)
+    plt.show()
+
+    # 计算误差
+    trainScore1 = math.sqrt(mean_squared_error(train_data_key[1:], model_fit.fittedvalues[1:]))
+    print('Train Score: %.2f RMSE' % (trainScore1))
+    testScore1 = math.sqrt(mean_squared_error(test_data_key[1:], predictions[1:]))
+    print('Test Score: %.2f RMSE' % (testScore1))
+
+    trainScore2 = mean_absolute_error(train_data_key[1:], model_fit.fittedvalues[1:])
+    print('Train Score: %.2f MAE' % (trainScore2))
+    testScore2 = mean_absolute_error(test_data_key[1:], predictions[1:])
+    print('Test Score: %.2f MAE' % (testScore2))
+
+    trainScore3 = r2_score(train_data_key[1:], model_fit.fittedvalues[1:])
+    print('Train Score: %.2f R2' % (trainScore3))
+    testScore3 = r2_score(test_data_key[1:], predictions[1:])
+    print('Test Score: %.2f R2' % (testScore3))
+
+    trainScore4 = mean_absolute_percentage_error(train_data_key[1:], model_fit.fittedvalues[1:])
+    print('Train Score: %.2f MAPE' % (trainScore4))
+    testScore4 = mean_absolute_percentage_error(test_data_key[1:], predictions[1:])
+    print('Test Score: %.2f MAPE' % (testScore4))
+
+
+    df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
+                       'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
+                       'Train Score: %.2f R2': [trainScore3], 'Test Score: %.2f R2': [testScore3],
+                       'Train Score: %.2f MAPE': [trainScore4], 'Test Score: %.2f MAPE': [testScore4]})
+
+    print(df)
+
+    df.to_excel(writer, sheet_name='sarima', index=False)
+
+    return predictions
+
+
+def sarima_grid_search(data, parameters):
+    # 首先定义 p、d、q 的参数值范围，这里取 0 - 2.
+    p = d = q = range(0, 2)
+    # 然后用itertools函数生成不同的参数组合
+    pdq = list(itertools.product(p, d, q))
+    # 同理处理季节周期性参数，也生成相应的多个组合
+    seasonal_pdq = [(x[0], x[1], x[2], 12) for x in list(itertools.product(p, d, q))]
+    print('Examples of parameter combinations for Seasonal ARIMA...')
+    print('SARIMAX: {} x {}'.format(pdq[1], seasonal_pdq[1]))
+    print('SARIMAX: {} x {}'.format(pdq[1], seasonal_pdq[2]))
+    print('SARIMAX: {} x {}'.format(pdq[2], seasonal_pdq[3]))
+    print('SARIMAX: {} x {}'.format(pdq[2], seasonal_pdq[4]))
+
+    dic = {}
+
+    for param in pdq:
+        for param_seasonal in seasonal_pdq:
+            try:
+                mod = statsmodels.api.tsa.statespace.SARIMAX(data[f'{parameters}'],
+                                                             order=param,
+                                                             seasonal_order=param_seasonal,
+                                                             enforce_stationarity=False,
+                                                             enforce_invertibility=False)
+
+                results = mod.fit()
+
+                print('SARIMAX{}x{}12 - AIC:{}'.format(param, param_seasonal, results.aic))
+                dic.update({results.aic: [param, param_seasonal]})
+            except:
+                continue
+
+    print(dic)
+    # ===================================================SARIMA最优模型的参数===============================
+    mod = statsmodels.api.tsa.statespace.SARIMAX(data[parameters],
+                                                 order=(1, 1, 1),
+                                                 seasonal_order=(1, 1, 1, 12),
+                                                 enforce_stationarity=False,
+                                                 enforce_invertibility=False)
+    results = mod.fit()
+    results.plot_diagnostics(figsize=(12, 10))
+    plt.show()
+    print(results.summary().tables[1])
+
 
 
 def holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz):
@@ -507,73 +576,7 @@ def holt_winters_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz
     return test_predictions
 
 
-def sarima(train_data_key, train_data_fz, test_data_key, test_data_fz):
-    # 拟合 SARIMA 模型
-    model = SARIMAX(train_data_key, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12))
-    model_fit = model.fit()
-    # 进行预测
-    predictions = model_fit.predict(start=test_data_key.index[0], end=test_data_key.index[-1])
 
-    # 绘图风格设置,使用seaborn库的API来设置样式
-    sns.set_style('darkgrid')
-    font1 = {'family': ['Times New Roman', 'SimSun'], 'weight': 'normal', 'size': 14}
-    plt.rc('font', **font1)
-    plt.rcParams["axes.unicode_minus"] = False
-
-
-    # 绘制原始数据、训练集预测结果和测试集预测结果的折线图
-    plt.figure(figsize=(10, 6))
-    plt.plot(train_data_key.index, train_data_key, label='真实值')
-    plt.plot(train_data_key.index, model_fit.fittedvalues, label='预测值')
-    plt.xlabel('年/月')
-    plt.ylabel(f'{parameters}')
-    plt.title(f'sarima: {point}训练集')
-    plt.legend()
-    plt.savefig(f'result/{point}/sarima_taian.jpg', bbox_inches='tight', dpi = 600)
-    plt.show()
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(test_data_key.index, test_data_key, label='真实值')
-    plt.plot(predictions.index, predictions, label='预测值')
-    plt.xlabel('年/月')
-    plt.ylabel(f'{parameters}')
-    plt.title(f'sarima: {point}测试集')
-    plt.legend()
-    plt.savefig(f'result/{point}/sarima_test.jpg', bbox_inches='tight', dpi = 600)
-    plt.show()
-
-    # 计算误差
-    trainScore1 = math.sqrt(mean_squared_error(train_data_key[1:], model_fit.fittedvalues[1:]))
-    print('Train Score: %.2f RMSE' % (trainScore1))
-    testScore1 = math.sqrt(mean_squared_error(test_data_key[1:], predictions[1:]))
-    print('Test Score: %.2f RMSE' % (testScore1))
-
-    trainScore2 = mean_absolute_error(train_data_key[1:], model_fit.fittedvalues[1:])
-    print('Train Score: %.2f MAE' % (trainScore2))
-    testScore2 = mean_absolute_error(test_data_key[1:], predictions[1:])
-    print('Test Score: %.2f MAE' % (testScore2))
-
-    trainScore3 = r2_score(train_data_key[1:], model_fit.fittedvalues[1:])
-    print('Train Score: %.2f R2' % (trainScore3))
-    testScore3 = r2_score(test_data_key[1:], predictions[1:])
-    print('Test Score: %.2f R2' % (testScore3))
-
-    trainScore4 = mean_absolute_percentage_error(train_data_key[1:], model_fit.fittedvalues[1:])
-    print('Train Score: %.2f MAPE' % (trainScore4))
-    testScore4 = mean_absolute_percentage_error(test_data_key[1:], predictions[1:])
-    print('Test Score: %.2f MAPE' % (testScore4))
-
-
-    df = pd.DataFrame({'Train Score: %.2f RMSE': [trainScore1], 'Test Score: %.2f RMSE': [testScore1],
-                       'Train Score: %.2f MAE': [trainScore2], 'Test Score: %.2f MAE': [testScore2],
-                       'Train Score: %.2f R2': [trainScore3], 'Test Score: %.2f R2': [testScore3],
-                       'Train Score: %.2f MAPE': [trainScore4], 'Test Score: %.2f MAPE': [testScore4]})
-
-    print(df)
-
-    df.to_excel(writer, sheet_name='sarima', index=False)
-
-    return predictions
 
 
 def sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz):
@@ -1234,7 +1237,7 @@ def compare_test_prediction(test_data_key, holt_winters_predictions, sarima_pred
 
 if __name__  == '__main__':
 
-    for i in range(1, 2):
+    for i in range(2, 3):
 
         point = f'样点{i}'
         parameters = 'TSM'
@@ -1268,7 +1271,7 @@ if __name__  == '__main__':
         print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
         compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions)
 
-        writer.save()
+        writer._save()
 
 
 

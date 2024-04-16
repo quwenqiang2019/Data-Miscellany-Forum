@@ -65,8 +65,6 @@ print("trainY Shape-- ",trainY.shape)
 print("testX Shape-- ",testX.shape)
 print("testY Shape-- ",testY.shape)
 
-
-
 # 创建输入层
 # inputs=Input(shape=(window_size, fea_num))
 # my_model=LSTM(50, activation='tanh')(inputs)
@@ -75,8 +73,6 @@ print("testY Shape-- ",testY.shape)
 # outputs = Dense(1, activation='tanh')(my_model)
 # my_model = Model(inputs=inputs, outputs=outputs)
 
-
-# 法2：
 inputs = Input(shape=(window_size, fea_num))
 lstm = LSTM(50, return_sequences=True)(inputs)
 attention = Attention()([lstm, lstm])
