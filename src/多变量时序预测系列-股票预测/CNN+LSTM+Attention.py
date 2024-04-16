@@ -7,7 +7,7 @@ import numpy as np
 import seaborn as sns
 from keras.models import Sequential
 from keras.models import Model
-from keras.layers import Input, LSTM, Dense, Dropout, Attention, Multiply, Flatten
+from keras.layers import Input, LSTM, Dense, Dropout, Attention
 import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
@@ -16,6 +16,8 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import r2_score
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
+from keras.layers import *
+from keras.models import *
 
 # 读取数据
 df=pd.read_csv("data.csv", parse_dates=["Date"], index_col=[0])
@@ -67,23 +69,22 @@ print("testY Shape-- ",testY.shape)
 
 
 
-# 创建输入层
-# inputs=Input(shape=(window_size, fea_num))
-# my_model=LSTM(50, activation='tanh')(inputs)
-# attention=Dense(50, activation='sigmoid', name='attention_vec')(my_model)#求解Attention权重
-# my_model=Multiply()([my_model, attention])#attention与LSTM对应数值相乘
-# outputs = Dense(1, activation='tanh')(my_model)
-# my_model = Model(inputs=inputs, outputs=outputs)
 
+#设置LSTM的时间窗等参数
+lstm_units = 50
+dropout = 0.01
+epoch=160
 
-# 法2：
-inputs = Input(shape=(window_size, fea_num))
-lstm = LSTM(50, return_sequences=True)(inputs)
-attention = Attention()([lstm, lstm])
-attention = Flatten()(attention)
-output = Dense(1)(attention)
-my_model = Model(inputs=inputs, outputs=output)
-
+#建立LSTM模型 训练
+inputs=Input(shape=(window_size, fea_num))
+my_model=Conv1D(filters = lstm_units, kernel_size = 1, activation = 'sigmoid')(inputs)#卷积层
+my_model=MaxPooling1D(pool_size = window_size)(my_model)#池化层
+my_model=Dropout(dropout)(my_model)#droupout层
+my_model=Bidirectional(LSTM(lstm_units, activation='tanh'), name='bilstm')(inputs)#双向LSTM层
+attention=Dense(lstm_units*2, activation='sigmoid', name='attention_vec')(my_model)#求解Attention权重
+my_model=Multiply()([my_model, attention])#attention与LSTM对应数值相乘
+outputs = Dense(1, activation='tanh')(my_model)
+my_model = Model(inputs=inputs, outputs=outputs)
 
 
 my_model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])

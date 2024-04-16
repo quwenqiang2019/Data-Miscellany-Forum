@@ -66,10 +66,12 @@ model.fit(X_train, Y_train, epochs=100, batch_size=32)
 
 # 使用 LSTM 模型进行预测
 train_predictions = model.predict(X_train)
+print(train_predictions.shape)
 test_predictions = model.predict(X_test)
 
 # 反归一化预测结果
 train_predictions = scaler.inverse_transform(train_predictions)
+
 test_predictions = scaler.inverse_transform(test_predictions)
 
 # 绘制测试集预测结果的折线图

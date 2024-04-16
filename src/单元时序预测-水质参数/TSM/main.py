@@ -22,7 +22,9 @@ from sklearn.metrics import mean_squared_error
 from keras.layers import Dropout
 from keras.layers import Activation
 from keras.callbacks import EarlyStopping
-
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
 
 class ACO:
     def __init__(self, parameters):
@@ -151,6 +153,7 @@ def fill_missing_data(series):
     return series
 
 
+
 def data_preprocess(file):
     # =============================读取数据集===============================
     data = pd.read_excel(file)
@@ -160,6 +163,7 @@ def data_preprocess(file):
     # 将日期列设置为索引
     data.set_index('日期', inplace=True)
     cols = list(data.columns)
+    print(data)
 
     for i in cols:
         data[[i]] = replace_outliers(data[[i]])
@@ -1230,7 +1234,7 @@ def compare_test_prediction(test_data_key, holt_winters_predictions, sarima_pred
 
 if __name__  == '__main__':
 
-    for i in range(1, 21):
+    for i in range(1, 2):
 
         point = f'样点{i}'
         parameters = 'TSM'

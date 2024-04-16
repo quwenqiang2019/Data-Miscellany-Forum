@@ -2,9 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
-from keras.layers import Attention
+from keras.models import Sequential, Model
+from keras.layers import LSTM, Dense, Attention, Input, Permute, Multiply, Dot, Activation, MultiHeadAttention, Flatten
+
 # 读取数据集
 data = pd.read_csv('data.csv')
 # 将日期列转换为日期时间类型
@@ -43,7 +43,7 @@ def create_dataset(data, look_back=1):
 np.random.seed(7)
 
 # 定义滑动窗口大小
-look_back = 2
+look_back = 3
 
 # 创建滑动窗口数据集
 X_train, Y_train = create_dataset(train_data_scaler, look_back)
@@ -55,21 +55,29 @@ X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
 
 
 # 构建 LSTM 模型
-model = Sequential()
-model.add(LSTM(4, input_shape=(look_back,1)))
-Attention(name='attention_weight')
-# model.add(Attention())
-model.add(Dense(1))
+inputs = Input(shape=(look_back, 1))
+lstm = LSTM(128, return_sequences=True)(inputs)
+attention = Attention()([lstm, lstm])
+attention = Flatten()(attention)
+output = Dense(1)(attention)
+model = Model(inputs=inputs, outputs=output)
 model.compile(loss='mean_squared_error', optimizer='adam')
-model.fit(X_train, Y_train, epochs=100, batch_size=1, verbose=2)
+model.fit(X_train, Y_train, epochs=50, batch_size=1, verbose=2)
+
 
 # 使用 LSTM 模型进行预测
 train_predictions = model.predict(X_train)
 test_predictions = model.predict(X_test)
 
+train_predictions = train_predictions.reshape(-1, 1)
+test_predictions = test_predictions.reshape(-1, 1)
+print(train_predictions)
+print(train_predictions.shape)
+
 # 反归一化预测结果
 train_predictions = scaler.inverse_transform(train_predictions)
 test_predictions = scaler.inverse_transform(test_predictions)
+print(test_predictions)
 
 # 绘制测试集预测结果的折线图
 plt.figure(figsize=(10, 6))
