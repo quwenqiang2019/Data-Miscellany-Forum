@@ -7,12 +7,12 @@ import pandas as pd
 
 
 # 构建模型的函数
-def create_model():
+def create_model(init_mode):
     # 创建模型
     model = Sequential()
-    model.add(Dense(50, input_shape=(8, ), kernel_initializer='uniform', activation='relu'))
+    model.add(Dense(30, input_shape=(8, ), kernel_initializer=init_mode, activation='relu'))
     model.add(Dropout(0.2))
-    model.add(Dense(1, kernel_initializer='uniform', activation='sigmoid'))
+    model.add(Dense(1, kernel_initializer=init_mode, activation='sigmoid'))
 
     # 编译模型
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -30,11 +30,11 @@ Y = dataset.iloc[:,8]
 seed = 7
 np.random.seed(seed)
 
-
+# 创建模型，使用到了上一步找出的 epochs、batch size 最优参数
 # 这里由于KerasClassifier没有定义隐含神经元的参数，需要自定义一个表示隐含层神经元的参数neurons_1，并赋默认值为1
-model = KerasClassifier(model=create_model)
+model = KerasClassifier(model=create_model, epochs=100, batch_size=80, verbose=0, init_mode='uniform')
 # 定义网格搜索参数，进行网格搜索
-param_grid = {"epochs":[20,50,100]}
+param_grid = {'init_mode': ['uniform', 'lecun_uniform', 'normal', 'zero', 'glorot_normal','glorot_uniform', 'he_normal', 'he_uniform']}
 grid = GridSearchCV(estimator=model,  param_grid=param_grid)
 grid_result = grid.fit(X, Y)
 
