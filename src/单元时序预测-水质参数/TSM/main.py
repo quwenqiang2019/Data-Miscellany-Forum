@@ -208,15 +208,15 @@ def data_analysis(data):
     seasonal_decompose(data)
     plot_acf(data)
     plot_pacf(data)
-    # 平稳性检验：Dickey-Fuller检验
-    from statsmodels.tsa.stattools import adfuller
-    adf, pval, usedlag, nobs, crit_vals, icbest = adfuller(data)
-    print('ADF test statistic:', adf)
-    print('ADF p-values:', pval)
-    print('ADF used number of lags:', usedlag)
-    print('ADF number of observations:', nobs)
-    print('ADF critical values:', crit_vals)
-    print('ADF best information criterion: ', icbest)
+    # # 平稳性检验：Dickey-Fuller检验
+    # from statsmodels.tsa.stattools import adfuller
+    # adf, pval, usedlag, nobs, crit_vals, icbest = adfuller(data)
+    # print('ADF test statistic:', adf)
+    # print('ADF p-values:', pval)
+    # print('ADF used number of lags:', usedlag)
+    # print('ADF number of observations:', nobs)
+    # print('ADF critical values:', crit_vals)
+    # print('ADF best information criterion: ', icbest)
 
 
 # ============================================检验时间序列平稳性===========================================
@@ -245,7 +245,7 @@ def TestStationaryPlot(df):
 
 
 #方法二：ADF检验
-def TestStationaryAdfuller(df, cutoff = 0.01):
+def TestStationaryAdfuller(df, cutoff = 0.05):
     df_test = adfuller(df, autolag = 'AIC')
     df_test_output = pd.Series(df_test[0:4], index=['Test Statistic','p-value','#Lags Used','Number of Observations Used'])
 
@@ -475,11 +475,11 @@ def lstm(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     # 构建 LSTM 模型
     model = Sequential()
-    model.add(LSTM(60, activation='relu', input_shape=(window_size, 1)))
+    model.add(LSTM(units=50, activation='relu', input_shape=(window_size, 1)))
     model.add(Dense(1))
     model.compile(optimizer='adam', loss='mse')
     # 训练 LSTM 模型
-    model.fit(X_train, Y_train, epochs=100, batch_size=32)
+    model.fit(X_train, Y_train, epochs=100, batch_size=5)
 
     # 使用 LSTM 模型进行预测
     train_predictions = model.predict(X_train)
@@ -757,10 +757,10 @@ def sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz):
     train_X, train_Y = create_sliding_windows(scaled_train_residuals_fz, look_back)
     # 训练模型  使用ssa找到的最好的神经元个数
     lstm_model = Sequential()
-    lstm_model.add(LSTM(4, input_shape=(look_back, 5)))
+    lstm_model.add(LSTM(50, input_shape=(look_back, 5)))
     lstm_model.add(Dense(1))
     lstm_model.compile(loss='mean_squared_error', optimizer='adam')
-    lstm_model.fit(train_X, train_Y, epochs=100, batch_size=1, verbose=0)
+    lstm_model.fit(train_X, train_Y, epochs=100, batch_size=5, verbose=0)
     # LSTM模型预测整个训练集的残差值
     lstm_train_residuals = lstm_model.predict(train_X)
     lstm_train_residuals = mm1.inverse_transform(lstm_train_residuals)
@@ -846,8 +846,8 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     train_X, train_Y = create_sliding_windows(scaled_train_residuals_fz, look_back)
 
     # ==================================
-    UP = [51, 6, 0.055, 9]
-    DOWN = [50, 5, 0.05, 8]
+    UP = [55, 10, 0.055, 10]
+    DOWN = [45, 5, 0.05, 1]
     NGEN = 100
     popsize = 100
     parameter = [NGEN, popsize, DOWN, UP]
@@ -855,48 +855,27 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     aco = ACO(parameter)
     aco.main()
 
-    # 训练模型  使用ssa找到的最好的神经元个数
+    # 训练模型  使用aco找到的最好的神经元个数
     neurons1 = int(aco.g_best[0])
     neurons2 = int(aco.g_best[1])
     dropout = aco.g_best[2]
     batch_size = int(aco.g_best[3])
 
-    # lstm_model = Sequential()
-    # lstm_model.add(LSTM(
-    #     input_shape=(look_back, 5),
-    #     units=neurons1,
-    #     return_sequences=True))
-    # lstm_model.add(Dropout(dropout))
-    # lstm_model.add(LSTM(
-    #     units=neurons2,
-    #     return_sequences=False))
-    # lstm_model.add(Dropout(dropout))
-    # lstm_model.add(Dense(units=1))
-    # lstm_model.add(Activation("linear"))
-    # lstm_model.compile(loss='mse', optimizer='Adam', metrics='mae')
-    # lstm_model.fit(train_X, train_Y, epochs=150, batch_size=batch_size, validation_split=0.2, verbose=1,
-    #                callbacks=[EarlyStopping(monitor='val_loss', patience=9, restore_best_weights=True)])
+    print('best:', neurons1, neurons2, dropout, batch_size)
 
     inputs = Input(shape=(look_back, 5))
-
     my_model = LSTM(units=neurons1, activation='tanh', return_sequences=True)(inputs)
     my_model = Dropout(dropout)(my_model)
-
     my_model = LSTM(units=neurons2, activation='tanh')(my_model)
     my_model = Dropout(dropout)(my_model)
-
     attention = Dense(units=neurons2, activation='sigmoid', name='attention_vec')(my_model)  # 求解Attention权重
     my_model = Multiply()([my_model, attention])  # attention与LSTM对应数值相乘
-
-
-    # attention = Dense(units=neurons1, activation='sigmoid', name='attention_vec')(my_model)  # 求解Attention权重
-    # my_model = Multiply()([my_model, attention])  # attention与LSTM对应数值相乘
-
     outputs = Dense(1, activation='tanh')(my_model)
     lstm_model = Model(inputs=inputs, outputs=outputs)
     lstm_model.compile(loss='mse', optimizer='Adam', metrics='mae')
-    lstm_model.fit(train_X, train_Y, epochs=150, batch_size=batch_size, validation_split=0.2, verbose=1,
+    lstm_model.fit(train_X, train_Y, epochs=100, batch_size=batch_size, validation_split=0.2, verbose=1,
                    callbacks=[EarlyStopping(monitor='val_loss', patience=9, restore_best_weights=True)])
+
     # =============================================
     # LSTM模型预测整个训练集的残差值
     lstm_train_residuals = lstm_model.predict(train_X)
@@ -961,7 +940,7 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     return test_predictions
 
 
-def compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions, sarima_lstm_v1_predictions, sarima_lstm_v2_predictions):
+def compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, lstm_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions, sarima_lstm_v1_predictions, sarima_lstm_v2_predictions):
     # 创建一个新的图形
     plt.figure(figsize=(12, 6))
 
@@ -969,6 +948,7 @@ def compare_test_prediction(test_data_key, holt_winters_predictions, sarima_pred
     plt.plot(test_data_key.index, test_data_key, label='Actual', marker='+')
     plt.plot(test_data_key.index, holt_winters_predictions, label='holt winters', marker='o')
     plt.plot(test_data_key.index, sarima_predictions, label='sarima', marker='s')
+    plt.plot(test_data_key.index[1:], lstm_predictions, label='lstm', marker='P')
     plt.plot(test_data_key.index[1:], holt_winters_lstm_predictions, label='holt winters+lstm', marker='^')
     plt.plot(test_data_key.index[1:], sarima_lstm_predictions, label='sarima+lstm', marker='*')
     plt.plot(test_data_key.index[1:], sarima_lstm_v1_predictions, label='sarima+lstm(协变量)', marker='d')
@@ -994,6 +974,7 @@ if __name__  == '__main__':
     pd.set_option('display.max_rows', None)
 
     for i in range(2, 3):
+    # for i in [2, 5, 10, 15, 18, 19]:
 
         point = f'样点{i}'
         parameters = 'TSM'
@@ -1024,7 +1005,7 @@ if __name__  == '__main__':
 
 
         # print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
-        # compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions, sarima_lstm_v1_predictions, sarima_lstm_v2_predictions)
+        # compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, lstm_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions, sarima_lstm_v1_predictions, sarima_lstm_v2_predictions)
 
         # writer._save()
 
