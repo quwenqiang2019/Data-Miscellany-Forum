@@ -710,12 +710,15 @@ def cor_analysis(data):
     for i in range(1, 5):
         x = data.iloc[:, i]
         y = data.iloc[:, 0]
-        plt.scatter(x, y, color='blue')
 
+        # 计算相关系数
+        correlation = x.corr(y)
+        print(f'相关系数{i}：', correlation)
+        plt.scatter(x, y, color='blue')
         # 进行线性拟合
         slope, intercept = np.polyfit(x, y, 1)
         trendline = intercept + slope * x
-        print(trendline)
+        # print(trendline)
         # 计算拟合误差
         residuals = y - (slope * x + intercept)
         std_error = np.sqrt(np.sum(residuals ** 2) / (len(x) - 2))
