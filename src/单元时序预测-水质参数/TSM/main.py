@@ -723,7 +723,7 @@ def cor_analysis(data):
         trendline_lower = trendline - 1.96 * std_error
 
         # 绘制趋势线
-        plt.plot(x, trendline, color='red', label='趋势线')
+        plt.plot(x, trendline, color='red', label=f'趋势线: y = {round(slope, 2)}*x + {round(intercept, 2)}')
         # 添加误差阴影
         plt.fill_between(x, trendline_upper, trendline_lower, color='red', alpha=0.2, label='Error Range')
 
@@ -998,9 +998,9 @@ if __name__  == '__main__':
         # sarima_lstm_predictions = sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
         #
         #
-        # cor_analysis(data)
+        cor_analysis(data)
         # sarima_lstm_v1_predictions = sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz)
-        sarima_lstm_v2_predictions = sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz)
+        # sarima_lstm_v2_predictions = sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz)
 
 
 
