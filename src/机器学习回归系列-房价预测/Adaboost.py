@@ -34,14 +34,14 @@ X_train_m = mm1.fit_transform(X_train)
 mm2 = MinMaxScaler()     # 标签进行归一化
 y_train_m = mm2.fit_transform(y_train)
 
-X_test_m = mm1.transform(X_test) #注意fit_transform() 和 transform()的区别
 
 # 建模预测
-model = AdaBoostRegressor(n_estimators=100, random_state=0).fit(X_train_m, y_train_m)
+model = AdaBoostRegressor(n_estimators=100, random_state=0)
+model = model.fit(X_train_m, y_train_m)
 y_train_pred_m = model.predict(X_train_m)
 y_train_pred = mm2.inverse_transform(np.reshape(y_train_pred_m, (-1, 1)))
 # 对测试集特征进行相同规则mm1的归一化处理，然后输入到模型进行预测
-
+X_test_m = mm1.transform(X_test) #注意fit_transform() 和 transform()的区别
 y_test_pred_m = model.predict(X_test_m)
 y_test_pred = mm2.inverse_transform(np.reshape(y_test_pred_m, (-1, 1)))
 

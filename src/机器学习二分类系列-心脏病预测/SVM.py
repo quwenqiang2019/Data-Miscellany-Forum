@@ -29,7 +29,7 @@ features = df.columns.drop(target)
 print(data["target"].value_counts()) # 顺便查看一下样本是否平衡
 
 # 划分训练集和测试集
-df = shuffle(df)
+# df = shuffle(df)
 X_train, X_test, y_train, y_test = train_test_split(df[features], df[[target]], test_size=0.2, random_state=0)
 
 # 归一化

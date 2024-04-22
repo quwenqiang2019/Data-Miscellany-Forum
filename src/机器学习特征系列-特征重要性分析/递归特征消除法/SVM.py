@@ -1,10 +1,9 @@
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
 from sklearn.feature_selection import RFE
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 
 # 准备数据
 data = pd.read_csv(r'dataset.csv')
@@ -18,10 +17,10 @@ features = df.columns.drop(target)
 X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, random_state=0)
 
 
-# 创建随机森林分类器作为选择器的基模型
-model = RandomForestClassifier(n_estimators=50, random_state=42)
-# RFE模型定义，选择保留2个最重要的特征
-selector = RFE(estimator=model, n_features_to_select=2, step=1)
+# 创建支持向量机分类器作为选择器的基模型
+model = SVC(kernel="linear", C=1)
+# RFE模型定义，选择保留1个最重要的特征
+selector = RFE(estimator=model, n_features_to_select=1, step=1)
 selector.fit(X_train, y_train)
 
 # 获取特征排名
@@ -36,7 +35,7 @@ ranking_df = ranking_df.sort_values(by='Ranking')
 # 可视化特征排名
 plt.figure(figsize=(10, 6))
 sns.barplot(x='Ranking', y='Feature', data=ranking_df)
-plt.title('Feature Ranking from Linear RF')
+plt.title('Feature Ranking from Linear SVC')
 plt.xlabel('Ranking')
 plt.ylabel('Feature')
 plt.show()
