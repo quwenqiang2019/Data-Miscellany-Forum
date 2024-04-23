@@ -1,22 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-"""
-作者：胖哥
-微信公众号：胖哥真不错
-微信号：zy10178083
-
-为了防止大家在运行项目时报错(项目都是运行好的，报错基本都是版本不一致 导致的)，
-胖哥把项目中用到的库文件版本在这里说明：
-
-pandas == 1.1.5
-matplotlib == 3.3.4
-seaborn == 0.11.1
-scikit-learn == 0.24.1
-numpy == 1.19.5
-
-"""
-
 # 导入第三方库
 from sklearn.model_selection import train_test_split  # 数据集拆分工具
 import pandas as pd  # 数据处理库
