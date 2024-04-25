@@ -152,54 +152,27 @@ def create_sliding_windows(data, window_size):
         Y.append(data[i + window_size, 0])
     return np.array(X), np.array(Y)
 
-def process_data():
-    # 读取数据集
-    data = pd.read_csv('data.csv')
-    # 将日期列转换为日期时间类型
-    data['Month'] = pd.to_datetime(data['Month'])
-    # 将日期列设置为索引
-    data.set_index('Month', inplace=True)
-
-    # 划分训练集和测试集
-    train_size = int(len(data) * 0.8)
-    train_data = data[:train_size]
-    test_data = data[train_size:]
-
-    # 绘制训练集和测试集的折线图
-    plt.figure(figsize=(10, 6))
-    plt.plot(train_data, label='Training Data')
-    plt.plot(test_data, label='Testing Data')
-    plt.xlabel('Year')
-    plt.ylabel('Passenger Count')
-    plt.title('International Airline Passengers - Training and Testing Data')
-    plt.legend()
-    plt.show()
-
+def process_data(train_data, test_data):
     # 将数据归一化到 0~1 范围
-    scaler = MinMaxScaler()
+    # scaler = MinMaxScaler()
     train_data_scaler = scaler.fit_transform(train_data.values.reshape(-1, 1))
-    print(train_data_scaler)
     test_data_scaler = scaler.transform(test_data.values.reshape(-1, 1))
-    print(test_data_scaler)
-
-
 
     # 定义滑动窗口大小
     window_size = 1
 
     # 创建滑动窗口数据集
-    X_train, Y_train = create_sliding_windows(train_data_scaler, window_size)
-    X_test, Y_test = create_sliding_windows(test_data_scaler, window_size)
+    X_train, y_train = create_sliding_windows(train_data_scaler, window_size)
+    X_test, y_test = create_sliding_windows(test_data_scaler, window_size)
 
     # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
     X_train = np.reshape(X_train, (X_train.shape[0], window_size, 1))
     X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
 
-    return X_train, Y_train, X_test, Y_test
+    return X_train, y_train, X_test, y_test
 
 
 def build_model(X_train, neurons1, neurons2, dropout):
-
     nb_features = X_train.shape[2]
     input1 = X_train.shape[1]
     model1 = Sequential()
@@ -227,7 +200,7 @@ def training(X):
     dropout = round(X[2], 6)
     batch_size = int(X[3])
     print(X)
-    model, X_train, y_train, X_test, y_test = build_model(X, neurons1, neurons2, dropout)
+    model = build_model(X_train, neurons1, neurons2, dropout)
     model.fit(
         X_train,
         y_train,
@@ -245,58 +218,98 @@ def training(X):
 
 
 
+if __name__ == "__main__":
+    '''
+    神经网络第一层神经元个数
+    神经网络第二层神经元个数
+    dropout比率
+    batch_size
+    '''
+    # 读取数据集
+    data = pd.read_csv('data.csv')
+    # 将日期列转换为日期时间类型
+    data['Month'] = pd.to_datetime(data['Month'])
+    # 将日期列设置为索引
+    data.set_index('Month', inplace=True)
 
-'''
-神经网络第一层神经元个数
-神经网络第二层神经元个数
-dropout比率
-batch_size
-'''
-UP = [51, 6, 0.055, 9]
-DOWN = [50, 5, 0.05, 8]
+    # 划分训练集和测试集
+    train_size = int(len(data) * 0.8)
+    train_data = data[:train_size]
+    test_data = data[train_size:]
 
-# 开始优化
-ssa = SSA(training, n_dim=4, pop_size=22, max_iter=128, lb=DOWN, ub=UP)
-ssa.run()
-print('best_params is ', ssa.gbest_x)
-print('best_precision is', 1 - ssa.gbest_y)
-
-# 训练模型  使用ssa找到的最好的神经元个数
-neurons1 = int(ssa.gbest_x[0])
-neurons2 = int(ssa.gbest_x[1])
-dropout = ssa.gbest_x[2]
-batch_size = int(ssa.gbest_x[3])
-
-model = build_model(X_train, neurons1, neurons2, dropout)
-history1 = model.fit(X_train, Y_train, epochs=150, batch_size=batch_size, validation_split=0.2, verbose=1,
-                     callbacks=[EarlyStopping(monitor='val_loss', patience=9, restore_best_weights=True)])
+    # 绘制训练集和测试集的折线图
+    plt.figure(figsize=(10, 6))
+    plt.plot(train_data, label='Training Data')
+    plt.plot(test_data, label='Testing Data')
+    plt.xlabel('Year')
+    plt.ylabel('Passenger Count')
+    plt.title('International Airline Passengers - Training and Testing Data')
+    plt.legend()
+    plt.show()
 
 
-# 使用 LSTM 模型进行预测
-train_predictions = model.predict(X_train)
-test_predictions = model.predict(X_test)
+    scaler = MinMaxScaler()
+    train_data_scaler = scaler.fit_transform(train_data.values.reshape(-1, 1))
+    test_data_scaler = scaler.transform(test_data.values.reshape(-1, 1))
 
-# 反归一化预测结果
-train_predictions = scaler.inverse_transform(train_predictions)
-test_predictions = scaler.inverse_transform(test_predictions)
+    # 定义滑动窗口大小
+    window_size = 1
 
-# 绘制测试集预测结果的折线图
-plt.figure(figsize=(10, 6))
-plt.plot(test_data, label='Actual')
-plt.plot(list(test_data.index)[-len(test_predictions):], test_predictions, label='Predicted')
-plt.xlabel('Month')
-plt.ylabel('Passengers')
-plt.title('Actual vs Predicted')
-plt.legend()
-plt.show()
+    # 创建滑动窗口数据集
+    X_train, y_train = create_sliding_windows(train_data_scaler, window_size)
+    X_test, y_test = create_sliding_windows(test_data_scaler, window_size)
 
-# 绘制原始数据、训练集预测结果和测试集预测结果的折线图
-plt.figure(figsize=(10, 6))
-plt.plot(data, label='Actual')
-plt.plot(list(train_data.index)[window_size:train_size], train_predictions, label='Training Predictions')
-plt.plot(list(test_data.index)[-(len(test_data)-window_size):], test_predictions, label='Testing Predictions')
-plt.xlabel('Year')
-plt.ylabel('Passenger Count')
-plt.title('International Airline Passengers - Actual vs Predicted')
-plt.legend()
-plt.show()
+    # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
+    X_train = np.reshape(X_train, (X_train.shape[0], window_size, 1))
+    X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
+
+
+    UP = [51, 6, 0.055, 9]
+    DOWN = [50, 5, 0.05, 8]
+
+    # 开始优化
+    ssa = SSA(training, n_dim=4, pop_size=22, max_iter=1, lb=DOWN, ub=UP)
+    ssa.run()
+    print('best_params is ', ssa.gbest_x)
+    print('best_precision is', 1 - ssa.gbest_y)
+
+    # 训练模型  使用ssa找到的最好的神经元个数
+    neurons1 = int(ssa.gbest_x[0])
+    neurons2 = int(ssa.gbest_x[1])
+    dropout = ssa.gbest_x[2]
+    batch_size = int(ssa.gbest_x[3])
+
+    model = build_model(X_train, neurons1, neurons2, dropout)
+    history1 = model.fit(X_train, y_train, epochs=150, batch_size=batch_size, validation_split=0.2, verbose=1,
+                         callbacks=[EarlyStopping(monitor='val_loss', patience=9, restore_best_weights=True)])
+
+
+    # 使用 LSTM 模型进行预测
+    train_predictions = model.predict(X_train)
+    test_predictions = model.predict(X_test)
+
+
+    # 反归一化预测结果
+    train_predictions = scaler.inverse_transform(train_predictions)
+    test_predictions = scaler.inverse_transform(test_predictions)
+
+    # 绘制测试集预测结果的折线图
+    plt.figure(figsize=(10, 6))
+    plt.plot(test_data, label='Actual')
+    plt.plot(list(test_data.index)[-len(test_predictions):], test_predictions, label='Predicted')
+    plt.xlabel('Month')
+    plt.ylabel('Passengers')
+    plt.title('Actual vs Predicted')
+    plt.legend()
+    plt.show()
+
+    # 绘制原始数据、训练集预测结果和测试集预测结果的折线图
+    plt.figure(figsize=(10, 6))
+    plt.plot(data, label='Actual')
+    plt.plot(list(train_data.index)[window_size:train_size], train_predictions, label='Training Predictions')
+    plt.plot(list(test_data.index)[-(len(test_data)-window_size):], test_predictions, label='Testing Predictions')
+    plt.xlabel('Year')
+    plt.ylabel('Passenger Count')
+    plt.title('International Airline Passengers - Actual vs Predicted')
+    plt.legend()
+    plt.show()
