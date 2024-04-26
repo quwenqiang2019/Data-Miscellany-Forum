@@ -152,25 +152,6 @@ def create_sliding_windows(data, window_size):
         Y.append(data[i + window_size, 0])
     return np.array(X), np.array(Y)
 
-def process_data(train_data, test_data):
-    # 将数据归一化到 0~1 范围
-    # scaler = MinMaxScaler()
-    train_data_scaler = scaler.fit_transform(train_data.values.reshape(-1, 1))
-    test_data_scaler = scaler.transform(test_data.values.reshape(-1, 1))
-
-    # 定义滑动窗口大小
-    window_size = 1
-
-    # 创建滑动窗口数据集
-    X_train, y_train = create_sliding_windows(train_data_scaler, window_size)
-    X_test, y_test = create_sliding_windows(test_data_scaler, window_size)
-
-    # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
-    X_train = np.reshape(X_train, (X_train.shape[0], window_size, 1))
-    X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
-
-    return X_train, y_train, X_test, y_test
-
 
 def build_model(X_train, neurons1, neurons2, dropout):
     nb_features = X_train.shape[2]
