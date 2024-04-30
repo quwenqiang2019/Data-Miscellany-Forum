@@ -7,10 +7,11 @@ from keras.layers import LSTM, Dense
 from keras.layers import Dropout
 from keras.layers import Activation
 from keras.callbacks import EarlyStopping
-from sklearn.metrics import mean_squared_error
 import random
 import time
 import seaborn as sns
+
+
 
 def build_model(X_train, neurons1, neurons2, dropout):
     nb_features = X_train.shape[2]
