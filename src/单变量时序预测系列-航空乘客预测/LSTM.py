@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from keras.models import Sequential
+from keras.layers import LSTM, Dense
 
 # 读取数据集
 data = pd.read_csv('data.csv')
@@ -30,9 +30,8 @@ plt.show()
 # 将数据归一化到 0~1 范围
 scaler = MinMaxScaler()
 train_data_scaler = scaler.fit_transform(train_data.values.reshape(-1, 1))
-print(train_data_scaler)
 test_data_scaler = scaler.transform(test_data.values.reshape(-1, 1))
-print(test_data_scaler)
+
 # 定义滑动窗口函数
 def create_sliding_windows(data, window_size):
     X, Y = [], []
@@ -66,12 +65,10 @@ model.fit(X_train, Y_train, epochs=100, batch_size=32)
 
 # 使用 LSTM 模型进行预测
 train_predictions = model.predict(X_train)
-print(train_predictions.shape)
 test_predictions = model.predict(X_test)
 
 # 反归一化预测结果
 train_predictions = scaler.inverse_transform(train_predictions)
-
 test_predictions = scaler.inverse_transform(test_predictions)
 
 # 绘制测试集预测结果的折线图

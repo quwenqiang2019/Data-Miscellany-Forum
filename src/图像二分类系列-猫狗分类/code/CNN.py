@@ -11,7 +11,7 @@ print(current_dir)
 
 # 创建新的目录来存储需要的数据集
 base_dir = current_dir + '/cat_vs_dog_small'
-if  not os.path.exists(base_dir):
+if not os.path.exists(base_dir):
     os.mkdir(base_dir)
 
 # 分别创建训练集、验证集的目录
@@ -24,7 +24,7 @@ if not os.path.exists(validation_dir):
 
 # 创建猫、狗的训练、验证图像目录
 train_cats_dir = os.path.join(train_dir, 'cats')
-if  not os.path.exists(train_cats_dir):
+if not os.path.exists(train_cats_dir):
     os.mkdir(train_cats_dir)
 train_dogs_dir = os.path.join(train_dir, 'dogs')
 if not os.path.exists(train_dogs_dir):

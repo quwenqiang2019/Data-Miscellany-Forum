@@ -32,11 +32,10 @@ oov_tok = "<OOV>"
 tokenizer = Tokenizer(num_words=vocab_size, oov_token=oov_tok)
 tokenizer.fit_on_texts(X_train)
 train_sequences = tokenizer.texts_to_sequences(X_train)
-
+test_sequences = tokenizer.texts_to_sequences(X_test)
 
 sequence_length = 200
 train_padded = pad_sequences(train_sequences, maxlen=sequence_length, padding='post', truncating='post')
-test_sequences = tokenizer.texts_to_sequences(X_test)
 test_padded = pad_sequences(test_sequences, maxlen=sequence_length, padding='post', truncating='post')
 
 embedding_dim = 16
