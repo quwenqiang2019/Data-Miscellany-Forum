@@ -84,11 +84,11 @@ def build_model(neurons_1=50, neurons_2=50):   # 这里采用sequential模型，
     return grid_model
 
 grid_model = KerasRegressor(model=build_model,verbose=1)  # 使用 Keras 中的 KerasRegressor 类来封装一个自定义的回归模型。使用了一个名为 build_model 的函数或模型作为参数传递给 KerasRegressor
-parameters = {'batch_size' : [16,20],
-              'epochs' : [8,10],
-              'optimizer' : ['adam','Adadelta'],
-              'model__neurons_1': [50, 128, 256],
-              'model__neurons_2': [50, 128, 256]}    # parameters 是一个字典，其中包含了需要调优的超参数及其对应的备选取值。在这个例子中，'batch_size' 表示批量大小，备选取值为 [16, 20]；'epochs' 表示训练轮数，备选取值为 [8, 10]；'optimizer' 表示优化器的选择，备选取值为 ['adam', 'Adadelta']
+parameters = {'batch_size' : [16],
+              'epochs' : [8],
+              'optimizer' : ['adam'],
+              'model__neurons_1': [50],
+              'model__neurons_2': [50]}    # parameters 是一个字典，其中包含了需要调优的超参数及其对应的备选取值。在这个例子中，'batch_size' 表示批量大小，备选取值为 [16, 20]；'epochs' 表示训练轮数，备选取值为 [8, 10]；'optimizer' 表示优化器的选择，备选取值为 ['adam', 'Adadelta']
 
 grid_search  = GridSearchCV(estimator = grid_model,
                             param_grid = parameters,
@@ -114,6 +114,7 @@ plt.xlabel('时间')
 plt.xticks(rotation=45)
 plt.ylabel('开盘')
 plt.legend()
+plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred_train.jpg'), bbox_inches='tight', dpi = 600)
 plt.show()
 
 
@@ -130,6 +131,7 @@ plt.xlabel('时间')
 plt.xticks(rotation=45)
 plt.ylabel('开盘')
 plt.legend()
+plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred_test.jpg'), bbox_inches='tight', dpi = 600)
 plt.show()
 
 
@@ -162,14 +164,110 @@ print('train Score: %.2f R2' % (trainScore3))
 trainScore4 = mean_absolute_percentage_error(original_train, pred_train)  # 计算测试集MAPE
 print('train Score: %.2f MAPE' % (trainScore4))
 
-df = pd.DataFrame({'Test Score: %.2f RMSE': [testScore1],
-                   'Test Score: %.2f MAE': [testScore2],
-                   'Test Score: %.2f R2': [testScore3],
-                   'Test Score: %.2f MAPE': [testScore4],
-                   'Train Score: %.2f RMSE': [trainScore1],
-                   'Train Score: %.2f MAE': [trainScore2],
-                   'Train Score: %.2f R2': [trainScore3],
-                   'Train Score: %.2f MAPE': [trainScore4]
-                   })
+
+index = ['Test Score: %.2f RMSE',
+          'Test Score: %.2f MAE',
+          'Test Score: %.2f R2',
+          'Test Score: %.2f MAPE',
+          'Train Score: %.2f RMSE',
+          'Train Score: %.2f MAE',
+          'Train Score: %.2f R2',
+          'Train Score: %.2f MAPE']
+
+values = [testScore1,  testScore2, testScore3, testScore4, trainScore1, trainScore2, trainScore3, trainScore4]
+df = pd.DataFrame({'index': index, 'values': values})
+print(df)
 
 df.to_excel(os.path.join(base_dir, 'result', 'lstm.xlsx'), index=False)   # 将评估指标值存为数据表
+
+values1 = [round(trainScore1, 2),  round(trainScore2, 2), round(trainScore3, 2), round(trainScore4, 2)]
+values2 = [round(testScore1, 2),  round(testScore2, 2), round(testScore3, 2), round(testScore4, 2)]
+
+values1_gy = [round(trainScore1, 2)/max(round(trainScore1, 2), round(testScore1, 2)),  round(trainScore2, 2)/max(round(trainScore2, 2), round(testScore2, 2)), round(trainScore3, 2)/max(round(trainScore3, 2), round(testScore3, 2)), round(trainScore4, 2)/max(round(trainScore4, 2), round(testScore4, 2))]
+values2_gy = [round(testScore1, 2)/max(round(trainScore1, 2), round(testScore1, 2)),  round(testScore2, 2)/max(round(trainScore2, 2), round(testScore2, 2)), round(testScore3, 2)/max(round(trainScore3, 2), round(testScore3, 2)), round(testScore4, 2)/max(round(trainScore4, 2), round(testScore4, 2))]
+
+def plot_radar(values1, values2):
+    font = {'family': 'Times New Roman',
+            'size': 12,
+            }
+    sns.set(font_scale=1.2)
+    plt.rc('font', family='Times New Roman')
+    plt.style.use('ggplot')  # 使用ggplot的绘图风格
+
+    # 构造数据
+    feature = ["RMSE", "MAE", "R2", "MAPE"]
+
+
+    # 设置每个数据点的显示位置，在雷达图上用角度表示
+    angles = np.linspace(0, 2 * np.pi, len(feature), endpoint=False)
+    angles = np.concatenate((angles, [angles[0]]))
+    feature = np.concatenate((feature, [feature[0]]))
+
+    # 绘图
+    fig = plt.figure(figsize=(8, 8))
+    # 设置为极坐标格式
+    ax = fig.add_subplot(111, polar=True)
+
+    for values in [values1, values2]:
+        # 拼接数据首尾，使图形中线条封闭
+        values = np.concatenate((values, [values[0]]))
+        # 绘制折线图
+        ax.plot(angles, values, 'o-', linewidth=2)
+
+    for values in [values1, values2]:
+        values = np.concatenate((values, [values[0]]))
+        # 填充颜色
+        ax.fill(angles, values, alpha=0.25)
+
+    # 设置图标上的角度划分刻度，为每个数据点处添加标签
+    ax.set_thetagrids(angles * 180 / np.pi, feature, fontsize=14, style='italic')
+    # 设置雷达图的范围
+    ax.set_ylim(0.1, 1)
+    # 设置雷达图的0度起始位置
+    ax.set_theta_zero_location('N')
+    # 设置雷达图的坐标值显示角度，相对于起始角度的偏移量
+    ax.set_rlabel_position(270)
+    plt.legend(["train", "test"], loc='best')
+    # 添加标题
+    plt.title('Comparison of evaluation indicators', fontsize=14)
+    # 添加网格线
+    plt.savefig(os.path.join(base_dir, 'result', 'Comparison_radar.jpg'), bbox_inches='tight', dpi=600)
+    plt.show()
+
+def plot_bar(values1, values2):
+    font = {'family': 'Times New Roman',
+            'size': 12,
+            }
+    sns.set(font_scale=1.2)
+
+    features = ["RMSE", "MAE", "R2", "MAPE"]
+
+    train = values1
+    test = values2
+
+    x = np.arange(len(features))
+    width = 0.2
+    train_x = x
+    test_x = x + width
+
+    # 绘图
+    plt.bar(train_x, train, width=width, color='gold', label='train data')
+    plt.bar(test_x, test, width=width, color="silver", label="test data")
+
+    plt.xticks(x + width, labels=features)
+
+    # 显示柱状图的高度文本
+    for i in range(len(features)):
+        plt.text(train_x[i], train[i], train[i], va="bottom", ha="center", fontsize=8)
+        plt.text(test_x[i], test[i], test[i], va="bottom", ha="center", fontsize=8)
+
+    # 显示图例
+    plt.legend(loc="upper right")
+    plt.savefig(os.path.join(base_dir, 'result', 'Comparison_bar.jpg'), bbox_inches='tight', dpi=600)
+    plt.show()
+
+
+
+
+plot_bar(values1, values2)
+plot_radar(values1_gy, values2_gy)
