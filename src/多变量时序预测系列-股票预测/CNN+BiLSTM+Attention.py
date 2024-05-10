@@ -18,6 +18,7 @@ from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
 from keras.layers import *
 from keras.models import *
+from keras.layers.merging.concatenate import concatenate
 
 # 读取数据
 df=pd.read_csv("data.csv", parse_dates=["Date"], index_col=[0])
@@ -54,7 +55,7 @@ def createXY(dataset,n_past):
             dataY.append(dataset[i,0])
     return np.array(dataX),np.array(dataY)
 
-window_size = 30
+window_size = 3
 trainX,trainY=createXY(df_for_training_scaled,window_size)
 testX,testY=createXY(df_for_testing_scaled,window_size)
 
@@ -68,23 +69,74 @@ print("testX Shape-- ",testX.shape)
 print("testY Shape-- ",testY.shape)
 
 
+# 注意力机制
+def attention_3d_block(inputs):
+    input_dim = int(inputs.shape[2])
+    a = inputs
+    a = Dense(input_dim, activation='softmax')(a)
+    # 根据给定的模式(dim)置换输入的维度  例如(2,1)即置换输入的第1和第2个维度
+    a_probs = Permute((1, 2), name='attention_vec')(a)
+    # Layer that multiplies (element-wise) a list of inputs.
+    output_attention_mul = Multiply()([inputs, a_probs])
+    return output_attention_mul
+
+# ------------------------------------------------------------------------------------------------------#
+#   注意力模块，主要是实现对step维度的注意力机制
+#   在这里大家可能会疑惑，为什么需要先Permute再进行注意力机制的施加。
+#   这是因为，如果我们直接进行全连接的话，我们的最后一维是特征维度，这个时候，我们每个step的特征是分开的，
+#   此时进行全连接的话，得出来注意力权值每一个step之间是不存在特征交换的，自然也就不准确了。
+#   所以在这里我们需要首先将step维度转到最后一维，然后再进行全连接，根据每一个step的特征获得注意力机制的权值。
+def attention_block(inputs, time_step):
+    # batch_size, time_steps, lstm_units -> batch_size, lstm_units, time_steps
+    a = Permute((2, 1))(inputs)
+    # batch_size, lstm_units, time_steps -> batch_size, lstm_units, time_steps
+    a = Dense(time_step, activation='softmax')(a)  # 和步长有关
+    # batch_size, lstm_units, time_steps -> batch_size, time_steps, lstm_units
+    a_probs = Permute((2, 1), name='attention_vec')(a)
+    # 相当于获得每一个step中，每个特征的权重
+    output_attention_mul = concatenate([inputs, a_probs], name='attention_mul')
+    return output_attention_mul
 
 
-#设置LSTM的时间窗等参数
-lstm_units = 50
-dropout = 0.01
-epoch=160
+# 建立cnn-BiLSTM-并添加注意力机制
+def cnn_bilstm_attention_model_1(window_size, fea_num):
+    inputs = Input(shape=(window_size, fea_num))
+    # 卷积层和dropout层
+    x = Conv1D(filters=64, kernel_size=1, activation='relu')(inputs)  # , padding = 'same'
+    x = Dropout(0.3)(x)
+    # For GPU you can use CuDNNLSTM cpu LSTM
+    lstm_out = Bidirectional(CuDNNLSTM(50, return_sequences=True))(x)
+    lstm_out = Dropout(0.3)(lstm_out)
+    attention_mul = attention_3d_block(lstm_out)
+    # 用于将输入层的数据压成一维的数据，一般用再卷积层和全连接层之间
+    attention_mul = Flatten()(attention_mul)
 
-#建立LSTM模型 训练
-inputs=Input(shape=(window_size, fea_num))
-my_model=Conv1D(filters = lstm_units, kernel_size = 1, activation = 'sigmoid')(inputs)#卷积层
-my_model=MaxPooling1D(pool_size = window_size)(my_model)#池化层
-my_model=Dropout(dropout)(my_model)#droupout层
-my_model=Bidirectional(LSTM(lstm_units, activation='tanh'), name='bilstm')(inputs)#双向LSTM层
-attention=Dense(lstm_units*2, activation='sigmoid', name='attention_vec')(my_model)#求解Attention权重
-my_model=Multiply()([my_model, attention])#attention与LSTM对应数值相乘
-outputs = Dense(1, activation='tanh')(my_model)
-my_model = Model(inputs=inputs, outputs=outputs)
+    # output = Dense(1, activation='sigmoid')(attention_mul)  分类
+    output = Dense(1, activation='linear')(attention_mul)
+    model = Model(inputs=[inputs], outputs=output)
+    return model
+
+
+
+def cnn_bilstm_attention_model_2(window_size, fea_num):
+    inputs = Input(shape=(window_size, fea_num))
+    x = Conv1D(filters=64, kernel_size=1, activation='relu')(inputs)  # , padding = 'same'
+    x = Dropout(0.3)(x)
+    # lstm_out = Bidirectional(LSTM(lstm_units, activation='relu'), name='bilstm')(x)
+    # 对于GPU可以使用CuDNNLSTM
+    lstm_out = Bidirectional(LSTM(128, return_sequences=True))(x)
+    lstm_out = Dropout(0.3)(lstm_out)
+    attention_mul = attention_block(lstm_out, window_size)
+    attention_mul = Flatten()(attention_mul)#扁平层，变为一维数据
+    output = Dense(1, activation='sigmoid')(attention_mul)
+    model = Model(inputs=[inputs], outputs=output)
+    return model
+
+
+
+
+my_model = cnn_bilstm_attention_model_1(window_size, fea_num)
+# my_model = cnn_bilstm_attention_model_2(window_size, fea_num)
 
 
 my_model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
