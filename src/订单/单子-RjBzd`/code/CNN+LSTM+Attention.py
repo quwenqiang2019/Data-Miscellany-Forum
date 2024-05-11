@@ -14,7 +14,7 @@ from keras.layers import CuDNNLSTM
 # 读取数据集
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__name__)))
 df = pd.DataFrame(pd.read_csv(os.path.join(base_dir, 'data', '特征截取后.csv')))
-col_names = df.columns.tolist()[3:]
+col_names = df.columns.tolist()[1:]
 print(col_names)
 
 # 指定要写入的excel文件路径
@@ -85,7 +85,7 @@ for col_name in col_names:
     inputs=Input(shape=(look_back, 1))
     my_model=Conv1D(filters = lstm_units, kernel_size = 1, activation = 'sigmoid')(inputs)#卷积层
     my_model=Dropout(dropout)(my_model)#droupout层
-    my_model=CuDNNLSTM(lstm_units, activation='tanh', return_sequences=True)(my_model)      #双向LSTM层
+    my_model=LSTM(lstm_units, activation='tanh', return_sequences=True)(my_model)      #LSTM层
     attention = attention_block(my_model, look_back)
     attention = Flatten()(attention)
     outputs = Dense(1, activation='tanh')(attention)
@@ -160,7 +160,7 @@ for col_name in col_names:
 
     # 将生成的DataFrame写入Excel文件的不同工作表中
     sheet_name = f'{col_name}'
-    df.to_excel(writer, sheet_name=sheet_name)
+    df_.to_excel(writer, sheet_name=sheet_name)
 
 # 保存Excel文件
 writer._save()

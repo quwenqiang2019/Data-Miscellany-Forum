@@ -4,18 +4,19 @@ from scikeras.wrappers import KerasClassifier
 from sklearn.model_selection import GridSearchCV
 import numpy as np
 import pandas as pd
-
+from keras.optimizers import SGD
 
 # 构建模型的函数
-def create_model(activation):
+def create_model(learn_rate, momentum, decay):
     # 创建模型
     model = Sequential()
-    model.add(Dense(50, input_shape=(8, ), kernel_initializer='uniform', activation=activation))
-    model.add(Dropout(0.2))
-    model.add(Dense(1, kernel_initializer='uniform', activation=activation))
+    model.add(Dense(50, input_shape=(8, ), kernel_initializer='uniform', activation='relu'))
+    model.add(Dropout(0.05))
+    model.add(Dense(1, kernel_initializer='uniform', activation='sigmoid'))
 
     # 编译模型
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    optimizer = SGD(learning_rate=learn_rate, momentum=momentum, decay=decay)
+    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
     return model
 
 # 加载数据
@@ -31,11 +32,10 @@ seed = 7
 np.random.seed(seed)
 
 # 创建模型，使用到了上一步找出的 epochs、batch size 最优参数
-# 这里由于KerasClassifier没有定义表示激活函数的参数，需要自定义一个表示激活函数的参数activation，并赋默认值为'relu'
-model = KerasClassifier(model=create_model, epochs=100, batch_size=80, verbose=0, activation='relu')
+# 这里由于KerasClassifier没有定义隐含神经元的参数，需要自定义一个表示学习率的参数learn_rate，并赋默认值为0.01，自定义一个表示动量的参数momentum，并赋默认值为0，自定义一个表示权重衰减系数的参数decay，并赋默认值为0.1
+model = KerasClassifier(model=create_model, epochs=100, batch_size=80, verbose=0, learn_rate=0.01, momentum=0, decay=0.01)
 # 定义网格搜索参数，进行网格搜索
-param_grid = {'activation': ['softmax', 'softplus', 'softsign', 'relu',
-              'tanh', 'sigmoid', 'hard_sigmoid', 'linear']}
+param_grid = {'learn_rate': [0.01, 0.1], 'momentum': [0.0, 0.2],  'decay': [0.01]}
 grid = GridSearchCV(estimator=model,  param_grid=param_grid)
 grid_result = grid.fit(X, Y)
 
