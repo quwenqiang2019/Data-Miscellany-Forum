@@ -9,6 +9,7 @@ from keras.layers import Activation
 from keras.callbacks import EarlyStopping
 from sklearn.metrics import mean_squared_error
 import random
+import seaborn as sns
 
 def GWO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
     # ===初始化 alpha, beta, and delta_pos=======
@@ -185,6 +186,8 @@ if __name__ == "__main__":
     test_data = data[train_size:]
 
     # 绘制训练集和测试集的折线图
+    sns.set(font_scale=1.2)
+    plt.rc('font', family=['Times New Roman', 'SimSun'], size=12)
     plt.figure(figsize=(10, 6))
     plt.plot(train_data, label='Training Data')
     plt.plot(test_data, label='Testing Data')
