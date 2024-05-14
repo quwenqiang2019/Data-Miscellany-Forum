@@ -7,53 +7,49 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingClassifier
 
-from sklearn.metrics import explained_variance_score
-from sklearn.metrics import mean_absolute_error
-from sklearn.metrics import mean_squared_error
-from sklearn.metrics import mean_absolute_percentage_error
-from sklearn.metrics import r2_score
 from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import roc_curve
+from sklearn.metrics import auc
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 
 BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 print(BASE_DIR)
 
 
 def base_model(x_train, x_test, y_train, y_test):
-    model = GradientBoostingRegressor()
+    model = GradientBoostingClassifier()
     model.fit(x_train, y_train)
-    y_pred_test = model.predict(x_test)
 
-    sns.set_style('darkgrid')
-    font1 = {'family': ['SimSun','Times New Roman'], 'weight': 'normal', 'size': 14}
-    plt.rc('font', **font1)
-    plt.rcParams["axes.unicode_minus"] = False
-    # 验证集预测值与真实值的对比
-    plt.plot(list(range(0, len(X_test))), y_test, marker='o')
-    plt.plot(list(range(0, len(X_test))), y_pred_test, marker='*')
-    plt.legend(['真实值', '预测值'])
-    plt.xlabel('序列')
-    plt.ylabel('房价')
-    plt.title('验证集预测值与真实值的对比')
+    # 模型推理与评价
+    y_pred = model.predict(X_test)
+    y_scores = model.predict_proba(X_test)
+    acc = accuracy_score(y_test, y_pred)  # 准确率acc
+    cm = confusion_matrix(y_test, y_pred)  # 混淆矩阵
+    cr = classification_report(y_test, y_pred)  # 分类报告
+    fpr, tpr, thresholds = roc_curve(y_test, y_scores[:, 1], pos_label=1)  # 计算ROC曲线和AUC值,绘制ROC曲线
+    roc_auc = auc(fpr, tpr)
+    plt.figure()
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic')
+    plt.legend(loc="lower right")
     plt.show()
 
-    # 评价
-    df = pd.DataFrame({
-                       'explained_variance_score': [round(explained_variance_score(y_test, y_pred_test), 2)],
-                        'MAE': [round(mean_absolute_error(y_test, y_pred_test), 2)],
-                       'MAPE': [round(mean_absolute_percentage_error(y_test, y_pred_test), 2)],
-                        'RMSE': [round(np.sqrt(mean_squared_error(y_test, y_pred_test)), 2)],
-                       'R² score': [round(r2_score(y_test, y_pred_test), 2)]})
+    return
 
-    print(df)
-
-    return y_test, y_pred_test
 
 
 def best_model(x_train, x_test, y_train, y_test):
 
-    model = GradientBoostingRegressor()
+    model = GradientBoostingClassifier()
     # 定义超参数网格
     param_grid_1 = {'n_estimators':range(1,200,10)}
     param_grid_2 = {'min_samples_split': range(2, 50, 5)}
@@ -112,51 +108,53 @@ def best_model(x_train, x_test, y_train, y_test):
     cvres = grid_search.cv_results_
     for mean_score, params in zip(cvres["mean_test_score"], cvres["params"]):
         print(np.sqrt(-mean_score), params)
-    y_pred_test = final_model.predict(x_test)
 
     sns.set_style('darkgrid')
     font1 = {'family': ['SimSun','Times New Roman'], 'weight': 'normal', 'size': 14}
     plt.rc('font', **font1)
     plt.rcParams["axes.unicode_minus"] = False
-    # 验证集预测值与真实值的对比
-    plt.plot(list(range(0, len(X_test))), y_test, marker='o')
-    plt.plot(list(range(0, len(X_test))), y_pred_test, marker='*')
-    plt.legend(['真实值', '预测值'])
-    plt.xlabel('序列')
-    plt.ylabel('房价')
-    plt.title('验证集预测值与真实值的对比')
+    # 模型推理与评价
+    y_pred = final_model.predict(X_test)
+    y_scores = final_model.predict_proba(X_test)
+    acc = accuracy_score(y_test, y_pred)  # 准确率acc
+    cm = confusion_matrix(y_test, y_pred)  # 混淆矩阵
+    cr = classification_report(y_test, y_pred)  # 分类报告
+    fpr, tpr, thresholds = roc_curve(y_test, y_scores[:, 1], pos_label=1)  # 计算ROC曲线和AUC值,绘制ROC曲线
+    roc_auc = auc(fpr, tpr)
+    plt.figure()
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic')
+    plt.legend(loc="lower right")
     plt.show()
-
-
-    # 评价
-    df = pd.DataFrame({
-                       'explained_variance_score': [round(explained_variance_score(y_test, y_pred_test), 2)],
-                        'MAE': [round(mean_absolute_error(y_test, y_pred_test), 2)],
-                       'MAPE': [round(mean_absolute_percentage_error(y_test, y_pred_test), 2)],
-                        'RMSE': [round(np.sqrt(mean_squared_error(y_test, y_pred_test)), 2)],
-                       'R² score': [round(r2_score(y_test, y_pred_test), 2)]})
-
-    print(df)
-
-    return y_test, y_pred_test
 
 
 
 
 if __name__ == '__main__':
-    # 导入数据
-    filename = 'data.csv'
-    names = ['CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS',
-             'RAD', 'TAX', 'PRTATIO', 'B', 'LSTAT', 'MEDV']
-    dataset = pd.read_csv(filename, names=names, delim_whitespace=True)
-    print(dataset)
-    df = pd.DataFrame(dataset)
+    # 准备数据
+    data = pd.read_csv(r'Dataset.csv')
+    df = pd.DataFrame(data)
+    ## 数据基本信息
+    print(df.head())
+    print(df.info())
+    print(df.shape)
+    print(df.columns)
+    print(df.dtypes)
+    cat_cols = [col for col in df.columns if df[col].dtype == "object"]  # 类别型变量名
+    num_cols = [col for col in df.columns if df[col].dtype != "object"]  # 数值型变量名
 
-    #  划分数据集
-    features = names[:-1]
-    target = ['MEDV']
+    # 提取目标变量和特征变量
+    target = 'target'
+    features = df.columns.drop(target)
+    print(data["target"].value_counts())  # 顺便查看一下样本是否平衡
+
+    # 划分训练集和测试集
     X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, random_state=0)
 
-
-    y_test_base_gb, y_pred_base_gb = base_model(X_train, X_test, y_train, y_test)
-    y_test_gs_gb, y_pred_gs_gb = best_model(X_train, X_test, y_train, y_test)
+    base_model(X_train, X_test, y_train, y_test)
+    best_model(X_train, X_test, y_train, y_test)
