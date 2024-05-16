@@ -68,17 +68,15 @@ print("testY Shape-- ",testY.shape)
 
 def build_model():
     grid_model = Sequential()
-    grid_model.add(LSTM(50,return_sequences=True,input_shape=(window_size, fea_num)))
-    grid_model.add(LSTM(50))
+    grid_model.add(LSTM(50, input_shape=(window_size, fea_num)))
     grid_model.add(Dropout(0.2))
     grid_model.add(Dense(1))
     grid_model.compile(loss='mse', optimizer='adam')
     return grid_model
 
 grid_model = KerasRegressor(build_model)
-parameters = {'batch_size' : [16,20],
-              'epochs' : [8,10],
-              'optimizer' : ['adam','Adadelta'] }
+parameters = {'batch_size' : [16],
+              'epochs' : [8]}
 
 grid_search = GridSearchCV(estimator = grid_model,
                             param_grid = parameters,

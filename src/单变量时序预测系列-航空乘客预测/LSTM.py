@@ -4,6 +4,18 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import LSTM, Dense
+import tensorflow as tf
+import random
+
+'''
+LSTM模型训练中的一些操作（如参数初始化、数据分割等）具有随机性，这会导致每次训练后的模型表现有所不同。
+解决方案：
+设置随机种子： 可以通过设定全局和框架内的随机种子来固定随机性，以确保每次实验的结果一致。
+'''
+seed_value = 42
+np.random.seed(seed_value)
+tf.random.set_seed(seed_value)
+random.seed(seed_value)
 
 # 读取数据集
 data = pd.read_csv('data.csv')
@@ -70,6 +82,7 @@ test_predictions = model.predict(X_test)
 # 反归一化预测结果
 train_predictions = scaler.inverse_transform(train_predictions)
 test_predictions = scaler.inverse_transform(test_predictions)
+print(test_predictions)
 
 # 绘制测试集预测结果的折线图
 plt.figure(figsize=(10, 6))
