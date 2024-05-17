@@ -11,162 +11,189 @@ from sklearn.metrics import r2_score
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
 from keras.layers import CuDNNLSTM
+from sklearn.ensemble import RandomForestRegressor
+import seaborn as sns
 
-# 读取数据集
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__name__)))
-df = pd.DataFrame(pd.read_excel(os.path.join(base_dir, 'data', '数据.xlsx')))
-df = df.rename(columns={'日期':'年份', 'Unnamed: 1':'月份', 'Unnamed: 2':'日期'})
-print(df)
-# 将年份、月份和日期列组合成表示日期格式的一列
-df['date'] = pd.to_datetime(df['年份'].astype(str) + '-' + df['月份'].astype(str) + '-' + df['日期'].astype(str))
-print(df)
 
-# # 指定要写入的excel文件路径
-# file_path = os.path.join(base_dir, 'result', 'evlution.xlsx')
-# writer = pd.ExcelWriter(file_path, engine='xlsxwriter')
-#
-# # 将每个DataFrame写入不同的sheet
-# for col_name in col_names:
-#     data = df[col_name]
-#     # 划分训练集和测试集
-#     train_size = int(len(data) * 0.7)
-#     train_data = data[:train_size]
-#     test_data = data[train_size:]
-#
-#     # 绘制训练集和测试集的折线图
-#     plt.figure(figsize=(10, 6))
-#     plt.plot(train_data, label='Training Data')
-#     plt.plot(test_data, label='Testing Data')
-#     plt.xlabel('sequences')
-#     plt.ylabel(f'{col_name}')
-#     plt.title(f'{col_name} - Actual vs Predicted')
-#     plt.legend()
-#     plt.savefig(os.path.join(base_dir, 'result', f'{col_name}_data_split.png'), bbox_inches='tight', dpi=600)
-#     plt.show()
-#
-#     # 将数据归一化到 0~1 范围
-#     scaler = MinMaxScaler()
-#     train_data_scaler = scaler.fit_transform(train_data.values.reshape(-1, 1))
-#     test_data_scaler = scaler.transform(test_data.values.reshape(-1, 1))
-#
-#     # 定义滑动窗口函数
-#     def create_dataset(data, look_back=1):
-#         X, Y = [], []
-#         for i in range(len(data) - look_back):
-#             X.append(data[i:i + look_back])
-#             Y.append(data[i + look_back])
-#         return np.array(X), np.array(Y)
-#
-#     np.random.seed(7)
-#
-#     # 定义滑动窗口大小
-#     look_back = 3
-#
-#     # 创建滑动窗口数据集
-#     X_train, Y_train = create_dataset(train_data_scaler, look_back)
-#     X_test, Y_test = create_dataset(test_data_scaler, look_back)
-#
-#     # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
-#     X_train = np.reshape(X_train, (X_train.shape[0],  X_train.shape[1],1))
-#     X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[1], 1))
-#
-#     # 注意力机制
-#     def attention_block(inputs,time_step):
-#         # batch_size, time_steps, lstm_units -> batch_size, lstm_units, time_steps
-#         a = Permute((2, 1))(inputs)
-#         # batch_size, lstm_units, time_steps -> batch_size, lstm_units, time_steps
-#         a = Dense(time_step, activation='softmax')(a)#和步长有关
-#         # batch_size, lstm_units, time_steps -> batch_size, time_steps, lstm_units
-#         a_probs = Permute((2, 1), name='attention_vec')(a)
-#         # 相当于获得每一个step中，每个特征的权重
-#         output_attention_mul = concatenate([inputs, a_probs], name='attention_mul')
-#         return output_attention_mul
-#
-#
-#     # 构建 LSTM 模型
-#     lstm_units = 50
-#     dropout = 0.01
-#     inputs=Input(shape=(look_back, 1))
-#     my_model=Conv1D(filters = lstm_units, kernel_size = 1, activation = 'sigmoid')(inputs)#卷积层
-#     my_model=Dropout(dropout)(my_model)#droupout层
-#     my_model=LSTM(lstm_units, activation='tanh', return_sequences=True)(my_model)      #LSTM层
-#     attention = attention_block(my_model, look_back)
-#     attention = Flatten()(attention)
-#     outputs = Dense(1, activation='tanh')(attention)
-#     my_model = Model(inputs=inputs, outputs=outputs)
-#     my_model.compile(loss='mean_squared_error', optimizer='adam')
-#     my_model.fit(X_train, Y_train, epochs=50, batch_size=1, verbose=2)
-#
-#
-#     # 使用 LSTM 模型进行预测
-#     train_predictions = my_model.predict(X_train)
-#     test_predictions = my_model.predict(X_test)
-#     train_predictions = train_predictions.reshape(-1, 1)
-#     test_predictions = test_predictions.reshape(-1, 1)
-#     # 反归一化预测结果
-#     train_predictions = scaler.inverse_transform(train_predictions)
-#     test_predictions = scaler.inverse_transform(test_predictions)
-#
-#
-#     # 绘制测试集预测结果的折线图
-#     plt.figure(figsize=(10, 6))
-#     plt.plot(test_data, label='Actual')
-#     plt.plot(list(test_data.index)[-len(test_predictions):], test_predictions, label='Predicted')
-#     plt.xlabel('sequences')
-#     plt.ylabel(f'{col_name}')
-#     plt.title(f'{col_name} - Actual vs Predicted')
-#     plt.legend()
-#     plt.savefig(os.path.join(base_dir, 'result', f'{col_name}_pred_test.jpg'), bbox_inches='tight', dpi=600)
-#     plt.show()
-#
-#     # 绘制原始数据、训练集预测结果和测试集预测结果的折线图
-#     plt.figure(figsize=(10, 6))
-#     plt.plot(data, label='Actual')
-#     plt.plot(list(train_data.index)[look_back:train_size], train_predictions, label='Training Predictions')
-#     plt.plot(list(test_data.index)[-(len(test_data)-look_back):], test_predictions, label='Testing Predictions')
-#     plt.xlabel('sequences')
-#     plt.ylabel(f'{col_name}')
-#     plt.title(f'{col_name} - Actual vs Predicted')
-#     plt.legend()
-#     plt.savefig(os.path.join(base_dir, 'result', f'{col_name}_pred_train_test.jpg'), bbox_inches='tight', dpi=600)
-#     plt.show()
-#
-#     # 计算误差
-#     testScore1 = math.sqrt(mean_squared_error(list(test_data.index)[-(len(test_data)-look_back):], test_predictions))
-#     print('Test Score: %.2f RMSE' % (testScore1))
-#     testScore2 = mean_absolute_error(list(test_data.index)[-(len(test_data)-look_back):], test_predictions)
-#     print('Test Score: %.2f MAE' % (testScore2))
-#     testScore3 = r2_score(list(test_data.index)[-(len(test_data)-look_back):], test_predictions)
-#     print('Test Score: %.2f R2' % (testScore3))
-#     testScore4 = mean_absolute_percentage_error(list(test_data.index)[-(len(test_data)-look_back):], test_predictions)
-#     print('Test Score: %.2f MAPE' % (testScore4))
-#
-#     trainScore1 = math.sqrt(mean_squared_error(list(train_data.index)[look_back:train_size], train_predictions))
-#     print('train Score: %.2f RMSE' % (trainScore1))
-#     trainScore2 = mean_absolute_error(list(train_data.index)[look_back:train_size], train_predictions)
-#     print('train Score: %.2f MAE' % (trainScore2))
-#     trainScore3 = r2_score(list(train_data.index)[look_back:train_size], train_predictions)
-#     print('train Score: %.2f R2' % (trainScore3))
-#     trainScore4 = mean_absolute_percentage_error(list(train_data.index)[look_back:train_size], train_predictions)
-#     print('train Score: %.2f MAPE' % (trainScore4))
-#
-#     df_ = pd.DataFrame({'Test Score: %.2f RMSE': [testScore1],
-#                        'Test Score: %.2f MAE': [testScore2],
-#                        'Test Score: %.2f R2': [testScore3],
-#                        'Test Score: %.2f MAPE': [testScore4],
-#                        'Train Score: %.2f RMSE': [trainScore1],
-#                        'Train Score: %.2f MAE': [trainScore2],
-#                        'Train Score: %.2f R2': [trainScore3],
-#                        'Train Score: %.2f MAPE': [trainScore4]
-#                        })
-#
-#     print(df_)
-#
-#     # 将生成的DataFrame写入Excel文件的不同工作表中
-#     sheet_name = f'{col_name}'
-#     df_.to_excel(writer, sheet_name=sheet_name)
-#
-# # 保存Excel文件
-# writer._save()
+def read_data(filename):
+    # 读取数据集
+    df = pd.DataFrame(pd.read_excel(os.path.join(base_dir, 'data', filename)))
+    df = df.rename(columns={'日期':'年份', 'Unnamed: 1':'月份', 'Unnamed: 2':'日期'})
+    # 将年份、月份和日期列组合成表示日期格式的一列
+    df['date'] = pd.to_datetime(df['年份'].astype(str) + '-' + df['月份'].astype(str) + '-' + df['日期'].astype(str))
+    df = df.drop(columns=['年份', '月份', '日期', '线性插值'])
+    # 将日期列设置为索引
+    df.set_index('date', inplace=True)
+    df.reset_index(drop=True, inplace=True)
+    print(df)
 
+    return df
+
+
+
+
+def nan_insert(df):
+    df['人口'].fillna(df['人口'].mean(), inplace=True)
+    df1 = df.iloc[:, 1:]
+    train_df1 = df1[df1['未插值'].notna()]
+    test_df1 = df1[df1['未插值'].isna()]
+    # 特征和标签
+    X_train = train_df1.drop(columns=['未插值'])
+    y_train = train_df1['未插值']
+    X_test = test_df1.drop(columns=['未插值'])
+    # 训练随机森林模型
+    rf_model = RandomForestRegressor(random_state=42)
+    rf_model.fit(X_train, y_train)
+    # 预测缺失值
+    y_pred = rf_model.predict(X_test)
+    # 填补缺失值
+    df.loc[df['未插值'].isna(), '未插值'] = y_pred
+    print("\n填补后的数据:")
+    print(df)
+
+    return df
+
+
+
+def lstm_model(df):
+    fea_num = len(df.columns)
+    # 数据划分
+    test_split=round(len(df)*0.20)
+    df_for_training=df[:-test_split]
+    df_for_testing=df[-test_split:]
+    print(df)
+    print(df_for_training)
+    print(df_for_testing)
+    # 绘制训练集和测试集的折线图
+    # 可视化部分
+    sns.set(font_scale=1.2)
+    plt.rc('font', family=['SimSun'], size=12)
+    # plt.rc('font', family=['Times New Roman', 'SimSun'], size=12)
+    plt.figure(figsize=(10, 6))
+    plt.plot(df_for_training['真值'], label='训练集')
+    plt.plot(df_for_testing['真值'], label='数据集')
+    plt.xlabel('时间序列')
+    plt.ylabel('真值')
+    plt.title('数据集')
+    plt.legend()
+    plt.savefig(os.path.join(base_dir, 'result', 'data_split.jpg'), bbox_inches='tight', dpi=600)
+    plt.show()
+
+    scaler = MinMaxScaler(feature_range=(0,1))
+    df_for_training_scaled = scaler.fit_transform(df_for_training)
+    df_for_testing_scaled=scaler.transform(df_for_testing)
+
+
+    def createXY(dataset,n_past):
+        dataX = []
+        dataY = []
+        for i in range(n_past, len(dataset)):
+                dataX.append(dataset[i - n_past:i, 0:dataset.shape[1]])
+                dataY.append(dataset[i,0])
+        return np.array(dataX),np.array(dataY)
+
+    window_size = 1
+    trainX,trainY=createXY(df_for_training_scaled,window_size)
+    testX,testY=createXY(df_for_testing_scaled,window_size)
+
+    # # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
+    trainX = np.reshape(trainX, (trainX.shape[0], window_size, fea_num))
+    testX = np.reshape(testX, (testX.shape[0], window_size, fea_num))
+
+    print("trainX Shape-- ",trainX.shape)
+    print("trainY Shape-- ",trainY.shape)
+    print("testX Shape-- ",testX.shape)
+    print("testY Shape-- ",testY.shape)
+
+    my_model = Sequential()
+    my_model.add(Input(shape=(window_size, fea_num)))
+    my_model.add(LSTM(50, return_sequences=True))
+    my_model.add(Dropout(0.2))
+    my_model.add(LSTM(50))
+    my_model.add(Dropout(0.2))
+    my_model.add(Dense(1))
+
+    my_model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+    my_model.summary()
+    my_model.fit(trainX, trainY)
+
+
+
+    prediction_test=my_model.predict(testX)
+    prediction_train=my_model.predict(trainX)
+
+    prediction_train_copies_array = np.repeat(prediction_train,fea_num, axis=-1)
+    pred_train=scaler.inverse_transform(np.reshape(prediction_train_copies_array,(len(prediction_train),fea_num)))[:,0]
+    original_train_copies_array = np.repeat(trainY, fea_num, axis=-1)
+    original_train=scaler.inverse_transform(np.reshape(original_train_copies_array,(len(trainY),fea_num)))[:,0]
+    print("train Pred Values-- ", pred_train)
+    print("\ntrain Original Values-- ", original_train)
+    plt.plot(df_for_training.index[window_size:,], original_train, color = 'red', label = '真实值')
+    plt.plot(df_for_training.index[window_size:,], pred_train, color = 'blue', label = '预测值')
+    plt.title('真值预测')
+    plt.xlabel('时间序列')
+    plt.xticks(rotation=45)
+    plt.ylabel('真值')
+    plt.legend()
+    plt.savefig(os.path.join(base_dir, 'result', 'train_pred.jpg'), bbox_inches='tight', dpi=600)
+    plt.show()
+
+
+    prediction_test_copies_array = np.repeat(prediction_test,fea_num, axis=-1)
+    pred_test=scaler.inverse_transform(np.reshape(prediction_test_copies_array,(len(prediction_test),fea_num)))[:,0]
+    original_test_copies_array = np.repeat(testY, fea_num, axis=-1)
+    original_test=scaler.inverse_transform(np.reshape(original_test_copies_array,(len(testY),fea_num)))[:,0]
+    print("test Pred Values-- ", pred_test)
+    print("\ntest Original Values-- ", original_test)
+    plt.plot(df_for_testing.index[window_size:,], original_test, color = 'red', label = '真实值')
+    plt.plot(df_for_testing.index[window_size:,], pred_test, color = 'blue', label = '预测值')
+    plt.title('真值预测')
+    plt.xlabel('时间序列')
+    plt.xticks(rotation=45)
+    plt.ylabel('真值')
+    plt.legend()
+    plt.savefig(os.path.join(base_dir, 'result', 'test_pred.jpg'), bbox_inches='tight', dpi=600)
+    plt.show()
+
+    # 计算误差
+    testScore1 = math.sqrt(mean_squared_error(original_test, pred_test))
+    print('Test Score: %.2f RMSE' % (testScore1))
+    testScore2 = mean_absolute_error(original_test, pred_test)
+    print('Test Score: %.2f MAE' % (testScore2))
+    testScore3 = r2_score(original_test, pred_test)
+    print('Test Score: %.2f R2' % (testScore3))
+    testScore4 = mean_absolute_percentage_error(original_test, pred_test)
+    print('Test Score: %.2f MAPE' % (testScore4))
+
+    trainScore1 = math.sqrt(mean_squared_error(original_train, pred_train))
+    print('train Score: %.2f RMSE' % (trainScore1))
+    trainScore2 = mean_absolute_error(original_train, pred_train)
+    print('train Score: %.2f MAE' % (trainScore2))
+    trainScore3 = r2_score(original_train, pred_train)
+    print('train Score: %.2f R2' % (trainScore3))
+    trainScore4 = mean_absolute_percentage_error(original_train, pred_train)
+    print('train Score: %.2f MAPE' % (trainScore4))
+
+    index = ['Test Score: %.2f RMSE',
+              'Test Score: %.2f MAE',
+              'Test Score: %.2f R2',
+              'Test Score: %.2f MAPE',
+              'Train Score: %.2f RMSE',
+              'Train Score: %.2f MAE',
+              'Train Score: %.2f R2',
+              'Train Score: %.2f MAPE']
+
+    values = [testScore1,  testScore2, testScore3, testScore4, trainScore1, trainScore2, trainScore3, trainScore4]
+    df = pd.DataFrame({'index': index, 'values': values})
+    print(df)
+
+    df.to_excel(os.path.join(base_dir, 'result', 'eval.xlsx'), index=False)   # 将评估指标值存为数据表
+
+
+if __name__ == "__main__":
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__name__)))
+    filename = '数据.xlsx'
+    df = read_data(filename)
+    df = nan_insert(df)
+    lstm_model(df)
 
