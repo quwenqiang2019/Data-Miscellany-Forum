@@ -18,6 +18,8 @@ from keras.layers import LSTM, Dense, Input, Multiply
 from keras.layers import Dropout
 from keras.layers import Activation
 from keras.callbacks import EarlyStopping
+from keras.layers import *
+from keras.models import *
 
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
@@ -866,6 +868,8 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
 
     print('best:', neurons1, neurons2, dropout, batch_size)
 
+
+    # =======================多层LSTM+Attention==============================
     inputs = Input(shape=(look_back, 5))
     my_model = LSTM(units=neurons1, activation='tanh', return_sequences=True)(inputs)
     my_model = Dropout(dropout)(my_model)
@@ -875,9 +879,23 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     my_model = Multiply()([my_model, attention])  # attention与LSTM对应数值相乘
     outputs = Dense(1, activation='tanh')(my_model)
     lstm_model = Model(inputs=inputs, outputs=outputs)
-    lstm_model.compile(loss='mse', optimizer='Adam', metrics='mae')
+    lstm_model.compile(loss='mse', optimizer='Adam', metrics=['mae'])
     lstm_model.fit(train_X, train_Y, epochs=100, batch_size=batch_size, validation_split=0.2, verbose=1,
                    callbacks=[EarlyStopping(monitor='val_loss', patience=9, restore_best_weights=True)])
+
+    # =======================多层Bi-LSTM+Attention==============================
+    # inputs = Input(shape=(look_back, 5))
+    # my_model = Bidirectional(LSTM(units=2*neurons1, activation='tanh', return_sequences=True))(inputs)
+    # my_model = Dropout(dropout)(my_model)
+    # my_model = Bidirectional(LSTM(units=neurons2, activation='tanh'))(my_model)
+    # my_model = Dropout(dropout)(my_model)
+    # attention = Dense(units=2*neurons2, activation='sigmoid', name='attention_vec')(my_model)  # 求解Attention权重
+    # my_model = Multiply()([my_model, attention])  # attention与LSTM对应数值相乘
+    # outputs = Dense(1, activation='tanh')(my_model)
+    # lstm_model = Model(inputs=inputs, outputs=outputs)
+    # lstm_model.compile(loss='mse', optimizer='Adam', metrics=['mae'])
+    # lstm_model.fit(train_X, train_Y, epochs=100, batch_size=batch_size, validation_split=0.2, verbose=1,
+    #                callbacks=[EarlyStopping(monitor='val_loss', patience=9, restore_best_weights=True)])
 
     # =============================================
     # LSTM模型预测整个训练集的残差值
@@ -943,6 +961,7 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     return test_predictions
 
 
+
 def compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, lstm_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions, sarima_lstm_v1_predictions, sarima_lstm_v2_predictions):
     # 创建一个新的图形
     plt.figure(figsize=(12, 6))
@@ -976,7 +995,7 @@ if __name__  == '__main__':
     # 显示所有行
     pd.set_option('display.max_rows', None)
 
-    for i in range(2, 3):
+    for i in range(10, 11):
     # for i in [2, 5, 10, 15, 18, 19]:
 
         point = f'样点{i}'
@@ -1001,11 +1020,9 @@ if __name__  == '__main__':
         # sarima_lstm_predictions = sarima_lstm(train_data_key, train_data_fz, test_data_key, test_data_fz)
         #
         #
-        cor_analysis(data)
+        # cor_analysis(data)
         # sarima_lstm_v1_predictions = sarima_lstm_v1(train_data_key, train_data_fz, test_data_key, test_data_fz)
-        # sarima_lstm_v2_predictions = sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz)
-
-
+        sarima_lstm_v2_predictions = sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz)
 
         # print(len(holt_winters_predictions), len(sarima_predictions), len(holt_winters_lstm_predictions), len(sarima_lstm_predictions))
         # compare_test_prediction(test_data_key, holt_winters_predictions, sarima_predictions, lstm_predictions, holt_winters_lstm_predictions, sarima_lstm_predictions, sarima_lstm_v1_predictions, sarima_lstm_v2_predictions)

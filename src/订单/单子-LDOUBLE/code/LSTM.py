@@ -51,6 +51,8 @@ def nan_insert(df):
     print("\n填补后的数据:")
     print(df)
 
+    df.to_excel(os.path.join(base_dir, 'result', 'insert_data.xlsx'), index=False)  # 将填补后的数据存为数据表
+
     return df
 
 
@@ -128,6 +130,9 @@ def lstm_model(df):
     original_train=scaler.inverse_transform(np.reshape(original_train_copies_array,(len(trainY),fea_num)))[:,0]
     print("train Pred Values-- ", pred_train)
     print("\ntrain Original Values-- ", original_train)
+    df_train = pd.DataFrame({'pred': pred_train, 'original': original_train})
+    df_train.to_excel(os.path.join(base_dir, 'result', 'train_pred.xlsx'), index=False)  # 将评估指标值存为数据表
+
     plt.plot(df_for_training.index[window_size:,], original_train, color = 'red', label = '真实值')
     plt.plot(df_for_training.index[window_size:,], pred_train, color = 'blue', label = '预测值')
     plt.title('真值预测')
@@ -145,6 +150,9 @@ def lstm_model(df):
     original_test=scaler.inverse_transform(np.reshape(original_test_copies_array,(len(testY),fea_num)))[:,0]
     print("test Pred Values-- ", pred_test)
     print("\ntest Original Values-- ", original_test)
+    df_test = pd.DataFrame({'pred': pred_test, 'original': original_test})
+    df_test.to_excel(os.path.join(base_dir, 'result', 'test_pred.xlsx'), index=False)  # 将评估指标值存为数据表
+
     plt.plot(df_for_testing.index[window_size:,], original_test, color = 'red', label = '真实值')
     plt.plot(df_for_testing.index[window_size:,], pred_test, color = 'blue', label = '预测值')
     plt.title('真值预测')
@@ -154,6 +162,9 @@ def lstm_model(df):
     plt.legend()
     plt.savefig(os.path.join(base_dir, 'result', 'test_pred.jpg'), bbox_inches='tight', dpi=600)
     plt.show()
+
+
+
 
     # 计算误差
     testScore1 = math.sqrt(mean_squared_error(original_test, pred_test))
