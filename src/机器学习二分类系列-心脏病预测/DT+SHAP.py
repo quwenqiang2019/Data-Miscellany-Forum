@@ -10,7 +10,7 @@ from sklearn.metrics import auc
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 import shap
-# shap.initjs()
+
 # 准备数据
 data = pd.read_csv(r'Dataset.csv')
 df = pd.DataFrame(data)
@@ -31,15 +31,21 @@ model.fit(X_train, y_train)
 explainer = shap.TreeExplainer(model, X_test)
 # 以numpy数组的形式输出SHAP值
 shap_values = explainer.shap_values(X_test)
+print(shap_values)     # shap_values = shap_obj.values
 # # 以SHAP的Explanation对象形式输出SHAP值
 shap_obj = explainer(X_test)
+print(shap_obj.values)
 
 
 # 特征分析
-shap.summary_plot(shap_values, X_test, show=True)
-shap.plots.bar(shap_obj[:,:,0], show=True)
-shap.plots.beeswarm(shap_obj[:,:,0], show=True)
-shap.plots.beeswarm(shap_obj[:,:,1], show=True)
+# shap.plots.bar(shap_obj[:,:,0], show=True)        # 全局条形图
+# shap.plots.beeswarm(shap_obj[:,:,0], show=True)   # 全局蜂群图
+# shap.plots.beeswarm(shap_obj[:,:,1], show=True)   # 全局蜂群图
+shap.plots.force(explainer.expected_value[0], shap_obj.values[0,:][:, 1], np.array(X_test.iloc[0,:]), matplotlib=True, show=True, feature_names=features)   # 单个样本力图
+# shap.plots.waterfall(shap_obj[0,:,1])    # 单个样本瀑布图
+
+
+
 
 # # 模型推理与评价
 # y_pred = model.predict(X_test)
