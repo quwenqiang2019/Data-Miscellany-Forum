@@ -869,33 +869,33 @@ def sarima_lstm_v2(train_data_key, train_data_fz, test_data_key, test_data_fz):
     print('best:', neurons1, neurons2, dropout, batch_size)
 
 
-    # =======================多层LSTM+Attention==============================
-    inputs = Input(shape=(look_back, 5))
-    my_model = LSTM(units=neurons1, activation='tanh', return_sequences=True)(inputs)
-    my_model = Dropout(dropout)(my_model)
-    my_model = LSTM(units=neurons2, activation='tanh')(my_model)
-    my_model = Dropout(dropout)(my_model)
-    attention = Dense(units=neurons2, activation='sigmoid', name='attention_vec')(my_model)  # 求解Attention权重
-    my_model = Multiply()([my_model, attention])  # attention与LSTM对应数值相乘
-    outputs = Dense(1, activation='tanh')(my_model)
-    lstm_model = Model(inputs=inputs, outputs=outputs)
-    lstm_model.compile(loss='mse', optimizer='Adam', metrics=['mae'])
-    lstm_model.fit(train_X, train_Y, epochs=100, batch_size=batch_size, validation_split=0.2, verbose=1,
-                   callbacks=[EarlyStopping(monitor='val_loss', patience=9, restore_best_weights=True)])
-
-    # =======================多层Bi-LSTM+Attention==============================
+    # # =======================多层LSTM+Attention==============================
     # inputs = Input(shape=(look_back, 5))
-    # my_model = Bidirectional(LSTM(units=2*neurons1, activation='tanh', return_sequences=True))(inputs)
+    # my_model = LSTM(units=neurons1, activation='tanh', return_sequences=True)(inputs)
     # my_model = Dropout(dropout)(my_model)
-    # my_model = Bidirectional(LSTM(units=neurons2, activation='tanh'))(my_model)
+    # my_model = LSTM(units=neurons2, activation='tanh')(my_model)
     # my_model = Dropout(dropout)(my_model)
-    # attention = Dense(units=2*neurons2, activation='sigmoid', name='attention_vec')(my_model)  # 求解Attention权重
+    # attention = Dense(units=neurons2, activation='sigmoid', name='attention_vec')(my_model)  # 求解Attention权重
     # my_model = Multiply()([my_model, attention])  # attention与LSTM对应数值相乘
     # outputs = Dense(1, activation='tanh')(my_model)
     # lstm_model = Model(inputs=inputs, outputs=outputs)
     # lstm_model.compile(loss='mse', optimizer='Adam', metrics=['mae'])
     # lstm_model.fit(train_X, train_Y, epochs=100, batch_size=batch_size, validation_split=0.2, verbose=1,
     #                callbacks=[EarlyStopping(monitor='val_loss', patience=9, restore_best_weights=True)])
+
+    # =======================多层Bi-LSTM+Attention==============================
+    inputs = Input(shape=(look_back, 5))
+    my_model = Bidirectional(LSTM(units=2*neurons1, activation='tanh', return_sequences=True))(inputs)
+    my_model = Dropout(dropout)(my_model)
+    my_model = Bidirectional(LSTM(units=neurons2, activation='tanh'))(my_model)
+    my_model = Dropout(dropout)(my_model)
+    attention = Dense(units=2*neurons2, activation='sigmoid', name='attention_vec')(my_model)  # 求解Attention权重
+    my_model = Multiply()([my_model, attention])  # attention与LSTM对应数值相乘
+    outputs = Dense(1, activation='tanh')(my_model)
+    lstm_model = Model(inputs=inputs, outputs=outputs)
+    lstm_model.compile(loss='mse', optimizer='Adam', metrics=['mae'])
+    lstm_model.fit(train_X, train_Y, epochs=100, batch_size=batch_size, validation_split=0.2, verbose=1,
+                   callbacks=[EarlyStopping(monitor='val_loss', patience=9, restore_best_weights=True)])
 
     # =============================================
     # LSTM模型预测整个训练集的残差值
