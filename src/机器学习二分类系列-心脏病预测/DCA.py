@@ -83,7 +83,7 @@ if __name__ == '__main__':
     # 模型推理与评价
     # 对测试集特征进行相同规则mm1的归一化处理，然后输入到模型进行预测
     X_test_m = mm1.transform(X_test)  # 注意fit_transform() 和 transform()的区别
-    y_pred_m = model.predict(X_test_m)  # 利用输入特征input1和input2测试模型
+    y_pred_m = model.predict(X_test_m)
     y_scores = model.predict_proba(X_test_m)
     y_pred = mm2.inverse_transform(np.reshape(y_pred_m, (-1, 1)))
 

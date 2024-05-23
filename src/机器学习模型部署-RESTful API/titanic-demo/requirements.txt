@@ -1,0 +1,5 @@
+flask==3.0.3
+scikit-learn==1.0
+pandas==2.2.1
+gunicorn
+requests==2.31.0
