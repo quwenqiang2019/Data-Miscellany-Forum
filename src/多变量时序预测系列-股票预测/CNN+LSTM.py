@@ -60,22 +60,36 @@ window_size = 30
 trainX,trainY=createXY(df_for_training_scaled,window_size)
 testX,testY=createXY(df_for_testing_scaled,window_size)
 
-# 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
-trainX = np.reshape(trainX, (trainX.shape[0], window_size, fea_num))
-testX = np.reshape(testX, (testX.shape[0], window_size, fea_num))
-
 print("trainX Shape-- ",trainX.shape)
 print("trainY Shape-- ",trainY.shape)
 print("testX Shape-- ",testX.shape)
 print("testY Shape-- ",testY.shape)
 
-# 初始化顺序模型
-model = Sequential()
-model.add(TimeDistributed(Conv1D(filters=64, kernel_size=1, activation='relu', input_shape=(None, fea_num, testX.shape[1]))))
-model.add(TimeDistributed(MaxPooling1D(pool_size=1)))
-model.add(TimeDistributed(Flatten()))
-model.add(LSTM(4, activation='relu'))
-model.add(Dense(1))
+
+# # =================如果用TimeDistributed需要将数据重构为4D [samples, subsequences, timesteps, features]==============================
+# trainX = np.reshape(trainX, (trainX.shape[0], 1, window_size, fea_num))
+# testX = np.reshape(testX, (testX.shape[0], 1, window_size, fea_num))
+# # 初始化顺序模型
+# model = Sequential()
+# model.add(TimeDistributed(Conv1D(filters=64, kernel_size=1, activation='relu', input_shape=(None, testX.shape[1], testX.shape[2], testX.shape[3]))))
+# model.add(TimeDistributed(MaxPooling1D(pool_size=1)))
+# model.add(TimeDistributed(Flatten()))
+# model.add(LSTM(4, activation='relu'))
+# model.add(Dense(1))
+
+
+
+# ==========================一般情况下，将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）===============================================
+trainX = np.reshape(trainX, (trainX.shape[0], window_size, fea_num))
+testX = np.reshape(testX, (testX.shape[0], window_size, fea_num))
+inputs = Input(shape=(window_size, fea_num))
+model = Conv1D(filters=16, kernel_size=1, activation='sigmoid')(inputs)  # 卷积层
+model = MaxPooling1D(pool_size=1)(model)
+model = LSTM(10, activation='tanh', return_sequences=True)(model)  # LSTM层
+model = Flatten()(model)
+outputs = Dense(1, activation='tanh')(model)
+model = Model(inputs=inputs, outputs=outputs)
+
 
 model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 model.fit(trainX, trainY)

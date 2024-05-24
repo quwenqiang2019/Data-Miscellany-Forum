@@ -63,11 +63,12 @@ X_test = np.reshape(X_test, (X_test.shape[0], 1, window_size, 1))
 
 # 初始化顺序模型
 model = Sequential()
-model.add(TimeDistributed(Conv1D(filters=64, kernel_size=1, activation='relu', input_shape=(None, 1, X_test.shape[1]))))
+model.add(TimeDistributed(Conv1D(filters=64, kernel_size=1, activation='relu', input_shape=(None, X_test.shape[1], X_test.shape[2], X_test.shape[3]))))
 model.add(TimeDistributed(MaxPooling1D(pool_size=1)))
 model.add(TimeDistributed(Flatten()))
 model.add(LSTM(4, activation='relu'))
 model.add(Dense(1))
+
 model.compile(loss='mse', optimizer='adam')
 model.fit(X_train, Y_train, epochs=50)
 # 打印模型
