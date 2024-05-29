@@ -26,8 +26,6 @@ def read_data(filename):
     return df
 
 
-
-
 def lstm_model(df):
     fea_num = len(df.columns)
     # 数据划分
@@ -48,7 +46,7 @@ def lstm_model(df):
     plt.ylabel(target)
     plt.title('数据集')
     plt.legend()
-    plt.savefig(os.path.join(base_dir, 'result', 'data_split.jpg'), bbox_inches='tight', dpi=600)
+    plt.savefig(os.path.join(base_dir, 'result', 'lstm_data_split.jpg'), bbox_inches='tight', dpi=600)
     plt.show()
 
     scaler = MinMaxScaler(feature_range=(0,1))
@@ -64,7 +62,7 @@ def lstm_model(df):
                 dataY.append(dataset[i,0])
         return np.array(dataX),np.array(dataY)
 
-    window_size = 1
+    window_size = 2
     trainX,trainY=createXY(df_for_training_scaled,window_size)
     testX,testY=createXY(df_for_testing_scaled,window_size)
 
@@ -79,7 +77,7 @@ def lstm_model(df):
 
     my_model = Sequential()
     my_model.add(Input(shape=(window_size, fea_num)))
-    # my_model.add(LSTM(10, return_sequences=True))
+    my_model.add(LSTM(10, return_sequences=True))
     my_model.add(LSTM(8))
     my_model.add(Dense(1))
 
@@ -96,8 +94,6 @@ def lstm_model(df):
     original_train=scaler.inverse_transform(np.reshape(original_train_copies_array,(len(trainY),fea_num)))[:,0]
     print("train Pred Values-- ", pred_train)
     print("\ntrain Original Values-- ", original_train)
-    df_train = pd.DataFrame({'pred': pred_train, 'original': original_train})
-    df_train.to_excel(os.path.join(base_dir, 'result', 'train_pred.xlsx'), index=False)  # 将评估指标值存为数据表
 
     plt.plot(df_for_training.index[window_size:,], original_train, color = 'red', label = '真实值')
     plt.plot(df_for_training.index[window_size:,], pred_train, color = 'blue', label = '预测值')
@@ -106,7 +102,7 @@ def lstm_model(df):
     plt.xticks(rotation=45)
     plt.ylabel(target)
     plt.legend()
-    plt.savefig(os.path.join(base_dir, 'result', 'train_pred.jpg'), bbox_inches='tight', dpi=600)
+    plt.savefig(os.path.join(base_dir, 'result', 'lstm_train_pred.jpg'), bbox_inches='tight', dpi=600)
     plt.show()
 
 
@@ -116,8 +112,6 @@ def lstm_model(df):
     original_test=scaler.inverse_transform(np.reshape(original_test_copies_array,(len(testY),fea_num)))[:,0]
     print("test Pred Values-- ", pred_test)
     print("\ntest Original Values-- ", original_test)
-    df_test = pd.DataFrame({'pred': pred_test, 'original': original_test})
-    df_test.to_excel(os.path.join(base_dir, 'result', 'test_pred.xlsx'), index=False)  # 将评估指标值存为数据表
 
     plt.plot(df_for_testing.index[window_size:,], original_test, color = 'red', label = '真实值')
     plt.plot(df_for_testing.index[window_size:,], pred_test, color = 'blue', label = '预测值')
@@ -126,7 +120,7 @@ def lstm_model(df):
     plt.xticks(rotation=45)
     plt.ylabel(target)
     plt.legend()
-    plt.savefig(os.path.join(base_dir, 'result', 'test_pred.jpg'), bbox_inches='tight', dpi=600)
+    plt.savefig(os.path.join(base_dir, 'result', 'lstm_test_pred.jpg'), bbox_inches='tight', dpi=600)
     plt.show()
 
     # 计算误差
@@ -161,7 +155,7 @@ def lstm_model(df):
     df = pd.DataFrame({'index': index, 'values': values})
     print(df)
 
-    df.to_excel(os.path.join(base_dir, 'result', 'eval.xlsx'), index=False)   # 将评估指标值存为数据表
+    df.to_excel(os.path.join(base_dir, 'result', 'lstm_eval.xlsx'), index=False)   # 将评估指标值存为数据表
 
 
 
@@ -226,6 +220,7 @@ def sarima_lstm(df):
     plt.ylabel(target)
     plt.title('Actual vs Predicted')
     plt.legend()
+    plt.savefig(os.path.join(base_dir, 'result', 'sarima_lstm_train_pred.jpg'), bbox_inches='tight', dpi=600)
     plt.show()
 
     # SARIMA模型测试集预测值
@@ -259,17 +254,50 @@ def sarima_lstm(df):
     plt.ylabel(target)
     plt.title('Actual vs Predicted')
     plt.legend()
+    plt.savefig(os.path.join(base_dir, 'result', 'sarima_lstm_test_pred.jpg'), bbox_inches='tight', dpi=600)
     plt.show()
 
+    # 计算误差
+    testScore1 = math.sqrt(mean_squared_error(test_data[1:], test_predictions))
+    print('Test Score: %.2f RMSE' % (testScore1))
+    testScore2 = mean_absolute_error(test_data[1:], test_predictions)
+    print('Test Score: %.2f MAE' % (testScore2))
+    testScore3 = r2_score(test_data[1:], test_predictions)
+    print('Test Score: %.2f R2' % (testScore3))
+    testScore4 = mean_absolute_percentage_error(test_data[1:], test_predictions)
+    print('Test Score: %.2f MAPE' % (testScore4))
 
+    trainScore1 = math.sqrt(mean_squared_error(train_data[1:], train_predictions))
+    print('train Score: %.2f RMSE' % (trainScore1))
+    trainScore2 = mean_absolute_error(train_data[1:], train_predictions)
+    print('train Score: %.2f MAE' % (trainScore2))
+    trainScore3 = r2_score(train_data[1:], train_predictions)
+    print('train Score: %.2f R2' % (trainScore3))
+    trainScore4 = mean_absolute_percentage_error(train_data[1:], train_predictions)
+    print('train Score: %.2f MAPE' % (trainScore4))
+
+    index = ['Test Score: %.2f RMSE',
+              'Test Score: %.2f MAE',
+              'Test Score: %.2f R2',
+              'Test Score: %.2f MAPE',
+              'Train Score: %.2f RMSE',
+              'Train Score: %.2f MAE',
+              'Train Score: %.2f R2',
+              'Train Score: %.2f MAPE']
+
+    values = [testScore1,  testScore2, testScore3, testScore4, trainScore1, trainScore2, trainScore3, trainScore4]
+    df = pd.DataFrame({'index': index, 'values': values})
+    print(df)
+
+    df.to_excel(os.path.join(base_dir, 'result', 'sarima_lstm_eval.xlsx'), index=False)   # 将评估指标值存为数据表
 
 
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__name__)))
     target = '实际质量值'
-    filename = 'my_data.csv'
-    # filename = 'my_data_enhance_1h.csv'
+    # filename = 'my_data.csv'
+    filename = 'my_data_enhance_1h.csv'
     df = read_data(filename)
     lstm_model(df)
-    # sarima_lstm(df)
+    sarima_lstm(df)
 
