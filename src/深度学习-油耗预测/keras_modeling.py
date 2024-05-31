@@ -1,5 +1,7 @@
 import os
 import pandas as pd
+import numpy as np
+import random
 import seaborn as sns
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -7,6 +9,13 @@ from tensorflow import keras
 from keras import datasets, layers, optimizers, Sequential, losses
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # 去掉不必要的报错
+
+# 老规矩，为了可以复现结果，指定一下随机数种子
+seed_value = 42
+np.random.seed(seed_value)
+tf.random.set_seed(seed_value)
+random.seed(seed_value)
+
 
 # 利用pandas读取数据集
 # 字段有效能（公里数每加仑），气缸数，排量，马力，重量，加速度，型号年份，产地
@@ -76,30 +85,6 @@ def build_model():
     return model
 
 
-model = build_model()
-
-
-# 通过为每个完成的时期打印一个点来显示训练进度
-class PrintDot(keras.callbacks.Callback):
-    def on_epoch_end(self, epoch, logs):
-        if epoch % 100 == 0:
-            print('')
-        print('.', end='')
-
-
-EPOCHS = 1000
-
-history = model.fit(
-    normed_train_data, train_labels,
-    epochs=EPOCHS, validation_split=0.2, verbose=0,
-    callbacks=[PrintDot()])
-
-
-hist = pd.DataFrame(history.history)
-hist['epoch'] = history.epoch
-hist.tail()
-
-
 def plot_history(history):
     hist = pd.DataFrame(history.history)
     hist['epoch'] = history.epoch
@@ -126,17 +111,29 @@ def plot_history(history):
     plt.show()
 
 
+# 通过为每个完成的时期打印一个点来显示训练进度
+class PrintDot(keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs):
+        if epoch % 100 == 0:
+            print('')
+        print('.', end='')
+
+
+
+EPOCHS = 1000
+model = build_model()
+history = model.fit(normed_train_data, train_labels,epochs=EPOCHS, validation_split=0.2, verbose=0,callbacks=[PrintDot()])
+hist = pd.DataFrame(history.history)
+hist['epoch'] = history.epoch
+print(hist.tail())
 plot_history(history)
 
 
 # patience 值用来检查改进 epochs 的数量
 model = build_model()
 early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
-history = model.fit(normed_train_data, train_labels, epochs=EPOCHS,
-                    validation_split=0.2, verbose=0, callbacks=[early_stop, PrintDot()])
+history = model.fit(normed_train_data, train_labels, epochs=EPOCHS,validation_split=0.2, verbose=0, callbacks=[early_stop, PrintDot()])
 plot_history(history)
-
-
 
 # 模型评估
 loss, mae, mse = model.evaluate(normed_test_data, test_labels, verbose=2)

@@ -4,18 +4,18 @@ LSTM：已完成
 Bi-LSTM：已完成
 LSTM+Attention：已完成
 
-CNN+LSTM：
+CNN+LSTM：已完成
 CNN+LSTM+Attention：
 CNN+Bi-LSTM：
 CNN+Bi-LSTM+Attention：
 
-conv+LSTM：
+conv+LSTM：已完成
 conv+LSTM+Attention：
 conv+Bi-LSTM：
 conv+Bi-LSTM+Attention：
 
 TCN：已完成
-TCN+LSTM：
+TCN+LSTM：已完成
 TCN+LSTM+Attention：
 TCN+Bi-LSTM：
 TCN+Bi-LSTM+Attention：
