@@ -15,12 +15,14 @@ X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], te
 
 # 进行 ANOVA 分析，通过计算每个特征与目标变量之间的f统计量，来判断哪些特征与目标变量最相关。
 f_scores, p_values = f_classif(X_train, y_train)
+
 # 打印每个特征的 F 值和 p 值
 for i, feature_name in enumerate(features):
     print(f"特征 '{feature_name}' 的 F 值：{f_scores[i]}, p 值：{p_values[i]}")
+
 # 可视化特征重要性
 sns.set(font_scale=1.2)
-plt.rc('font',family=['SimSun'], size=12)
+plt.rc('font',family=['Times New Roman', 'SimSun'], size=12)
 plt.figure(figsize=(10, 6))
 plt.bar(features, f_scores, color='skyblue')
 plt.title("特征重要性：ANOVA F 值")
