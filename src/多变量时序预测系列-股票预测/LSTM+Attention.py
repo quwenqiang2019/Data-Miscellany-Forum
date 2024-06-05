@@ -87,7 +87,7 @@ my_model.summary()
 my_model.fit(trainX, trainY)
 
 prediction_test=my_model.predict(testX)
-print(prediction_test.shape)
+print(prediction_test)
 prediction_train=my_model.predict(trainX)
 prediction_train_copies_array = np.repeat(prediction_train,fea_num, axis=-1)
 pred_train=scaler.inverse_transform(np.reshape(prediction_train_copies_array,(len(prediction_train),fea_num)))[:,0]

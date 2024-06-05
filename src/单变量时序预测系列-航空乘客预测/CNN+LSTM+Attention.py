@@ -2,10 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from keras.models import Sequential, Model
-from keras.layers import LSTM, Dense, Attention, Input, Permute, Multiply, Dot, Activation, MultiHeadAttention, Flatten
 from keras.layers import *
 from keras.models import *
+import seaborn as sns
 
 # 读取数据集
 data = pd.read_csv('data.csv')
@@ -20,6 +19,8 @@ train_data = data[:train_size]
 test_data = data[train_size:]
 
 # 绘制训练集和测试集的折线图
+sns.set(font_scale=1.2)
+plt.rc('font', family=['Times New Roman', 'SimSun'], size=12)
 plt.figure(figsize=(10, 6))
 plt.plot(train_data, label='Training Data')
 plt.plot(test_data, label='Testing Data')
@@ -84,7 +85,7 @@ dropout = 0.01
 inputs=Input(shape=(look_back, 1))
 my_model=Conv1D(filters = lstm_units, kernel_size = 1, activation = 'sigmoid')(inputs)#卷积层
 my_model=Dropout(dropout)(my_model)#droupout层
-my_model=LSTM(lstm_units, activation='tanh', return_sequences=True)(my_model)      #双向LSTM层
+my_model=LSTM(lstm_units, activation='tanh', return_sequences=True)(my_model)      #LSTM层
 # attention = Attention()([my_model, my_model])
 # attention = attention_3d_block(my_model)
 attention = attention_block(my_model, look_back)
