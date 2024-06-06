@@ -81,7 +81,7 @@ my_model.summary()
 my_model.fit(trainX, trainY)
 
 
-prediction_test=my_model.predict(testX)
+
 prediction_train=my_model.predict(trainX)
 prediction_train_copies_array = np.repeat(prediction_train,fea_num, axis=-1)
 pred_train=scaler.inverse_transform(np.reshape(prediction_train_copies_array,(len(prediction_train),fea_num)))[:,0]
@@ -98,9 +98,13 @@ plt.ylabel('Stock Price')
 plt.legend()
 plt.show()
 
-
+prediction_test=my_model.predict(testX)
+print(prediction_test)
 prediction_test_copies_array = np.repeat(prediction_test,fea_num, axis=-1)
+print(prediction_test_copies_array)
+print(np.reshape(prediction_test_copies_array,(len(prediction_test),fea_num)))
 pred_test=scaler.inverse_transform(np.reshape(prediction_test_copies_array,(len(prediction_test),fea_num)))[:,0]
+print(pred_test)
 original_test_copies_array = np.repeat(testY, fea_num, axis=-1)
 original_test=scaler.inverse_transform(np.reshape(original_test_copies_array,(len(testY),fea_num)))[:,0]
 print("test Pred Values-- ", pred_test)

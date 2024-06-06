@@ -4,8 +4,8 @@ import math
 from matplotlib import pyplot as plt
 import seaborn as sns
 import tensorflow as tf
-from keras.models import Sequential
-from keras.layers import Dense, Dropout
+from keras.models import Sequential, Model
+from keras.layers import Dense, Dropout, Input, RepeatVector, TimeDistributed
 from keras.layers import LSTM
 from scikeras.wrappers import KerasRegressor
 from sklearn.preprocessing import MinMaxScaler
@@ -51,19 +51,19 @@ def split_series(series, n_past, n_future):
   #
   # n_future ==> no of future observations
   #
-  X, y = list(), list()
-  for window_start in range(len(series)):
-    past_end = window_start + n_past
-    future_end = past_end + n_future
-    if future_end > len(series):
-      break
-    # slicing the past and future parts of the window
-    past, future = series[window_start:past_end, :], series[past_end:future_end, :]
-    X.append(past)
-    y.append(future)
-  return np.array(X), np.array(y)
+    X, y = list(), list()
+    for window_start in range(len(series)):
+        past_end = window_start + n_past
+        future_end = past_end + n_future
+        if future_end > len(series):
+           break
+        # slicing the past and future parts of the window
+        past, future = series[window_start:past_end, :], series[past_end:future_end, :]
+        X.append(past)
+        y.append(future)
+    return np.array(X), np.array(y)
 
-# 假设给定过去 10 天的观察结果，我们需要预测接下来的 5 天观察结果
+# 假设给定过去 10 天的观察结果，我们需要预测接下来的 3 天观察结果
 n_past = 10
 n_future = 3
 n_features = fea_num
@@ -86,14 +86,14 @@ print("testY Shape-- ",y_test.shape)
 # E1D1
 # n_features ==> no of features at each timestep in the data.
 #
-encoder_inputs = tf.keras.layers.Input(shape=(n_past, n_features))
-encoder_l1 = tf.keras.layers.LSTM(100, return_state=True)
+encoder_inputs = Input(shape=(n_past, n_features))
+encoder_l1 = LSTM(100, return_state=True)
 encoder_outputs1 = encoder_l1(encoder_inputs)
 encoder_states1 = encoder_outputs1[1:]
-decoder_inputs = tf.keras.layers.RepeatVector(n_future)(encoder_outputs1[0])
-decoder_l1 = tf.keras.layers.LSTM(100, return_sequences=True)(decoder_inputs,initial_state = encoder_states1)
-decoder_outputs1 = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(n_features))(decoder_l1)
-model_e1d1 = tf.keras.models.Model(encoder_inputs,decoder_outputs1)
+decoder_inputs = RepeatVector(n_future)(encoder_outputs1[0])
+decoder_l1 = LSTM(100, return_sequences=True)(decoder_inputs,initial_state = encoder_states1)
+decoder_outputs1 = TimeDistributed(Dense(n_features))(decoder_l1)
+model_e1d1 = Model(encoder_inputs,decoder_outputs1)
 model_e1d1.summary()
 
 
@@ -105,12 +105,13 @@ print(history_e1d1)
 
 pred_e1d1=model_e1d1.predict(X_test)
 print(pred_e1d1)
+print(pred_e1d1.shape)
 
 
 
-for index,i in enumerate(df_for_training.columns):
-    pred_e1d1[:,:,index]=scaler.inverse_transform(pred_e1d1[:,:,index])
-    y_test[:,:,index]=scaler.inverse_transform(y_test[:,:,index])
+# for index,i in enumerate(df_for_training.columns):
+#     pred_e1d1[:,:,index]=scaler.inverse_transform(pred_e1d1[:,:,index])
+#     y_test[:,:,index]=scaler.inverse_transform(y_test[:,:,index])
 
 
 #

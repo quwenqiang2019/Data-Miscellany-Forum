@@ -18,3 +18,19 @@ l = filter(str.isalnum, s.lower())
 s1 = ''.join(l)
 print(s1)
 print(s1 == s1[::-1])
+
+
+s = "paper"
+t = "title"
+
+from collections import Counter
+
+dicts = Counter(s)
+dictt = Counter(t)
+
+for i in range(len(s)):
+    print(list(dicts.keys()))
+    print(s[i])
+    inds = list(dicts.keys()).index(s[i])
+    print(inds)
+
