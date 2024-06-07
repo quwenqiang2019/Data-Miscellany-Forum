@@ -1,27 +1,140 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.utils import shuffle
-from sklearn import preprocessing
+import numpy as np
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import roc_curve
-from sklearn.metrics import auc
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import classification_report
+from sklearn.impute import SimpleImputer
+import warnings
+warnings.filterwarnings("ignore")
+
+# 我们第一个名为 FeatureSelector 的自定义转换器的代码。此构造函数的转换方法仅提取并返回 Pandas 数据集，其中仅包含其名称在其初始化期间作为参数传递给它的那些列。
+class FeatureSelector(BaseEstimator, TransformerMixin):
+    # 构造函数，传递列参数用于列抽取
+    # 可以加入一些打印信息，看看执行的流程
+    def __init__(self, feature_names):
+        self.feature_names = feature_names
+        # print('FeatureSelector init exce...')
+
+    # 返回对象本身
+    def fit(self, X, y=None):
+        # print('FeatureSelector fit exce...')
+        return self
+
+    # 我们需要重写transform方法
+    def transform(self, X, y=None):
+        # print('FeatureSelector transform exce...')
+        return X[self.feature_names]
 
 
-# 1、准备数据
-data = pd.read_csv(r'dataset.csv')
+# 自定义数值列的转换处理器
+class NumericalTransformer(BaseEstimator, TransformerMixin):
+    # 构造函数，bath_per_bed ,years_old控制是否计算卧室和时间处理
+    def __init__(self, bath_per_bed=True, years_old=True):
+        self._bath_per_bed = bath_per_bed
+        self._years_old = years_old
+
+    # 直接返回转换器本身
+    def fit(self, X, y=None):
+        return self
+
+    # 我们编写的自定义变换方法创建了上述特征并删除了冗余特征
+    def transform(self, X, y=None):
+        if self._bath_per_bed:
+            # 创建新列
+            X.loc[:, 'bath_per_bed'] = X['bathrooms'] / X['bedrooms']
+            # 删除冗余列
+            X.drop('bathrooms', axis=1)
+        if self._years_old:
+            # 创建新列
+            X.loc[:, 'years_old'] = 2019 - X['yr_built']
+            # 删除冗余列
+            X.drop('yr_built', axis=1)
+
+        # 将数据集中的任何无穷大值转换为 Nan
+        X = X.replace([np.inf, -np.inf], np.nan)
+        # 返回一个 numpy 数组
+        return X.values
+
+
+
+# 构建自定义的分类列Transformer
+class CategoricalTransformer(BaseEstimator, TransformerMixin):
+    def __init__(self, use_dates=['year', 'month', 'day']):
+        self._use_dates = use_dates
+        # print('CategoricalTransformer init exce...')
+
+    def fit(self, X, y=None):
+        return self
+
+    def get_year(self, obj):
+        return str(obj)[:4]
+
+    def get_month(self, obj):
+        return str(obj)[4:6]
+
+    def get_day(self, obj):
+        return str(obj)[6:8]
+
+    def create_binary(self, obj):
+        if obj == 0:
+            return 'No'
+        else:
+            return 'Yes'
+
+    def transform(self, X, y=None):
+        # print('CategoricalTransformer transform exce...')
+        for spec in self._use_dates:
+            exec("X.loc[:,'{}'] = X['date'].apply(self.get_{})".format(spec, spec))
+        X = X.drop(columns=['date'], axis=1)
+
+        X.loc[:, 'view'] = X['view'].apply(self.create_binary)
+        X.loc[:, 'waterfront'] = X['waterfront'].apply(self.create_binary)
+        X.loc[:, 'yr_renovated'] = X['yr_renovated'].apply(self.create_binary)
+
+        return X.values
+
+
+
+# 准备数据
+data = pd.read_csv(r'kc_house_data.csv')
 df = pd.DataFrame(data)
-
-# 2、数据预处理
-
-## 2.1 数据基本信息
 print(df.head())
-print(df.info())
-print(df.shape)
-print(df.columns)
-print(df.dtypes)
-cat_cols = [col for col in df.columns if df[col].dtype == "object"] # 类别型变量名
-num_cols = [col for col in df.columns if df[col].dtype != "object"] # 数值型变量名
+
+# 提取目标变量、划分数据集
+X = data.drop('price', axis=1)
+y = data['price'].values
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# 传递分类管道的分类特征
+categorical_features = ['date', 'waterfront', 'view', 'yr_renovated']
+# 传递数值管道的数值特征
+numerical_features = ['bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'floors', 'condition', 'grade', 'sqft_basement', 'yr_built']
+
+# 定义分类管道中的步骤
+categorical_pipeline = Pipeline(steps=[('cat_selector', FeatureSelector(categorical_features)),
+                                       ('cat_transformer', CategoricalTransformer()),
+                                       ('one_hot_encoder', OneHotEncoder(sparse=False))])
+
+# 定义数值管道中的步骤
+numerical_pipeline = Pipeline(steps=[('num_selector', FeatureSelector(numerical_features)),
+                                     ('num_transformer', NumericalTransformer()),
+                                     ('imputer', SimpleImputer(strategy='median')),
+                                     ('std_scaler', StandardScaler())])
+
+# 将数值和分类管道水平组合成一个完整的大管道
+# 使用 FeatureUnion
+full_pipeline = FeatureUnion(transformer_list=[('categorical_pipeline', categorical_pipeline),
+                                               ('numerical_pipeline', numerical_pipeline)])
+
+# 完整管道作为另一个管道中的一个步骤，将估算器作为最后一步
+full_pipeline_m = Pipeline(steps=[('full_pipeline', full_pipeline),
+                                  ('model', LinearRegression())])
+
+# 可以像任何其他管道一样调用它
+full_pipeline_m.fit(X_train, y_train)
+
+# 可以像任何其他管道一样使用它进行预测
+y_pred = full_pipeline_m.predict(X_test)
+print(y_pred)

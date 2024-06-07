@@ -60,7 +60,6 @@ trainX, trainY = createXY(df_for_training_scaled, win_size, target_feature_idxs)
 testX, testY = createXY(df_for_testing_scaled, win_size, target_feature_idxs)
 print("训练集形状:", trainX.shape, trainY.shape)
 print("测试集形状:", testX.shape, testY.shape)
-print(testX[-1:])
 # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
 trainX = np.reshape(trainX, (trainX.shape[0], win_size, fea_num))
 testX = np.reshape(testX, (testX.shape[0], win_size, fea_num))
@@ -94,7 +93,6 @@ plt.legend()
 plt.show()
 
 
-
 # def predict_next_11_days(model, input_data):
 #     input_sequence = input_data.copy()
 #
@@ -112,8 +110,6 @@ plt.show()
 #
 # future_predictions = predict_next_11_days(model, testX[-1:])
 # print(future_predictions)
-
-
 
 
 i=0
