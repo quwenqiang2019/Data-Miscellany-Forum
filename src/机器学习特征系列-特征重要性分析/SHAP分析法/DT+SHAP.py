@@ -35,8 +35,8 @@ shap_obj = explainer(X_test)
 
 
 # 特征分析
-# shap.plots.bar(shap_obj[:,:,0], show=True)        # 全局条形图
-# shap.plots.beeswarm(shap_obj[:,:,0], show=True)   # 全局蜂群图
+shap.plots.bar(shap_obj[:,:,0], show=True)        # 全局条形图
+shap.plots.beeswarm(shap_obj[:,:,0], show=True)   # 全局蜂群图
 # shap.plots.beeswarm(shap_obj[:,:,1], show=True)   # 全局蜂群图
 # shap.plots.force(explainer.expected_value[0], shap_obj.values[0,:][:, 1], np.array(X_test.iloc[0,:]), matplotlib=True, show=True, feature_names=features)   # 单个样本力图
 # shap.plots.waterfall(shap_obj[0,:,1])    # 单个样本瀑布图
