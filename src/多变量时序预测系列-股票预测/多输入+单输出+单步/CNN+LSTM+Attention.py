@@ -98,22 +98,17 @@ def attention_block(inputs, time_step):
     return output_attention_mul
 
 
-# 建立cnn-BiLSTM-并添加注意力机制
+# 建立cnn-LSTM-并添加注意力机制
 inputs = Input(shape=(window_size, fea_num))
-# 卷积层和dropout层
-x = Conv1D(filters=64, kernel_size=1, activation='relu')(inputs)  # , padding = 'same'
+x = Conv1D(filters=64, kernel_size=1, activation='relu')(inputs)
 x = Dropout(0.3)(x)
-# For GPU you can use CuDNNLSTM cpu LSTM
-lstm_out = Bidirectional(CuDNNLSTM(50, return_sequences=True))(x)
+lstm_out = CuDNNLSTM(50, return_sequences=True)(x)
 lstm_out = Dropout(0.3)(lstm_out)
 # attention_mul = attention_3d_block(lstm_out)
 attention_mul = attention_block(lstm_out, window_size)
-# 用于将输入层的数据压成一维的数据，一般用再卷积层和全连接层之间
 attention_mul = Flatten()(attention_mul)
-# output = Dense(1, activation='sigmoid')(attention_mul)  分类
 output = Dense(1, activation='linear')(attention_mul)
 my_model = Model(inputs=[inputs], outputs=output)
-
 
 my_model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 my_model.summary()
