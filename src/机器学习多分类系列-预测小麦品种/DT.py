@@ -9,7 +9,7 @@ from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
-
+from sklearn.metrics import precision_score, recall_score, f1_score
 
 # 准备数据
 data = pd.read_csv(r'data.csv')
@@ -21,9 +21,6 @@ print(df.describe())
 target = 'Type'
 features = df.columns.drop(target)
 print(data["Type"].value_counts()) # 顺便查看一下样本是否平衡
-
-
-# 特征重要性分析与筛选
 
 
 # 划分训练集和测试集
@@ -38,7 +35,39 @@ model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 y_scores = model.predict_proba(X_test)
 acc = accuracy_score(y_test, y_pred) # 准确率acc
+print(acc)
 cm = confusion_matrix(y_test, y_pred) # 混淆矩阵
 print(cm)
 cr = classification_report(y_test, y_pred) # 分类报告
 print(cr)
+
+
+print("----------------------------- precision（精确率）-----------------------------")
+precision_score_average_None = precision_score(y_test, y_pred, average=None)
+precision_score_average_micro = precision_score(y_test, y_pred, average='micro')
+precision_score_average_macro = precision_score(y_test, y_pred, average='macro')
+precision_score_average_weighted = precision_score(y_test, y_pred, average='weighted')
+print('precision_score_average_None = ', precision_score_average_None)
+print('precision_score_average_micro = ', precision_score_average_micro)
+print('precision_score_average_macro = ', precision_score_average_macro)
+print('precision_score_average_weighted = ', precision_score_average_weighted)
+
+print("\n\n----------------------------- recall（召回率）-----------------------------")
+recall_score_average_None = recall_score(y_test, y_pred, average=None)
+recall_score_average_micro = recall_score(y_test, y_pred, average='micro')
+recall_score_average_macro = recall_score(y_test, y_pred, average='macro')
+recall_score_average_weighted = recall_score(y_test, y_pred, average='weighted')
+print('recall_score_average_None = ', recall_score_average_None)
+print('recall_score_average_micro = ', recall_score_average_micro)
+print('recall_score_average_macro = ', recall_score_average_macro)
+print('recall_score_average_weighted = ', recall_score_average_weighted)
+
+print("\n\n----------------------------- F1-value-----------------------------")
+f1_score_average_None = f1_score(y_test, y_pred, average=None)
+f1_score_average_micro = f1_score(y_test, y_pred, average='micro')
+f1_score_average_macro = f1_score(y_test, y_pred, average='macro')
+f1_score_average_weighted = f1_score(y_test, y_pred, average='weighted')
+print('f1_score_average_None = ', f1_score_average_None)
+print('f1_score_average_micro = ', f1_score_average_micro)
+print('f1_score_average_macro = ', f1_score_average_macro)
+print('f1_score_average_weighted = ', f1_score_average_weighted)

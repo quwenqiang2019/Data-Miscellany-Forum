@@ -22,16 +22,13 @@ print(data)
 std_table = data.std()  # 计算标准差
 figdata = data.mean()  # 计算均值
 print(figdata)
-print(data.columns)
+print(std_table)
 # # 绘图
 sns.set(font_scale=1.2)
 plt.rc('font',family=['Times New Roman', 'SimSun'], size=12)
-
 plt.errorbar(list(data.columns), figdata, yerr=std_table, fmt='k-o', lw=2, ecolor='k',elinewidth=1, ms=7, capsize=3, label='Chl-a季节平均浓度')
-# 设置数字标签
 for a, b, c in zip(list(data.columns), figdata, std_table):
     plt.text(a, b+0.5, f'{round(b, 2)}±{round(c, 2)}', ha='center', va='bottom')
-
 plt.xlabel('季节')
 plt.ylabel('Chl-a浓度（ug/L）')
 plt.legend()
