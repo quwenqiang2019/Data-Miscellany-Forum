@@ -6,8 +6,10 @@ from sklearn.metrics import accuracy_score
 
 
 # 读取数据并做大致分析
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
 df = pd.read_csv('data.csv')
-print('数据前5行：', df.head(), sep='\n')
+print('数据：', df, sep='\n')
 print('数据形状：', df.shape, sep='\n')
 print("数据列：", df.columns, sep='\n')
 print("数据统计描述：", df.describe(), sep='\n')   # 只会统计数值型变量（int、float）
@@ -19,10 +21,6 @@ cat_cols = [col for col in df.columns if df[col].dtype == "object"] # 类别型�
 num_cols = [col for col in df.columns if df[col].dtype != "object"] # 数值型变量名
 print(cat_cols)
 print(num_cols)
-
-# 查看一下类别型变量每个类别的数量,主要是看一下有没有脏数据和错误数据，有些本应该是数值型的变量被划分为类别型表明该列存在一些脏数据，有的类别型变量无端多出奇怪的类也表明存在脏数据
-for i in cat_cols:
-    print(df[i].value_counts())
 
 # 划分数据集
 train_df = df.sample(frac=0.8, random_state=0)
@@ -42,17 +40,11 @@ print(test_df)
 
 le = LabelEncoder()  # 对于标签采用LabelEncoder
 ohe = OneHotEncoder(sparse=False)  # 对于特征采用OneHotEncoder
-
-train_df['class label'] = le.fit_transform(train_df['class label'])
-
+train_df['classification'] = le.fit_transform(train_df['classification'])
 train_df.drop("id",axis=1,inplace=True)   # 删除第一列id
 
-
-
-
-
-train_df[train_df > train_df.mean() + 2 * train_df.std()] = train_df[train_df < train_df.mean() + 2 * train_df.std()].max()
-train_df[train_df < train_df.mean() - 2 * train_df.std()] = train_df[train_df > train_df.mean() - 2 * train_df.std()].min()
+# train_df[train_df > train_df.mean() + 2 * train_df.std()] = train_df[train_df < train_df.mean() + 2 * train_df.std()].max()
+# train_df[train_df < train_df.mean() - 2 * train_df.std()] = train_df[train_df > train_df.mean() - 2 * train_df.std()].min()
 
 
 # train_df = pd.DataFrame(ohe.fit_transform(train_df[['color','size']].values), columns=ohe.get_feature_names()).join(train_df[['prize','class label']])
