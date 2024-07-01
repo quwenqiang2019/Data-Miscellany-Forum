@@ -1,7 +1,7 @@
 import pandas as pd
-from sklearn.utils import shuffle
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
@@ -24,13 +24,19 @@ print(data["Type"].value_counts()) # 顺便查看一下样本是否平衡
 # df = shuffle(df)
 X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, random_state=0)
 
+
+# 归一化
+mm1 = MinMaxScaler()   # 特征进行归一化
+X_train_m = mm1.fit_transform(X_train)
+
 # 模型的构建与训练
-model = DecisionTreeClassifier(max_depth=5)
-model.fit(X_train, y_train)
+model = LogisticRegression()
+model.fit(X_train_m, y_train)
 
 # 模型推理与评价
-y_pred = model.predict(X_test)
-y_scores = model.predict_proba(X_test)
+X_test_m = mm1.transform(X_test)
+y_pred = model.predict(X_test_m)
+y_scores = model.predict_proba(X_test_m)
 print(y_pred)
 acc = accuracy_score(y_test, y_pred) # 准确率acc
 print(f"acc: \n{acc}")
