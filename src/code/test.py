@@ -10,6 +10,11 @@ print(list(origin))
 
 s = ["flower","flow","flight"]
 print(list(zip(*s)))
+
+
+dic = {'a':1, 'b':2, 'c':3}
+print({**dic})
+
 #
 #
 # s = "A man, a plan, a canal: Panama"

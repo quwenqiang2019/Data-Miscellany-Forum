@@ -1,4 +1,5 @@
 import numpy as np
+import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -20,6 +21,8 @@ train_data = data[:train_size]
 test_data = data[train_size:]
 
 # 绘制训练集和测试集的折线图
+sns.set(font_scale=1.2)
+plt.rc('font', family=['Times New Roman', 'SimSun'], size=12)
 plt.figure(figsize=(10, 6))
 plt.plot(train_data, label='Training Data')
 plt.plot(test_data, label='Testing Data')
@@ -32,9 +35,9 @@ plt.show()
 # 将数据归一化到 0~1 范围
 scaler = MinMaxScaler()
 train_data_scaler = scaler.fit_transform(train_data.values.reshape(-1, 1))
-print(train_data_scaler)
 test_data_scaler = scaler.transform(test_data.values.reshape(-1, 1))
-print(test_data_scaler)
+
+
 # 定义滑动窗口函数
 def create_sliding_windows(data, window_size):
     X, Y = [], []
@@ -43,10 +46,8 @@ def create_sliding_windows(data, window_size):
         Y.append(data[i+window_size,0])
     return np.array(X), np.array(Y)
 
-
-
 # 定义滑动窗口大小
-window_size = 1
+window_size = 2
 
 # 创建滑动窗口数据集
 X_train, Y_train = create_sliding_windows(train_data_scaler, window_size)
@@ -60,7 +61,7 @@ X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
 # TCN
 model = Sequential()
 model.add(Input(shape=(window_size, fea_num)))
-model.add(TCN(nb_filters=50, kernel_size= 6, return_sequences=True, dilations=[1, 2, 4, 8]))  # ,return_sequences=True
+model.add(TCN(nb_filters=65, kernel_size=3, return_sequences=True, dilations=[1, 2, 4, 8]))  # ,return_sequences=True
 # LSTM
 model.add(LSTM(100, return_sequences=True, input_shape=(X_train.shape[1:], 1)))
 model.add(LSTM(100, return_sequences=False))
