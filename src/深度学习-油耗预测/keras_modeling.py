@@ -85,32 +85,6 @@ def build_model():
     return model
 
 
-def plot_history(history):
-    hist = pd.DataFrame(history.history)
-    hist['epoch'] = history.epoch
-
-    plt.figure()
-    plt.xlabel('Epoch')
-    plt.ylabel('Mean Abs Error [MPG]')
-    plt.plot(hist['epoch'], hist['mae'],
-             label='Train Error')
-    plt.plot(hist['epoch'], hist['val_mae'],
-             label='Val Error')
-    plt.ylim([0, 5])
-    plt.legend()
-
-    plt.figure()
-    plt.xlabel('Epoch')
-    plt.ylabel('Mean Square Error [$MPG^2$]')
-    plt.plot(hist['epoch'], hist['mse'],
-             label='Train Error')
-    plt.plot(hist['epoch'], hist['val_mse'],
-             label='Val Error')
-    plt.ylim([0, 20])
-    plt.legend()
-    plt.show()
-
-
 # 通过为每个完成的时期打印一个点来显示训练进度
 class PrintDot(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs):
@@ -126,14 +100,58 @@ history = model.fit(normed_train_data, train_labels,epochs=EPOCHS, validation_sp
 hist = pd.DataFrame(history.history)
 hist['epoch'] = history.epoch
 print(hist.tail())
-plot_history(history)
+hist = pd.DataFrame(history.history)
+hist['epoch'] = history.epoch
+
+plt.figure()
+plt.xlabel('Epoch')
+plt.ylabel('Mean Abs Error [MPG]')
+plt.plot(hist['epoch'], hist['mae'],
+         label='Train Error')
+plt.plot(hist['epoch'], hist['val_mae'],
+         label='Val Error')
+plt.ylim([0, 5])
+plt.legend()
+
+plt.figure()
+plt.xlabel('Epoch')
+plt.ylabel('Mean Square Error [$MPG^2$]')
+plt.plot(hist['epoch'], hist['mse'],
+         label='Train Error')
+plt.plot(hist['epoch'], hist['val_mse'],
+         label='Val Error')
+plt.ylim([0, 20])
+plt.legend()
+plt.show()
 
 
 # patience 值用来检查改进 epochs 的数量
 model = build_model()
 early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
 history = model.fit(normed_train_data, train_labels, epochs=EPOCHS,validation_split=0.2, verbose=0, callbacks=[early_stop, PrintDot()])
-plot_history(history)
+hist = pd.DataFrame(history.history)
+hist['epoch'] = history.epoch
+
+plt.figure()
+plt.xlabel('Epoch')
+plt.ylabel('Mean Abs Error [MPG]')
+plt.plot(hist['epoch'], hist['mae'],
+         label='Train Error')
+plt.plot(hist['epoch'], hist['val_mae'],
+         label='Val Error')
+plt.ylim([0, 5])
+plt.legend()
+
+plt.figure()
+plt.xlabel('Epoch')
+plt.ylabel('Mean Square Error [$MPG^2$]')
+plt.plot(hist['epoch'], hist['mse'],
+         label='Train Error')
+plt.plot(hist['epoch'], hist['val_mse'],
+         label='Val Error')
+plt.ylim([0, 20])
+plt.legend()
+plt.show()
 
 # 模型评估
 loss, mae, mse = model.evaluate(normed_test_data, test_labels, verbose=2)

@@ -1,19 +1,28 @@
-a = ['a', 'b', 'c', 'd']
-b = ['1', '2', '3', '4']
-
-res = list(zip(a, b))
-print(res)
-
-
-origin = zip(*res)  # #前面加*号，事实上*号也是一个特殊的运算符，叫解包运算符
-print(list(origin))
-
-s = ["flower","flow","flight"]
-print(list(zip(*s)))
+from collections import Counter
+L = [2, 1, 2]
+counter = dict(Counter(L))
+print(counter)
+for k, v in counter:
+    print(k, v)
 
 
-dic = {'a':1, 'b':2, 'c':3}
-print({**dic})
+
+# a = ['a', 'b', 'c', 'd']
+# b = ['1', '2', '3', '4']
+#
+# res = list(zip(a, b))
+# print(res)
+#
+#
+# origin = zip(*res)  # #前面加*号，事实上*号也是一个特殊的运算符，叫解包运算符
+# print(list(origin))
+#
+# s = ["flower","flow","flight"]
+# print(list(zip(*s)))
+#
+#
+# dic = {'a':1, 'b':2, 'c':3}
+# print({**dic})
 
 #
 #
