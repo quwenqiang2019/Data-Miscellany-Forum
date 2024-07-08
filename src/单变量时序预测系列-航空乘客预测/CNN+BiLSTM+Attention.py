@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
+import seaborn as sns
 from keras.models import Sequential, Model
 from keras.layers import LSTM, Dense, Attention, Input, Permute, Multiply, Dot, Activation, MultiHeadAttention, Flatten, CuDNNLSTM
 from keras.layers import *
@@ -20,6 +21,8 @@ train_data = data[:train_size]
 test_data = data[train_size:]
 
 # 绘制训练集和测试集的折线图
+sns.set(font_scale=1.2)
+plt.rc('font', family=['Times New Roman', 'SimSun'], size=12)
 plt.figure(figsize=(10, 6))
 plt.plot(train_data, label='Training Data')
 plt.plot(test_data, label='Testing Data')
@@ -78,7 +81,7 @@ def attention_block(inputs,time_step):
     output_attention_mul = concatenate([inputs, a_probs], name='attention_mul')
     return output_attention_mul
 
-# 构建 LSTM 模型
+# 构建模型
 lstm_units = 50
 dropout = 0.01
 
@@ -95,7 +98,7 @@ my_model = Model(inputs=inputs, outputs=outputs)
 my_model.compile(loss='mean_squared_error', optimizer='adam')
 my_model.fit(X_train, Y_train, epochs=50, batch_size=1, verbose=2)
 
-# 使用 LSTM 模型进行预测
+# 使用模型进行预测
 train_predictions = my_model.predict(X_train)
 test_predictions = my_model.predict(X_test)
 

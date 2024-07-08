@@ -99,7 +99,7 @@ model = build_model()
 history = model.fit(normed_train_data, train_labels,epochs=EPOCHS, validation_split=0.2, verbose=0,callbacks=[PrintDot()])
 hist = pd.DataFrame(history.history)
 hist['epoch'] = history.epoch
-print(hist.tail())
+print('\n', hist.tail())
 hist = pd.DataFrame(history.history)
 hist['epoch'] = history.epoch
 
@@ -129,29 +129,27 @@ plt.show()
 model = build_model()
 early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
 history = model.fit(normed_train_data, train_labels, epochs=EPOCHS,validation_split=0.2, verbose=0, callbacks=[early_stop, PrintDot()])
-hist = pd.DataFrame(history.history)
-hist['epoch'] = history.epoch
 
-plt.figure()
-plt.xlabel('Epoch')
-plt.ylabel('Mean Abs Error [MPG]')
-plt.plot(hist['epoch'], hist['mae'],
-         label='Train Error')
-plt.plot(hist['epoch'], hist['val_mae'],
-         label='Val Error')
-plt.ylim([0, 5])
-plt.legend()
 
-plt.figure()
-plt.xlabel('Epoch')
-plt.ylabel('Mean Square Error [$MPG^2$]')
-plt.plot(hist['epoch'], hist['mse'],
-         label='Train Error')
-plt.plot(hist['epoch'], hist['val_mse'],
-         label='Val Error')
-plt.ylim([0, 20])
-plt.legend()
-plt.show()
+# 参数：
+# filename：字符串，保存模型的路径
+# monitor：需要监视的值
+# verbose：信息展示模式，0或1
+# save_best_only：当设置为True时，将只保存在验证集上性能最好的模型
+
+filepath = "model_{epoch:02d}-{val_mse:.2f}.h5"
+checkpoint = keras.callbacks.ModelCheckpoint(
+    filepath=filepath,
+    monitor='val_loss',
+    save_best_only=True,
+    verbose=1,
+    save_weights_only=True,
+    period=3
+)
+history = model.fit(normed_train_data, train_labels, epochs=EPOCHS,validation_split=0.2, verbose=0, callbacks=[checkpoint, PrintDot()])
+
+
+
 
 # 模型评估
 loss, mae, mse = model.evaluate(normed_test_data, test_labels, verbose=2)
