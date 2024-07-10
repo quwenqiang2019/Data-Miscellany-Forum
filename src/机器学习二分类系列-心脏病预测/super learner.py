@@ -1,6 +1,4 @@
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn import tree
 from sklearn import svm
 from sklearn import naive_bayes
@@ -9,9 +7,15 @@ from sklearn import neighbors
 from sklearn import ensemble
 from sklearn import neural_network
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
-
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import roc_curve
+from sklearn.metrics import auc
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 
 
 # Create a new classifier which is based on the sckit-learn BaseEstimator and ClassifierMixin classes
@@ -21,19 +25,13 @@ class SuperLearnerClassifier(BaseEstimator, ClassifierMixin):
     Parameters
     ----------
 
-
     Attributes
     ----------
-
-
-
     Notes
     -----
 
-
     See also
     --------
-
     ----------
     .. [1]  van der Laan, M., Polley, E. & Hubbard, A. (2007).
             Super Learner. Statistical Applications in Genetics
@@ -41,8 +39,6 @@ class SuperLearnerClassifier(BaseEstimator, ClassifierMixin):
             doi:10.2202/1544-6115.1309
     Examples
     --------
-
-
     """
 
     # Define base estimators
@@ -90,7 +86,7 @@ class SuperLearnerClassifier(BaseEstimator, ClassifierMixin):
         return all_meta
 
     # Constructor for the classifier object
-    def __init__(self, probability='False', meta_clf='DecisionTree', K=5, num_class=10, \
+    def __init__(self, probability='False', meta_clf='DecisionTree', K=5, num_class=2, \
                  base_models=base_learners(), meta_models=meta_learners(), \
                  dataset='only_meta'):
 
@@ -283,16 +279,17 @@ class SuperLearnerClassifier(BaseEstimator, ClassifierMixin):
         X_test = X
 
         # Create test data for SuperLearner
-        meta_test_proba = np.zeros((len(X_test[0:]), len(self.base_models) * self.num_class))
+        meta_test_proba = np.zeros((len(X_test[0:]), len(self.base_models) * 1))
+        print(meta_test_proba.shape)
 
         # Do the prediction on each base learners
         for i, k in enumerate(self.base_models):
             clf_test_proba = self.base_models[k]
-            test_pred_proba = clf_test_proba.predict_proba(X_test)
+            test_pred_proba = clf_test_proba.predict_proba(X_test)[:, 1]
+            # test_pred_proba = test_pred_proba.reshape(-1, 1)
+            # print(test_pred_proba.shape)
 
-            for l in range(0, 10):
-                meta_test_proba[:, i * l + 1] = test_pred_proba[:,
-                                                l]  # Append the probability predictions to the meta test
+            meta_test_proba[:, i] = test_pred_proba  # Append the probability predictions to the meta test
 
         # Check if predict_proba to be done including orignal test data
         if self.dataset == 'Full':
@@ -333,14 +330,56 @@ class SuperLearnerClassifier(BaseEstimator, ClassifierMixin):
         return self
 
 
-# Test SuperLearnerClassifier on Iris Dataset
-from sklearn.datasets import load_iris
 
-clf = SuperLearnerClassifier()
-iris = load_iris()
-clf.fit(iris.data, iris.target)
-cv_results = cross_val_score(clf, iris.data, iris.target, cv=10)
+if __name__ == "__main__":
+    # 准备数据
+    data = pd.read_csv(r'Dataset.csv')
+    df = pd.DataFrame(data)
+    ## 数据基本信息
+    print(df.head())
+    print(df.info())
+    print(df.shape)
+    print(df.columns)
+    print(df.dtypes)
+    cat_cols = [col for col in df.columns if df[col].dtype == "object"]  # 类别型变量名
+    num_cols = [col for col in df.columns if df[col].dtype != "object"]  # 数值型变量名
 
-print("Accuracy on Iris Data:", cv_results.mean())
-print()
+    # 提取目标变量和特征变量
+    target = 'target'
+    features = df.columns.drop(target)
+    print(data["target"].value_counts())  # 顺便查看一下样本是否平衡
+
+    # 划分训练集和测试集
+    X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, random_state=0)
+    X_train = np.array(X_train)
+    y_train = np.array(y_train)
+    X_test = np.array(X_test)
+    y_test = np.array(y_test)
+
+    # 模型的构建与训练
+    model = SuperLearnerClassifier()
+    model.fit(X_train, y_train)
+
+    # 模型推理与评价
+    y_pred = model.predict(X_test)
+    y_scores = model.predict_proba(X_test)
+    acc = accuracy_score(y_test, y_pred) # 准确率acc
+    cm = confusion_matrix(y_test, y_pred) # 混淆矩阵
+    cr = classification_report(y_test, y_pred) # 分类报告
+    print(acc, cm, cr, sep='\n')
+    fpr, tpr, thresholds = roc_curve(y_test, y_scores, pos_label=1) # 计算ROC曲线和AUC值,绘制ROC曲线
+    roc_auc = auc(fpr, tpr)
+    plt.figure()
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic')
+    plt.legend(loc="lower right")
+    plt.show()
+
+
+
 
