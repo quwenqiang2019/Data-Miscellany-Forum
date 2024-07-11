@@ -86,6 +86,7 @@ inputs=Input(shape=(look_back, 1))
 my_model=Conv1D(filters = lstm_units, kernel_size = 1, activation = 'sigmoid')(inputs)#卷积层
 my_model=Dropout(dropout)(my_model)#droupout层
 my_model=LSTM(lstm_units, activation='tanh', return_sequences=True)(my_model)      #LSTM层
+print(my_model)
 # attention = Attention()([my_model, my_model])
 # attention = attention_3d_block(my_model)
 attention = attention_block(my_model, look_back)

@@ -14,15 +14,15 @@ CNN+LSTM+Attention：已完成
 CNN+Bi-LSTM：已完成
 CNN+Bi-LSTM+Attention：已完成
 
-conv+LSTM：已完成
-conv+LSTM+Attention：
-conv+Bi-LSTM：
-conv+Bi-LSTM+Attention：
+ConvLSTM：已完成
+ConvLSTM+Attention：
+ConvBi-LSTM：
+Conv+Bi-LSTM+Attention：
 
 TCN：已完成
 TCN+LSTM：已完成
 TCN+LSTM+Attention：
-TCN+Bi-LSTM：
+TCN+Bi-LSTM：已完成
 TCN+Bi-LSTM+Attention：
 
 蚁群算法（ACO）+LSTM：已完成
