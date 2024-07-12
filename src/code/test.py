@@ -1,8 +1,12 @@
+from qwq_package import mymodule
+print(mymodule.add(1, 2))
+
+
 from collections import Counter
 L = [2, 1, 2]
 counter = dict(Counter(L))
 print(counter)
-for k, v in counter:
+for k, v in enumerate(counter):
     print(k, v)
 
 
