@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from keras.models import Sequential
-from keras.layers import LSTM, Dense
+from keras.models import Sequential, Model
+from keras.layers import LSTM, Dense, Input
 import tensorflow as tf
 import random
 
@@ -68,12 +68,20 @@ X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
 
 
 # 构建 LSTM 模型
-model = Sequential()
-model.add(LSTM(50, activation='relu', input_shape=(window_size, 1)))
-model.add(Dense(1))
+# model = Sequential()
+# model.add(Input(shape=(window_size, 1)))
+# model.add(LSTM(50, activation='relu'))
+# model.add(Dense(1))
+
+input = Input(shape=(window_size, 1))
+lstm = LSTM(units=50, activation='relu')(input)
+output = Dense(units=1)(lstm)
+model = Model(inputs=input, outputs=output)
+model.summary()
 model.compile(optimizer='adam', loss='mse')
 # 训练 LSTM 模型
 model.fit(X_train, Y_train, epochs=100, batch_size=32)
+
 
 # 使用 LSTM 模型进行预测
 train_predictions = model.predict(X_train)
