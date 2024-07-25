@@ -39,10 +39,11 @@ X_train_m = mm1.fit_transform(X_train)
 mm2 = MinMaxScaler()     # 标签进行归一化
 y_train_m = mm2.fit_transform(y_train)
 
-
+print(X_train_m.shape, y_train_m.shape)
 # 模型的构建与训练
 model = LogisticRegression()
 model.fit(X_train_m, y_train_m)
+
 
 # 模型推理与评价
 # 对测试集特征进行相同规则mm1的归一化处理，然后输入到模型进行预测

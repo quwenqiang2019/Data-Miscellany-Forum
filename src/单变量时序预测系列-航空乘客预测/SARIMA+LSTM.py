@@ -2,10 +2,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from keras.models import Sequential
+from keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
-
+import seaborn as sns
 # 读取数据集
 data = pd.read_csv('data.csv')
 data['Month'] = pd.to_datetime(data['Month'])   # 将日期列转换为日期时间类型
@@ -13,8 +13,8 @@ data.set_index('Month', inplace=True)    # 将日期列设置为索引
 data = data['Passengers'].values
 
 # 拆分数据集为训练集和测试集
-# train_size = int(len(data) * 0.8)
-train_size = len(data) - 12
+train_size = int(len(data) * 0.8)
+# train_size = len(data) - 12
 train_data = data[:train_size]
 test_data = data[train_size:]
 print(train_data, len(train_data))
@@ -62,6 +62,8 @@ train_predictions = sarima_train_predictions[1:] + lstm_train_residuals.flatten(
 print("最终训练集的预测值:", train_predictions)
 
 # 绘制训练集预测结果的折线图
+sns.set(font_scale=1.2)
+plt.rc('font', family=['Times New Roman', 'SimSun'], size=12)
 plt.figure(figsize=(10, 6))
 plt.plot(train_predictions, label='Predicted')
 plt.plot(train_data[1:], label='Actual')
@@ -92,8 +94,9 @@ print(lstm_test_residuals, len(lstm_test_residuals))
 # SARIMA模型预测值与LSTM模型预测残差值相加得到最终测试集的预测值
 test_predictions = sarima_test_predictions[1:] + lstm_test_residuals.flatten()
 print("最终测试集的预测值:", test_predictions)
-
 # 绘制测试集预测结果的折线图
+sns.set(font_scale=1.2)
+plt.rc('font', family=['Times New Roman', 'SimSun'], size=12)
 plt.figure(figsize=(10, 6))
 plt.plot(test_predictions, label='Predicted')
 plt.plot(test_data[1:], label='Actual')

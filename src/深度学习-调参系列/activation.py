@@ -31,7 +31,7 @@ seed = 7
 np.random.seed(seed)
 
 # 创建模型，使用到了上一步找出的 epochs、batch size 最优参数
-# 这里由于KerasClassifier没有定义隐含神经元的参数，需要自定义一个表示激活函数的参数activation，并赋默认值为'relu'
+# 这里由于KerasClassifier没有定义表示激活函数的参数，需要自定义一个表示激活函数的参数activation，并赋默认值为'relu'
 model = KerasClassifier(model=create_model, epochs=100, batch_size=80, verbose=0, activation='relu')
 # 定义网格搜索参数，进行网格搜索
 param_grid = {'activation': ['softmax', 'softplus', 'softsign', 'relu',

@@ -2,8 +2,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from keras.models import Sequential, Model
+from keras.layers import LSTM, Dense, Input
+import tensorflow as tf
+import random
+
+'''
+LSTM模型训练中的一些操作（如参数初始化、数据分割等）具有随机性，这会导致每次训练后的模型表现有所不同。
+解决方案：
+设置随机种子： 可以通过设定全局和框架内的随机种子来固定随机性，以确保每次实验的结果一致。
+'''
+seed_value = 42
+np.random.seed(seed_value)
+tf.random.set_seed(seed_value)
+random.seed(seed_value)
 
 # 读取数据集
 data = pd.read_csv('data.csv')
@@ -30,9 +42,8 @@ plt.show()
 # 将数据归一化到 0~1 范围
 scaler = MinMaxScaler()
 train_data_scaler = scaler.fit_transform(train_data.values.reshape(-1, 1))
-print(train_data_scaler)
 test_data_scaler = scaler.transform(test_data.values.reshape(-1, 1))
-print(test_data_scaler)
+
 # 定义滑动窗口函数
 def create_sliding_windows(data, window_size):
     X, Y = [], []
@@ -57,22 +68,29 @@ X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
 
 
 # 构建 LSTM 模型
-model = Sequential()
-model.add(LSTM(50, activation='relu', input_shape=(window_size, 1)))
-model.add(Dense(1))
+# model = Sequential()
+# model.add(Input(shape=(window_size, 1)))
+# model.add(LSTM(50, activation='relu'))
+# model.add(Dense(1))
+
+input = Input(shape=(window_size, 1))
+lstm = LSTM(units=50, activation='relu')(input)
+output = Dense(units=1)(lstm)
+model = Model(inputs=input, outputs=output)
+model.summary()
 model.compile(optimizer='adam', loss='mse')
 # 训练 LSTM 模型
 model.fit(X_train, Y_train, epochs=100, batch_size=32)
 
+
 # 使用 LSTM 模型进行预测
 train_predictions = model.predict(X_train)
-print(train_predictions.shape)
 test_predictions = model.predict(X_test)
 
 # 反归一化预测结果
 train_predictions = scaler.inverse_transform(train_predictions)
-
 test_predictions = scaler.inverse_transform(test_predictions)
+print(test_predictions)
 
 # 绘制测试集预测结果的折线图
 plt.figure(figsize=(10, 6))
