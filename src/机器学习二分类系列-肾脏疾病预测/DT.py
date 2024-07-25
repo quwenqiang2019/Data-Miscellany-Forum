@@ -9,7 +9,7 @@ from sklearn.metrics import auc
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 
-# 读取数据并做大致分析
+# ===================================================读取数据并做大致分析=================================================
 # pd.set_option('display.max_columns', None)
 # pd.set_option('display.max_rows', None)
 
@@ -26,7 +26,7 @@ train_df = df.sample(frac=0.8, random_state=0)
 test_df = df.drop(train_df.index)
 
 
-# 对训练集进行特征工程
+# ============================================对训练集进行特征工程=========================================================
 le = LabelEncoder()  # 对于标签采用LabelEncoder
 ohe = OneHotEncoder(sparse=False)  # 对于特征采用OneHotEncoder
 mm = MinMaxScaler()   # 特征进行归一化
@@ -65,7 +65,7 @@ model = DecisionTreeClassifier()
 model.fit(X_train, y_train)
 
 
-# 测试集做相同的特征处理
+# =================================测试集做相同的特征处理================================================
 # 1、删除第一列id
 test_df.drop("id",axis=1,inplace=True)
 
@@ -95,7 +95,7 @@ X_test = test_df.iloc[:,:-1]
 y_test = test_df['classification']
 
 
-# 模型推理与评价
+# ============================================模型推理与评价============================================
 y_pred = model.predict(X_test)
 y_scores = model.predict_proba(X_test)
 acc = accuracy_score(y_test, y_pred) # 准确率acc
