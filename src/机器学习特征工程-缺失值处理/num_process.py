@@ -16,14 +16,13 @@ from sklearn.metrics import classification_report
 df = pd.read_csv('data.csv')
 df.drop("id",axis=1,inplace=True)
 print('数据：', df, sep='\n')
+
+
 print('数据缺失值情况：', df.isnull().sum(), sep='\n')
-
-
 cat_cols = [col for col in df.columns if df[col].dtype == "object"] # 类别型变量名
 num_cols = [col for col in df.columns if df[col].dtype != "object"] # 数值型变量名
 print(cat_cols)
 print(num_cols)
-
 print('数值型数据缺失情况：', df[num_cols].isnull().sum(), sep='\n')
 
 
@@ -46,7 +45,7 @@ df[num_cols] = df[num_cols].fillna(df[num_cols].mode().iloc[0])
 # 法6：interpolate()插值方法填充
 # df[num_cols] = df[num_cols].interpolate()
 
-# 法7：机器学学习预测填充
+# 法7：机器学习预测填充
 # 略
 
 print('处理后数值型数据缺失情况：', df[num_cols].isnull().sum(), sep='\n')
