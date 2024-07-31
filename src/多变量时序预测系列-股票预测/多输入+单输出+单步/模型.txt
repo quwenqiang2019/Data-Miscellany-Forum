@@ -6,7 +6,7 @@ LSTM+Attention：已完成
 
 CNN+LSTM：已完成
 CNN+LSTM+Attention：已完成
-CNN+Bi-LSTM：
+CNN+Bi-LSTM：已完成
 CNN+Bi-LSTM+Attention：已完成
 
 conv+LSTM：已完成
