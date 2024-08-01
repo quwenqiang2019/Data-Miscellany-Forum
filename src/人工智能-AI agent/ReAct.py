@@ -11,9 +11,9 @@ from langchain.tools import BaseTool
 from langchain.chat_models import ChatOpenAI
 
 # 模型
-# api_key = "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"
-api_key = "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"
-# api_key = "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"
+# api_key = "xxx"
+api_key = "xxx"
+# api_key = "xxx"
 
 model = ChatOpenAI(model="gpt-3.5-turbo",
                    openai_api_key=api_key,
