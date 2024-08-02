@@ -23,7 +23,7 @@ from util import base64_to_pil
 app = Flask(__name__)
 
 
-# You can use pretrained model from Keras
+# 1、You can use pretrained model from Keras
 # Check https://keras.io/applications/
 # or https://www.tensorflow.org/api_docs/python/tf/keras/applications
 
@@ -32,9 +32,8 @@ model = MobileNetV2(weights='imagenet')
 print('Model loaded. Check http://127.0.0.1:5000/')
 
 
-# Model saved with Keras model.save()
+# 2、Model saved with Keras model.save()
 # MODEL_PATH = 'models/cats_and_dogs_small.h5'
-
 # Load your own trained model
 # model = load_model(MODEL_PATH)
 # model._make_predict_function()          # Necessary
