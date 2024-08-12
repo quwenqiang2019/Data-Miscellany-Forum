@@ -12,8 +12,8 @@ from langchain.chat_models import ChatOpenAI
 
 # 模型
 
-api_key = "sk-QnX8nky4zXmRxfUgAZ5bmKInUseicFcnim4n32u7aHMf73QR"
-api_base = "https://api.chatanywhere.tech/v1"
+api_key = "xxxx"
+api_base = "xxxx"
 model = ChatOpenAI(model="gpt-3.5-turbo",
                    openai_api_key=api_key,
                    openai_api_base=api_base)
