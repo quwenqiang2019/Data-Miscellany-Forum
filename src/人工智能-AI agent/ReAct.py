@@ -11,15 +11,16 @@ from langchain.tools import BaseTool
 from langchain.chat_models import ChatOpenAI
 
 # 模型
-# api_key = "xxx"
-api_key = "xxx"
-# api_key = "xxx"
 
+api_key = "sk-QnX8nky4zXmRxfUgAZ5bmKInUseicFcnim4n32u7aHMf73QR"
+api_base = "https://api.chatanywhere.tech/v1"
 model = ChatOpenAI(model="gpt-3.5-turbo",
                    openai_api_key=api_key,
-                   openai_api_base="https://api.openai.com/v1")
+                   openai_api_base=api_base)
+
 # 直接让模型计算数字，模型会算错
-model.invoke([HumanMessage(content="你帮我算下，3.941592623412424+4.3434532535353的结果")])
+ai_msg = model.invoke([HumanMessage(content="你帮我算下，3.941592623412424+4.3434532535353的结果")])
+print(ai_msg)
 
 
 # 下面开始使用ReAct机制，定义工具，让LLM使用工具做专业的事情。
@@ -30,7 +31,7 @@ class SumNumberTool(BaseTool):
     description = "当你被要求计算2个数字相加时，使用此工具"
 
     def _run(self, a, b):
-        return a.value + b.value
+        return a["title"] + b["title"]
 
 # 工具合集
 tools = [SumNumberTool()]
@@ -52,5 +53,5 @@ agent_executor = AgentExecutor.from_agent_and_tools(
     agent=agent, tools=tools, memory=memory, verbose=True, handle_parsing_errors=True
 )
 # 测试使用到工具的场景
-agent_executor.invoke({"input": "你帮我算下3.941592623412424+4.3434532535353的结果"})
-
+ai_msg = agent_executor.invoke({"input": "你帮我算下3.941592623412424+4.3434532535353的结果"})
+print(ai_msg)
