@@ -15,27 +15,33 @@ filename = 'data.csv'
 names = ['CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS',
          'RAD', 'TAX', 'PRTATIO', 'B', 'LSTAT', 'MEDV']
 dataset = pd.read_csv(filename, names=names, delim_whitespace=True)
-print(dataset)
 df = pd.DataFrame(dataset)
+print(df)
 
 #  划分数据集
 features = names[:-1]
 target = ['MEDV']
 X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2, random_state=0)
 
+
 # 建模预测
 model = XGBRegressor(n_estimators=100, max_depth=10)
-help(model)
 model.fit(X_train, y_train)
 y_train_pred = model.predict(X_train)
 y_test_pred = model.predict(X_test)
 print(r2_score(y_test, y_test_pred))
 
-
-feature_names = names
-#建立解释器
-explainer = LimeTabularExplainer(X_train,feature_names=feature_names,mode='regression')
-# 解释第81个样本的规则,选择10个特征
-exp = explainer.explain_instance(X_test[81], model.predict,num_features=5)
+# 建立解释器，解释第1个样本的规则,选择13个特征
+explainer = LimeTabularExplainer(X_train.values,feature_names=list(X_train.columns), mode='regression')
+exp = explainer.explain_instance(X_test.iloc[0].values, model.predict, num_features=13)
 # 画图
+sns.set(font_scale=1.2)
+plt.rc('font', family=['Times New Roman', 'SimSun'], size=12)
 fig = exp.as_pyplot_figure()
+plt.tight_layout()
+plt.show()
+# 需要在jupyter notebook中运行才能显示
+exp.show_in_notebook(show_table=True, show_all=False)
+exp.save_to_file('oi.html')
+
+
