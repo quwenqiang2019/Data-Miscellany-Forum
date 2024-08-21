@@ -2,5 +2,6 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/机器学习二分类系列-心脏病预测/streamlit-app" vcs="Git" />
   </component>
 </project>
