@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from xgboost.sklearn import XGBClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
@@ -33,6 +34,11 @@ model.fit(X_train, y_train)
 # 使用 pickle 保存模型
 with open('./random_forest_model.pkl', 'wb') as file:
     pickle.dump(model, file)
+
+# import joblib
+# # 保存模型
+# joblib.dump(model, 'random_forest_model.pkl')
+
 
 # 加载保存的模型
 with open('./random_forest_model.pkl', 'rb') as file:

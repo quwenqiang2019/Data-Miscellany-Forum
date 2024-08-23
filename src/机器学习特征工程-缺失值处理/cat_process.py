@@ -28,13 +28,13 @@ print('字符型数据缺失情况：', df[cat_cols].isnull().sum(), sep='\n')
 # 法1：众数填充
 # for i in cat_cols:
 #     df[i] = df[i].fillna(df[i].mode()[0])
-
+df[cat_cols] = df[cat_cols].fillna(df[cat_cols].mode().iloc[0])
 # 法2：自定义填充
 # 略
 
 # 法3：前后数据填充
-df[cat_cols] = df[cat_cols].fillna(method='pad')
-# df[num_cols] = df[num_cols].fillna(method='bfill')
+# df[cat_cols] = df[cat_cols].fillna(method='pad')
+# df[cat_cols] = df[num_cols].fillna(method='bfill')
 
 # 法4：机器学学习预测填充
 # 略

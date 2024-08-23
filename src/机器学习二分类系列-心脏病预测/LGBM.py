@@ -33,7 +33,6 @@ X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], te
 
 # 模型的构建与训练
 model = LGBMClassifier()
-help(model)
 model.fit(X_train, y_train)
 
 # 模型推理与评价
