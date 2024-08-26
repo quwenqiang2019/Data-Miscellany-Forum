@@ -37,7 +37,6 @@ def read_data(filename):
     data.set_index('Month', inplace=True)
     return data
 
-
 def data_split(data):
     # 数据划分
     train_data = data[:train_size]

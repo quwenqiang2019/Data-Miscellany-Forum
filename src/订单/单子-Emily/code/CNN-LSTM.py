@@ -57,8 +57,8 @@ def data_split(data):
 
     return train_data, test_data
 
-
 def df_converse(train_data, test_data):
+    # 数据格式转换
     train_data_scaler = scaler.fit_transform(train_data.values.reshape(-1, 1))
     test_data_scaler = scaler.transform(test_data.values.reshape(-1, 1))
 
@@ -83,9 +83,8 @@ def df_converse(train_data, test_data):
 
     return trainX, trainY, testX, testY
 
-
-
 def cnn_lstm_model():
+    # 建立CNN-LSTM模型
     model = Sequential()
     model.add(TimeDistributed(Conv1D(filters=64, kernel_size=1, activation='relu',
                                      input_shape=(None, trainX.shape[1], trainX.shape[2], trainX.shape[3]))))
