@@ -12,8 +12,6 @@ from sklearn.ensemble import RandomForestRegressor
 import seaborn as sns
 import tensorflow as tf
 import random
-from keras.models import Model
-from keras.layers import LSTM, Dense, Input, Dropout
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
@@ -107,7 +105,6 @@ def model_evl():
     # 反归一化预测结果
     pred_train = scaler.inverse_transform(train_predictions)
     pred_test = scaler.inverse_transform(test_predictions)
-
 
     # 绘制测试集预测结果的折线图
     plt.figure(figsize=(10, 6))
