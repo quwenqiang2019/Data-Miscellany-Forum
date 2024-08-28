@@ -191,6 +191,27 @@ def model_evl():
 
     return
 
+def model_predict(input_value):
+    model_input = input_value
+    input_scaler = scaler.transform(model_input.reshape(-1, 1))
+
+    inputX=input_scaler
+
+    # # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
+    inputX = np.reshape(inputX, (inputX.shape[1], window_size, fea_num))
+
+    print("inputX Shape-- ", inputX.shape)
+    # 使用 LSTM 模型进行预测
+    input_predictions = model.predict(inputX)
+
+    # 反归一化预测结果
+    pred_input = scaler.inverse_transform(input_predictions)
+
+
+    return pred_input
+
+
+
 
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__name__)))
@@ -205,4 +226,7 @@ if __name__ == "__main__":
     trainX, trainY, testX, testY = df_converse(train_data, test_data)
     model = lstm_model()
     model_evl()
+
+    pred_input = model_predict(np.array([151198.0]))
+    print(pred_input)
 

@@ -4,6 +4,7 @@ SARIMA：已完成
 
 SARIMA+LSTM：已完成
 
+GRU：已完成
 LSTM：已完成
 多层LSTM：已完成
 Bi-LSTM：已完成
@@ -16,14 +17,12 @@ CNN+Bi-LSTM+Attention：已完成
 
 ConvLSTM：已完成
 ConvLSTM+Attention：
-ConvBi-LSTM：
-Conv+Bi-LSTM+Attention：
 
 TCN：已完成
 TCN+LSTM：已完成
 TCN+LSTM+Attention：已完成
 TCN+Bi-LSTM：已完成
-TCN+Bi-LSTM+Attention：
+TCN+Bi-LSTM+Attention：已完成
 
 蚁群算法（ACO）+LSTM：已完成
 粒子群算法（PSO）+LSTM：已完成
