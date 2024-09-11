@@ -6,7 +6,7 @@ proxies = {'http': 'socks5://127.0.0.1:10808',
            'https': 'socks5://127.0.0.1:10808'}
 
 url = 'https://api.dify.ai/v1/chat-messages'
-api_key = 'app-929fCP0pIpgF7wgLJuZIAXIc'
+api_key = ''
 headers = {
     'Authorization': f'Bearer {api_key}',
     'Content-Type': 'application/json',
