@@ -18,6 +18,7 @@ X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], te
 model = DecisionTreeClassifier()
 model.fit(X_train, y_train)
 
+print(X_test.shape)
 # 创建Explainer
 explainer = shap.TreeExplainer(model, X_test)
 # 以numpy数组的形式输出SHAP值
@@ -31,7 +32,8 @@ print(shap_values[:,:,0])
 # # 以SHAP的Explanation对象形式输出SHAP值
 shap_obj = explainer(X_test)
 # print(shap_obj.values)
-# print(shap_obj[:,:,0].shape)
+print(shap_obj.shape)
+print(shap_obj[:,:,0].shape)
 
 
 # 特征分析

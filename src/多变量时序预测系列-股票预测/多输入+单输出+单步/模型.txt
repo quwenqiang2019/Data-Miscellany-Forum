@@ -4,6 +4,7 @@ LSTM：已完成
 Bi-LSTM：已完成
 GRU：
 LSTM+Attention：已完成
+Bi-LSTM-Attention:
 
 CNN+LSTM：已完成
 CNN+LSTM+Attention：已完成
