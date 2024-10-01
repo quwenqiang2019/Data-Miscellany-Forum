@@ -12,7 +12,9 @@ y_pred = [1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
 
 # 1.计算混淆矩阵
 cm = confusion_matrix(y_true, y_pred)
+print(cm)
 conf_matrix = pd.DataFrame(cm, index=['1', '2', '3', '4', '5'], columns=['1', '2', '3', '4', '5'])  # 数据有5个类别
+print(conf_matrix)
 # 画出混淆矩阵
 sns.set(font_scale=1.2)
 plt.rc('font', family=['Times New Roman', 'SimSun'], size=12)
