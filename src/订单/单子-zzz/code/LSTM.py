@@ -143,24 +143,33 @@ plt.savefig(os.path.join(base_dir, 'result', 'lstm_accuracy.jpg'), bbox_inches='
 plt.show()
 
 
-'''
+
 ###============shap分析================================
-print(trainX[:100])
-trainX_shap_smaple = trainX[:100].reshape(100, window_size*fea_num)
-print(trainX_shap_smaple)
+train_sample = trainX[:100]
+print(train_sample.shape)  # (100, 2, 9)
+trainX_shap_smaple = train_sample.reshape(100, window_size*fea_num)
+print(trainX_shap_smaple.shape)  # (100, 18)
 
 
-explainer = shap.GradientExplainer(model, trainX[:100])
+explainer = shap.GradientExplainer(model, train_sample)
 
 # 以numpy数组的形式输出SHAP值
-shap_values = explainer.shap_values(trainX[:100])
+shap_values = explainer.shap_values(train_sample)
+print(shap_values.shape) # (100, 2, 9, 4)
+print(shap_values.reshape(100, 2*9, 4).shape)  # (100, 18, 4)
+
 # # 以SHAP的Explanation对象形式输出SHAP值
-shap_obj = explainer(trainX[:100])
-print(shap_obj)
-print(shap_obj.shape)
-print(shap_obj[:,:,:,0].shape)
+shap_obj = explainer(train_sample)
+# print(shap_obj)
+print(shap_obj.shape) # (100, 2, 9, 4)
+print(shap_obj[:,:,:,0].shape) # (100, 2, 9)
 
 
-shap.plots.bar(shap_obj[:,:,:,0], show=True)        # 全局条形图
-shap.plots.beeswarm(shap_obj[:,:,:,0], show=True)   # 全局蜂群图
-'''
+
+shap.summary_plot(shap_values.reshape(100, 2*9, 4), trainX_shap_smaple)
+shap.summary_plot(shap_obj[:,:,:,0].values.reshape(100, window_size*fea_num), trainX_shap_smaple)
+shap.summary_plot(shap_values.reshape(100, 2*9, 4), trainX_shap_smaple, plot_type="bar")
+shap.summary_plot(shap_obj[:,:,:,0].values.reshape(100, window_size*fea_num), trainX_shap_smaple, plot_type="bar")
+
+# shap.plots.bar(shap_obj[:,:,:,0].values.reshape(100, window_size*fea_num), show=True)        # 全局条形图
+# shap.plots.beeswarm(shap_obj[:,:,:,0], show=True)   # 全局蜂群图
