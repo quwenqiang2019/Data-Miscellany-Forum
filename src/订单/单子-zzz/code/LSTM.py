@@ -166,10 +166,9 @@ print(shap_obj[:,:,:,0].shape) # (100, 2, 9)
 
 
 
-shap.summary_plot(shap_values.reshape(100, 2*9, 4), trainX_shap_smaple)
+# shap.summary_plot(shap_values.reshape(100, 2*9, 4), trainX_shap_smaple)
 shap.summary_plot(shap_obj[:,:,:,0].values.reshape(100, window_size*fea_num), trainX_shap_smaple)
-shap.summary_plot(shap_values.reshape(100, 2*9, 4), trainX_shap_smaple, plot_type="bar")
+# plt.savefig(os.path.join(base_dir, 'result', 'summary_1.png'), bbox_inches='tight', dpi=600)
+# shap.summary_plot(shap_values.reshape(100, 2*9, 4), trainX_shap_smaple, plot_type="bar")
 shap.summary_plot(shap_obj[:,:,:,0].values.reshape(100, window_size*fea_num), trainX_shap_smaple, plot_type="bar")
-
-# shap.plots.bar(shap_obj[:,:,:,0].values.reshape(100, window_size*fea_num), show=True)        # 全局条形图
-# shap.plots.beeswarm(shap_obj[:,:,:,0], show=True)   # 全局蜂群图
+# plt.savefig(os.path.join(base_dir, 'result', 'summary_2.png'), bbox_inches='tight', dpi=600)
