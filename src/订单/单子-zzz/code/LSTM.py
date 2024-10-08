@@ -49,7 +49,7 @@ def createXY(dataset,n_past):
 
     return np.array(dataX),np.array(dataY)
 
-window_size = 2
+window_size = 1
 trainX,trainY=createXY(df_for_training,window_size)
 testX,testY=createXY(df_for_testing,window_size)
 
@@ -156,7 +156,7 @@ explainer = shap.GradientExplainer(model, train_sample)
 # 以numpy数组的形式输出SHAP值
 shap_values = explainer.shap_values(train_sample)
 print(shap_values.shape) # (100, 2, 9, 4)
-print(shap_values.reshape(100, 2*9, 4).shape)  # (100, 18, 4)
+print(shap_values.reshape(100, window_size*fea_num, 4).shape)  # (100, 18, 4)
 
 # # 以SHAP的Explanation对象形式输出SHAP值
 shap_obj = explainer(train_sample)
