@@ -26,6 +26,8 @@ df = df1.dropna(axis=0, how='any')
 df.insert(0, '标签', df.pop('标签'))
 print(df)
 fea_num = len(df.columns)
+fea_name = df.columns
+print(fea_name)
 
 # 数据划分
 test_split = round(len(df)*0.20)
@@ -160,15 +162,24 @@ print(shap_values.reshape(100, window_size*fea_num, 4).shape)  # (100, 18, 4)
 
 # # 以SHAP的Explanation对象形式输出SHAP值
 shap_obj = explainer(train_sample)
-# print(shap_obj)
+print(shap_obj)
 print(shap_obj.shape) # (100, 2, 9, 4)
 print(shap_obj[:,:,:,0].shape) # (100, 2, 9)
 
 
 
 # shap.summary_plot(shap_values.reshape(100, 2*9, 4), trainX_shap_smaple)
-shap.summary_plot(shap_obj[:,:,:,0].values.reshape(100, window_size*fea_num), trainX_shap_smaple)
+shap.summary_plot(shap_obj[:,:,:,0].values.reshape(100, window_size*fea_num), trainX_shap_smaple,feature_names=fea_name)
 # plt.savefig(os.path.join(base_dir, 'result', 'summary_1.png'), bbox_inches='tight', dpi=600)
 # shap.summary_plot(shap_values.reshape(100, 2*9, 4), trainX_shap_smaple, plot_type="bar")
-shap.summary_plot(shap_obj[:,:,:,0].values.reshape(100, window_size*fea_num), trainX_shap_smaple, plot_type="bar")
+shap.summary_plot(shap_obj[:,:,:,0].values.reshape(100, window_size*fea_num), trainX_shap_smaple, plot_type="bar",feature_names=fea_name)
 # plt.savefig(os.path.join(base_dir, 'result', 'summary_2.png'), bbox_inches='tight', dpi=600)
+
+
+print(shap_obj[0,:,:,:].shape)  # (2, 9, 4)
+print(shap_obj[0,:,:,:1].shape)
+print(shap_obj[0][0].shape)
+print(shap_obj[0][0][:,0].shape)
+print(shap_obj[0][0][:,0])
+shap.plots.waterfall(shap_obj[0][0][:,0])
+
