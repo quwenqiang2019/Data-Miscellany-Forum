@@ -30,7 +30,6 @@ print(shap_values.shape)   # (60, 13, 2)
 # print(shap_values[0].shape)
 # print(shap_values[0][0].shape)
 # print(shap_values[0][0][0].shape)
-print(shap_values[:,:,0])
 print(shap_values[:,:,0].shape)  # (60, 13)
 
 # # 以SHAP的Explanation对象形式输出SHAP值
