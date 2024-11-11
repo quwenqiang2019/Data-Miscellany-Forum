@@ -185,10 +185,8 @@ if __name__ == '__main__':
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__name__)))
     data = pd.read_csv(os.path.join(base_dir, 'data', 'heartbalance.csv'))
     df = pd.DataFrame(data)
-    print(df)
     target = 'target'
     features = df.columns.drop(target)
-    print(data["target"].value_counts()) # 顺便查看一下样本是否平衡
     X_train, X_test, y_train, y_test = train_test_split(df[features], df[[target]], test_size=0.2, random_state=0)
 
 
