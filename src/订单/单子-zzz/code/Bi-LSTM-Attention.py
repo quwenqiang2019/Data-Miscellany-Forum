@@ -7,11 +7,6 @@ from sklearn import preprocessing
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from math import sqrt
-from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Activation
-from keras.layers import LSTM, Bidirectional
-from tensorflow.keras.utils import to_categorical
 import shap
 from sklearn.metrics import accuracy_score,f1_score,confusion_matrix,classification_report
 from keras.utils import np_utils
@@ -30,6 +25,8 @@ df = df1.dropna(axis=0, how='any')
 df.insert(0, '标签', df.pop('标签'))
 print(df)
 fea_num = len(df.columns)
+fea_name = df.columns
+print(fea_name)
 
 # 数据划分
 test_split = round(len(df)*0.20)
@@ -53,7 +50,7 @@ def createXY(dataset,n_past):
 
     return np.array(dataX),np.array(dataY)
 
-window_size = 2
+window_size = 1
 trainX,trainY=createXY(df_for_training,window_size)
 testX,testY=createXY(df_for_testing,window_size)
 
@@ -148,24 +145,40 @@ plt.savefig(os.path.join(base_dir, 'result', 'bi_lstm_attention_accuracy.jpg'), 
 plt.show()
 
 
-'''
+
 ###============shap分析================================
-print(trainX[:100])
-trainX_shap_smaple = trainX[:100].reshape(100, window_size*fea_num)
-print(trainX_shap_smaple)
+train_sample = trainX[:100]
+print(train_sample.shape)  # (100, 2, 9)
+trainX_shap_smaple = train_sample.reshape(100, window_size*fea_num)
+print(trainX_shap_smaple.shape)  # (100, 18)
 
 
-explainer = shap.GradientExplainer(model, trainX[:100])
+explainer = shap.GradientExplainer(model, train_sample)
 
 # 以numpy数组的形式输出SHAP值
-shap_values = explainer.shap_values(trainX[:100])
+shap_values = explainer.shap_values(train_sample)
+print(shap_values.shape) # (100, 2, 9, 4)
+print(shap_values.reshape(100, window_size*fea_num, 4).shape)  # (100, 18, 4)
+
 # # 以SHAP的Explanation对象形式输出SHAP值
-shap_obj = explainer(trainX[:100])
+shap_obj = explainer(train_sample)
 print(shap_obj)
-print(shap_obj.shape)
-print(shap_obj[:,:,:,0].shape)
+print(shap_obj.shape) # (100, 2, 9, 4)
+print(shap_obj[:,:,:,0].shape) # (100, 2, 9)
 
 
-shap.plots.bar(shap_obj[:,:,:,0], show=True)        # 全局条形图
-shap.plots.beeswarm(shap_obj[:,:,:,0], show=True)   # 全局蜂群图
-'''
+##### shap.summary_plot(shap_values.reshape(100, 2*9, 4), trainX_shap_smaple)
+shap.summary_plot(shap_obj[:,:,:,0].values.reshape(100, window_size*fea_num), trainX_shap_smaple,feature_names=fea_name)
+# plt.savefig(os.path.join(base_dir, 'result', 'summary_1.png'), bbox_inches='tight', dpi=600)
+##### shap.summary_plot(shap_values.reshape(100, 2*9, 4), trainX_shap_smaple, plot_type="bar")
+shap.summary_plot(shap_obj[:,:,:,0].values.reshape(100, window_size*fea_num), trainX_shap_smaple, plot_type="bar",feature_names=fea_name)
+# plt.savefig(os.path.join(base_dir, 'result', 'summary_2.png'), bbox_inches='tight', dpi=600)
+
+
+# print(shap_obj[0,:,:,:].shape)  # (2, 9, 4)
+# print(shap_obj[0,:,:,:1].shape)
+# print(shap_obj[0][0].shape)
+# print(shap_obj[0][0][:,0].shape)
+# print(shap_obj[0][0][:,0])
+# shap.plots.waterfall(shap_obj[0][0][:,0])
+
