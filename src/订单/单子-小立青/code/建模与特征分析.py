@@ -60,10 +60,10 @@ def lr_classifier():
     # 以SHAP的Explanation对象形式输出SHAP值
     shap_obj = explainer(X_test_m[:100])
     # 特征分析
-    # shap.plots.bar(shap_obj, show=False)  # 全局条形图
+    # shap.summary_plot(shap_obj, X_test_m[:100], plot_type="bar", feature_names=features, show=False)
     # plt.savefig(os.path.join(base_dir, 'result', 'lr_bar.png'), bbox_inches='tight', dpi=600)
-    # shap.plots.beeswarm(shap_obj, show=False)  # 全局蜂群图
-    # plt.savefig(os.path.join(base_dir, 'result', 'lr_beeswarm.png'), bbox_inches='tight', dpi=600)
+    shap.summary_plot(shap_obj, X_test_m[:100], feature_names=features, show=False)
+    plt.savefig(os.path.join(base_dir, 'result', 'lr_beeswarm.png'), bbox_inches='tight', dpi=600)
 
     y_pred_m = model.predict(X_test_m)
     y_scores = model.predict_proba(X_test_m)
@@ -108,9 +108,9 @@ def svc_classifier():
     # 以SHAP的Explanation对象形式输出SHAP值
     shap_obj = explainer(X_test_m[:100])
     # 特征分析
-    # shap.plots.bar(shap_obj, show=False)  # 全局条形图
+    # shap.summary_plot(shap_obj, X_test_m[:100], plot_type="bar", feature_names=features, show=False)
     # plt.savefig(os.path.join(base_dir, 'result', 'svc_bar.png'), bbox_inches='tight', dpi=600)
-    shap.plots.beeswarm(shap_obj, show=False)  # 全局蜂群图
+    shap.summary_plot(shap_obj, X_test_m[:100], feature_names=features, show=False)
     plt.savefig(os.path.join(base_dir, 'result', 'svc_beeswarm.png'), bbox_inches='tight', dpi=600)
 
     y_pred_m = model.predict(X_test_m)
@@ -153,10 +153,10 @@ def xgb_classifier():
     # # 以SHAP的Explanation对象形式输出SHAP值
     shap_obj = explainer(X_test[:100])
     # 特征分析
-    # shap.plots.bar(shap_obj, show=False)  # 全局条形图
+    # shap.summary_plot(shap_obj, X_test[:100], plot_type="bar", feature_names=features, show=False)
     # plt.savefig(os.path.join(base_dir, 'result', 'xgb_bar.png'), bbox_inches='tight', dpi=600)
-    # shap.plots.beeswarm(shap_obj, show=False)  # 全局蜂群图
-    # plt.savefig(os.path.join(base_dir, 'result', 'xgb_beeswarm.png'), bbox_inches='tight', dpi=600)
+    shap.summary_plot(shap_obj, X_test[:100],  feature_names=features, show=False)
+    plt.savefig(os.path.join(base_dir, 'result', 'xgb_beeswarm.png'), bbox_inches='tight', dpi=600)
 
     y_pred = model.predict(X_test)
     y_scores = model.predict_proba(X_test)
@@ -197,6 +197,6 @@ if __name__ == '__main__':
 
     # corr_analysis()
     # lr_classifier()
-    svc_classifier()
-    # xgb_classifier()
+    # svc_classifier()
+    xgb_classifier()
 
