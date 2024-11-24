@@ -1,33 +1,34 @@
-Holt-Winters：已完成
-ARIMA：已完成
-SARIMA：已完成
+Holt-Winters：已完成（已发布）
+ARIMA：已完成（已发布）
+SARIMA：已完成（已发布）
 
-SARIMA+LSTM：已完成
+SARIMA+LSTM：已完成（已发布）
 
-GRU：已完成
-LSTM：已完成
-多层LSTM：已完成
-Bi-LSTM：已完成
-LSTM+Attention：已完成
+RNN：已完成（已发布）
+GRU：已完成（已发布）
+LSTM：已完成（已发布）
+多层LSTM：已完成（已发布）
+Bi-LSTM：已完成（已发布）
+LSTM+Attention：已完成（已发布）
 
 CNN+LSTM：已完成
-CNN+LSTM+Attention：已完成
-CNN+Bi-LSTM：已完成
-CNN+Bi-LSTM+Attention：已完成
+CNN+LSTM+Attention：已完成（已发布）
+CNN+Bi-LSTM：已完成（已发布）
+CNN+Bi-LSTM+Attention：已完成（已发布）
 
 ConvLSTM：已完成
 ConvLSTM+Attention：
 
 TCN：已完成
-TCN+LSTM：已完成
-TCN+LSTM+Attention：已完成
-TCN+Bi-LSTM：已完成
-TCN+Bi-LSTM+Attention：已完成
+TCN+LSTM：已完成（已发布）
+TCN+LSTM+Attention：已完成（已发布）
+TCN+Bi-LSTM：已完成（已发布）
+TCN+Bi-LSTM+Attention：已完成（已发布）
 
 蚁群算法（ACO）+LSTM：已完成
-粒子群算法（PSO）+LSTM：已完成
-灰狼算法（GWO）+LSTM：已完成
-麻雀算法（SSA）+LSTM：已完成
+粒子群算法（PSO）+LSTM：已完成（已发布）
+灰狼算法（GWO）+LSTM：已完成（已发布）
+麻雀算法（SSA）+LSTM：已完成（已发布）
 鲸鱼算法（WOA）+LSTM：
 遗传算法（GA）+LSTM：
 蝙蝠算法（HBA）+LSTM：

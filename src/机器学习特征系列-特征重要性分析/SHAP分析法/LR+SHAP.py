@@ -45,8 +45,8 @@ print(shap_obj.shape)  # (60, 13)
 # shap.plots.bar(shap_obj, show=True)        # 全局条形图
 # shap.plots.beeswarm(shap_obj, show=True)   # 全局蜂群图
 
-shap.summary_plot(shap_obj, X_test_m,feature_names=features)
 shap.summary_plot(shap_obj, X_test_m, plot_type="bar",feature_names=features)
+shap.summary_plot(shap_obj, X_test_m,feature_names=features)
 
 
 
