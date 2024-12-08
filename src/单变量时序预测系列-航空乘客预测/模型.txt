@@ -1,34 +1,38 @@
-Holt-Winters：已完成（已发布）
-ARIMA：已完成（已发布）
-SARIMA：已完成（已发布）
+1、Holt-Winters：已完成（已发布）
+2、ARIMA：已完成（已发布）
+3、SARIMA：已完成（已发布）
 
-SARIMA+LSTM：已完成（已发布）
+4、SARIMA+LSTM：已完成（已发布）
 
-RNN：已完成（已发布）
-GRU：已完成（已发布）
-LSTM：已完成（已发布）
-多层LSTM：已完成（已发布）
-Bi-LSTM：已完成（已发布）
-LSTM+Attention：已完成（已发布）
+5、RNN：已完成（已发布）
+6、GRU：已完成（已发布）
+7、LSTM：已完成（已发布）
+8、多层LSTM：已完成（已发布）
+9、Bi-LSTM：已完成（已发布2次）
+10、LSTM+Attention：已完成（已发布）
 
-CNN+LSTM：已完成
-CNN+LSTM+Attention：已完成（已发布）
-CNN+Bi-LSTM：已完成（已发布）
-CNN+Bi-LSTM+Attention：已完成（已发布）
+11、CNN+LSTM：已完成（已发布）
+12、CNN+LSTM+Attention：已完成（已发布）
+13、CNN+Bi-LSTM：已完成（已发布）
+14、CNN+Bi-LSTM+Attention：已完成（已发布）
 
-ConvLSTM：已完成
-ConvLSTM+Attention：
+15、ConvLSTM：已完成（已发布）
 
-TCN：已完成
-TCN+LSTM：已完成（已发布）
-TCN+LSTM+Attention：已完成（已发布）
-TCN+Bi-LSTM：已完成（已发布）
-TCN+Bi-LSTM+Attention：已完成（已发布）
+16、TCN：已完成（已发布）
+17、TCN+LSTM：已完成（已发布）
+18、TCN+LSTM+Attention：已完成（已发布）
+19、TCN+Bi-LSTM：已完成（已发布）
+20、TCN+Bi-LSTM+Attention：已完成（已发布）
 
-蚁群算法（ACO）+LSTM：已完成
-粒子群算法（PSO）+LSTM：已完成（已发布）
-灰狼算法（GWO）+LSTM：已完成（已发布）
-麻雀算法（SSA）+LSTM：已完成（已发布）
+21、xlstm：已完成（已发布）
+
+22、蚁群算法（ACO）+LSTM：已完成（已发布）
+23、粒子群算法（PSO）+LSTM：已完成（已发布）
+24、灰狼算法（GWO）+LSTM：已完成（已发布）
+25、麻雀算法（SSA）+LSTM：已完成（已发布）
+
+26、单变量多步预测：已完成（已发布）
+
 鲸鱼算法（WOA）+LSTM：
 遗传算法（GA）+LSTM：
 蝙蝠算法（HBA）+LSTM：

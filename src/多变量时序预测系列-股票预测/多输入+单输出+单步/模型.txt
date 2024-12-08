@@ -1,23 +1,23 @@
 
-LSTM：已完成
-多层LSTM：已完成
-Bi-LSTM：已完成
-GRU：
-LSTM+Attention：已完成
+LSTM：已完成（已发布）
+多层LSTM：已完成（已发布）
+Bi-LSTM：已完成（已发布）
+GRU：已完成（已发布）
+LSTM+Attention：已完成（已发布）
 Bi-LSTM-Attention:
 
-CNN+LSTM：已完成
-CNN+LSTM+Attention：已完成
-CNN+Bi-LSTM：已完成
-CNN+Bi-LSTM+Attention：已完成
+CNN+LSTM：已完成（已发布）
+CNN+LSTM+Attention：已完成（已发布）
+CNN+Bi-LSTM：已完成（已发布）
+CNN+Bi-LSTM+Attention：已完成（已发布）
 
-conv+LSTM：已完成
+conv+LSTM：已完成（已发布）
 conv+LSTM+Attention：
 conv+Bi-LSTM：
 conv+Bi-LSTM+Attention：
 
-TCN：已完成
-TCN+LSTM：已完成
+TCN：已完成（已发布）
+TCN+LSTM：已完成（已发布）
 TCN+LSTM+Attention：
 TCN+Bi-LSTM：
 TCN+Bi-LSTM+Attention：
