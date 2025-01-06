@@ -47,15 +47,22 @@ print("modelscope: ", modelscope.__version__) # modelscope:  1.15.0
 # print(res)
 
 # 对多说话人进行语音识别
-speaker1_wav = ("E:\data\\a2.wav")
+speaker1_wav = ("E:\\data\\a2.wav")
 waveform, sample_rate = torchaudio.load(speaker1_wav)
 Audio(waveform, rate=sample_rate, autoplay=True)
 
-funasr_model = AutoModel(model="C:\\Users\quwen\.cache\modelscope\hub\iic/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch",
-                        vad_model="C:\\Users\quwen\.cache\modelscope\hub\iic/speech_fsmn_vad_zh-cn-16k-common-pytorch",
-                        punc_model="C:\\Users\quwen\.cache\modelscope\hub\iic\punc_ct-transformer_cn-en-common-vocab471067-large",
-                        spk_model="C:\\Users\quwen\.cache\modelscope\hub\iic/speech_campplus_sv_zh-cn_16k-common",
+# funasr_model = AutoModel(model="C:\\Users\quwen\.cache\modelscope\hub\iic/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch",
+#                         vad_model="C:\\Users\quwen\.cache\modelscope\hub\iic/speech_fsmn_vad_zh-cn-16k-common-pytorch",
+#                         punc_model="C:\\Users\quwen\.cache\modelscope\hub\iic\punc_ct-transformer_cn-en-common-vocab471067-large",
+#                         spk_model="C:\\Users\quwen\.cache\modelscope\hub\iic/speech_campplus_sv_zh-cn_16k-common",
+#                         )
+
+funasr_model = AutoModel(model="E:\\model\speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch",
+                        vad_model="E:\\model\speech_fsmn_vad_zh-cn-16k-common-pytorch",
+                        punc_model="E:\\model\punc_ct-transformer_cn-en-common-vocab471067-large",
+                        spk_model="E:\\model\speech_campplus_sv_zh-cn_16k-common",
                         )
+
 res = funasr_model.generate(input=speaker1_wav,
                             batch_size_s=300,
                             hotword='苏珊银行')
