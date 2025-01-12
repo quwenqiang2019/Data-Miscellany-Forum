@@ -12,7 +12,7 @@ from torch import nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 import requests
-ray.init()
+
 
 class MovieLensDataset(Dataset):  
 
@@ -248,6 +248,7 @@ def predict_and_compare(user_id, movie_id, model, user_encoder, movie_encoder, t
     else:
         return None
 
+print(dataset.test_df)
 example_pairs = dataset.test_df.sample(n=5)
 results = []
 for _, row in example_pairs.iterrows():
@@ -261,52 +262,52 @@ print(results_df.head())
 
 
 
-# ==============================模型部署==================================
-# Load your trained model (assuming it's saved as 'model.pth')
-# n_users = 610  # 示例值，替换为实际用户数
-# n_movies = 9724  # 示例值，替换为实际电影数
-# embedding_size = 16
-# hidden_size = 32
-# model = MultiTaskMovieLensModel(n_users, n_movies, embedding_size, hidden_size)
-
-model.load_state_dict(torch.load("model.pth"))
-model.eval()
-
-
-
-@serve.deployment
-class ModelServeDeployment:
-    def __init__(self, model):
-        self.model = model
-        self.model.eval()
-
-    async def __call__(self, request):
-        json_input = await request.json()
-        user_id = torch.tensor([json_input["user_id"]])
-        movie_id = torch.tensor([json_input["movie_id"]])
-        with torch.no_grad():
-            rating_pred, liked_pred = self.model(user_id, movie_id)
-        return {
-            "rating_prediction": rating_pred.item(),
-            "liked_prediction": liked_pred.item()
-        }
-
-# 初始化 Ray 和 Ray Serve
-ray.init()
-serve.start()  # 部署模型
-model_deployment = ModelServeDeployment.bind(model)
-serve.run(model_deployment)
-
-# 定义服务器地址（Ray Serve 默认为 http://127.0.0.1:8000）
-url = "http://127.0.0.1:8000/ModelServeDeployment"
-# 示例输入
-data = {
-    "user_id": 123,  # 替换为实际用户 ID
-    "movie_id": 456  # 替换为实际电影 ID
-    }
-
-# 向模型服务器发送 POST 请求
-response = requests.post(url, json=data)
-# 打印模型的响应
-print(response.json())
+# # ==============================模型部署==================================
+# # Load your trained model (assuming it's saved as 'model.pth')
+# # n_users = 610  # 示例值，替换为实际用户数
+# # n_movies = 9724  # 示例值，替换为实际电影数
+# # embedding_size = 16
+# # hidden_size = 32
+# # model = MultiTaskMovieLensModel(n_users, n_movies, embedding_size, hidden_size)
+#
+# model.load_state_dict(torch.load("model.pth"))
+# model.eval()
+#
+#
+#
+# @serve.deployment
+# class ModelServeDeployment:
+#     def __init__(self, model):
+#         self.model = model
+#         self.model.eval()
+#
+#     async def __call__(self, request):
+#         json_input = await request.json()
+#         user_id = torch.tensor([json_input["user_id"]])
+#         movie_id = torch.tensor([json_input["movie_id"]])
+#         with torch.no_grad():
+#             rating_pred, liked_pred = self.model(user_id, movie_id)
+#         return {
+#             "rating_prediction": rating_pred.item(),
+#             "liked_prediction": liked_pred.item()
+#         }
+#
+# # 初始化 Ray 和 Ray Serve
+# ray.init()
+# serve.start()  # 部署模型
+# model_deployment = ModelServeDeployment.bind(model)
+# serve.run(model_deployment)
+#
+# # 定义服务器地址（Ray Serve 默认为 http://127.0.0.1:8000）
+# url = "http://127.0.0.1:8000/ModelServeDeployment"
+# # 示例输入
+# data = {
+#     "user_id": 123,  # 替换为实际用户 ID
+#     "movie_id": 456  # 替换为实际电影 ID
+#     }
+#
+# # 向模型服务器发送 POST 请求
+# response = requests.post(url, json=data)
+# # 打印模型的响应
+# print(response.json())
 
