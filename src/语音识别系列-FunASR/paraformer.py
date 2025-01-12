@@ -47,7 +47,7 @@ print("modelscope: ", modelscope.__version__) # modelscope:  1.15.0
 # print(res)
 
 # 对多说话人进行语音识别
-speaker1_wav = ("E:\\data\\a2.wav")
+speaker1_wav = ("E:\\data\\专有名词-姓名1.wav")
 waveform, sample_rate = torchaudio.load(speaker1_wav)
 Audio(waveform, rate=sample_rate, autoplay=True)
 
@@ -65,7 +65,7 @@ funasr_model = AutoModel(model="E:\\model\speech_seaco_paraformer_large_asr_nat-
 
 res = funasr_model.generate(input=speaker1_wav,
                             batch_size_s=300,
-                            hotword='苏珊银行')
+                            hotword="热词库.txt")
 print(res)
 print(type(res))
 

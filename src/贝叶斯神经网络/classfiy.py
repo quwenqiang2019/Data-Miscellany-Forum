@@ -17,7 +17,7 @@ data_dir = 'E:\datasets'
 batch_size = 128
 sample_num = 5
 
-# ===== 数据准备
+# ======================= 数据准备============================
 full_ds = MNIST(data_dir, train=True, download=True,
                 transform=Compose([ToTensor(), Normalize((0.1307,), (0.3081,))]))
 train_ds, val_ds = random_split(full_ds, [55000, 5000])
@@ -33,7 +33,7 @@ out_dim = 10                    # 输入维度
 batch_num=len(train_dl)         # 小批量总数
 
 
-# ===== 模型定义
+# ====================== 模型定义=========================
 # 模型
 model = BayesMLP(in_dim, out_dim, hidden_dims=[128, 64]).to(device)
 # 优化器
@@ -42,7 +42,7 @@ opt = Adam(model.parameters(), lr=0.001)
 loss_fn = ClassificationELBOLoss(batch_num=batch_num)
 
 
-# ===== 训练
+# ======================= 训练=============================
 epochs = 3
 for epoch in range(epochs):                                                         # 算法2：第2行
     for batch, (batch_x, batch_y) in enumerate(train_dl):
@@ -50,14 +50,14 @@ for epoch in range(epochs):                                                     
         model_out = model(batch_x, sample_num)
         loss = loss_fn(model_out, batch_y)
         loss.backward()                                                             # 算法2：第9行
-        opt.step()                                                                  # 第法2：第12行
+        opt.step()                                                                  # 算法2：第12行
         if batch % 100 == 0:
             acc = evaluate(model, val_dl, sample_num)
             print(f'epoch: {epoch+1:>2}/{epochs:<2} batch: {batch+1:>4}/{batch_num:<4} Loss: {loss.item():.8}\tValid Acc: {acc: .6}')
             model.train()
 
 
-# ==== 测试、可视化
+# ========================= 测试、可视化========================
 test_acc = evaluate(model, test_dl, sample_num)
 print(f"Test acc: {test_acc:.6}")
 

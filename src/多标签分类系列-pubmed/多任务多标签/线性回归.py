@@ -12,7 +12,7 @@ from torch import nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 import requests
-
+ray.init()
 
 class MovieLensDataset(Dataset):  
 
@@ -231,9 +231,9 @@ def predict_and_compare(user_id, movie_id, model, user_encoder, movie_encoder, t
         rating_pred, liked_pred = model(example_dense_features)
         predicted_rating = rating_pred.item()
         predicted_liked = liked_pred.item()
-        actual_row = train_dataset.data[(train_dataset.data['userId'] == user_id) & (train_dataset.data['movieId'] == movie_id)]
+        actual_row = train_dataset[(train_dataset['userId'] == user_id) & (train_dataset['movieId'] == movie_id)]
     if actual_row.empty:
-        actual_row = test_dataset.data[(test_dataset.data['userId'] == user_id) & (test_dataset.data['movieId'] == movie_id)]
+        actual_row = test_dataset[(test_dataset['userId'] == user_id) & (test_dataset['movieId'] == movie_id)]
     if not actual_row.empty:
         actual_rating = actual_row['rating'].values[0]
         actual_liked = actual_row['liked'].values[0]
@@ -248,23 +248,23 @@ def predict_and_compare(user_id, movie_id, model, user_encoder, movie_encoder, t
     else:
         return None
 
-# example_pairs = test_dataset.data.sample(n=5)
-# results = []
-# for _, row in example_pairs.iterrows():
-#     user_id = row['userId']
-#     movie_id = row['movieId']
-#     result = predict_and_compare(user_id, movie_id, model, user_encoder, movie_encoder, train_dataset, test_dataset)
-#     if result:
-#         results.append(result)
-# results_df = pd.DataFrame(results)
-# print(results_df.head())
+example_pairs = dataset.test_df.sample(n=5)
+results = []
+for _, row in example_pairs.iterrows():
+    user_id = row['userId']
+    movie_id = row['movieId']
+    result = predict_and_compare(user_id, movie_id, model, user_encoder, movie_encoder, dataset.train_df, dataset.test_df)
+    if result:
+        results.append(result)
+results_df = pd.DataFrame(results)
+print(results_df.head())
 
 
 
 # ==============================模型部署==================================
 # Load your trained model (assuming it's saved as 'model.pth')
-# n_users = 1000  # 示例值，替换为实际用户数
-# n_movies = 1000  # 示例值，替换为实际电影数
+# n_users = 610  # 示例值，替换为实际用户数
+# n_movies = 9724  # 示例值，替换为实际电影数
 # embedding_size = 16
 # hidden_size = 32
 # model = MultiTaskMovieLensModel(n_users, n_movies, embedding_size, hidden_size)
