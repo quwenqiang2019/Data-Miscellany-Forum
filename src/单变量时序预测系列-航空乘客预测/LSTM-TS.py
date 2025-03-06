@@ -5,24 +5,56 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 import random
-import os
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-import tensorflow as tf
-print(tf.test.is_built_with_cuda())
-print(tf.config.list_physical_devices('GPU'))
-import numpy as np
-import seaborn as sns
-from keras.models import Sequential
-from keras.layers import Input, LSTM, Dense, Dropout, Bidirectional
-import pandas as pd
-from matplotlib import pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
-import math
-from sklearn.metrics import mean_absolute_error
-from sklearn.metrics import r2_score
-from sklearn.metrics import mean_absolute_percentage_error
-from sklearn.metrics import mean_squared_error
 
+
+def set_seed(seed=42):
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    random.seed(seed)
+
+
+set_seed(42)
+
+
+# 1. 数据集生成
+class SyntheticTimeSeriesDataset(Dataset):
+    def __init__(self, seq_length=200, num_samples=1000, noise_std=0.1):
+        """
+        生成虚拟的多尺度时间序列数据。
+        数据由多个正弦波叠加构成，包含低频、中频、高频成分，加上高斯噪声。
+        """
+        self.seq_length = seq_length
+        self.num_samples = num_samples
+        self.noise_std = noise_std
+
+        self.data = []
+        self.targets = []
+        t = np.linspace(0, 10, seq_length)
+        # 对于每个样本随机生成不同的参数
+        for _ in range(num_samples):
+            # 随机选取不同的幅值、频率与相位
+            A1, f1, phi1 = np.random.uniform(0.5, 1.5), np.random.uniform(0.5, 1.0), np.random.uniform(0, 2 * np.pi)
+            A2, f2, phi2 = np.random.uniform(0.2, 1.0), np.random.uniform(1.5, 3.0), np.random.uniform(0, 2 * np.pi)
+            A3, f3, phi3 = np.random.uniform(0.1, 0.5), np.random.uniform(3.0, 6.0), np.random.uniform(0, 2 * np.pi)
+            signal = A1 * np.sin(2 * np.pi * f1 * t + phi1) + \
+                     A2 * np.sin(2 * np.pi * f2 * t + phi2) + \
+                     A3 * np.sin(2 * np.pi * f3 * t + phi3)
+            signal += np.random.normal(0, noise_std, size=seq_length)
+            # 将序列归一化
+            signal = (signal - np.mean(signal)) / (np.std(signal) + 1e-5)
+            self.data.append(signal.astype(np.float32))
+            # 预测目标这里取序列最后一个值作为示例（可扩展为多步预测）
+            self.targets.append(signal[-1].astype(np.float32))
+
+        self.data = np.array(self.data)
+        self.targets = np.array(self.targets)
+
+    def __len__(self):
+        return self.num_samples
+
+    def __getitem__(self, idx):
+        # 返回一个样本及其目标
+        return self.data[idx], self.targets[idx]
 
 
 # 2. 模型构建：融合 LSTM 与 Transformer 的多尺度模型
@@ -203,50 +235,41 @@ def plot_results(train_losses, sample_time, sample_signal, transformer_feature, 
     plt.show()
 
 
+# 4. 主函数：数据加载、模型训练、评估与结果可视化
+if __name__ == '__main__':
+    # 参数设置
+    seq_length = 200
+    num_samples = 1000
+    batch_size = 32
+    num_epochs = 50
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-'''
-LSTM模型训练中的一些操作（如参数初始化、数据分割等）具有随机性，这会导致每次训练后的模型表现有所不同。
-解决方案：
-设置随机种子： 可以通过设定全局和框架内的随机种子来固定随机性，以确保每次实验的结果一致。
-'''
-seed_value = 42
-np.random.seed(seed_value)
-tf.random.set_seed(seed_value)
-random.seed(seed_value)
-batch_size = 32
-num_epochs = 50
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# 读取数据集
-data = pd.read_csv('data.csv')
-# 将日期列转换为日期时间类型
-data['Month'] = pd.to_datetime(data['Month'])
-# 将日期列设置为索引
-data.set_index('Month', inplace=True)
-dataset = data
-
-train_size = int(0.8 * len(dataset))
-val_size = len(dataset) - train_size
-train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-
-# 初始化模型、损失函数和优化器
-model = MultiScaleTimeSeriesModel().to(device)
-criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
-
-# 训练模型
-print("开始模型训练：")
-train_losses = train_model(model, train_loader, criterion, optimizer, num_epochs=num_epochs, device=device)
-
-# 在验证集上评估模型
-val_loss, preds, trues, transformer_feature = evaluate_model(model, val_loader, criterion, device=device)
-print(f"验证集损失：{val_loss:.4f}")
-
-# 为绘图生成示例数据：取一个样本的原始序列
-sample_idx = 0
-sample_signal, _ = dataset[sample_idx]
-sample_time = np.linspace(0, 10, seq_length)
-
-plot_results(train_losses, sample_time, sample_signal, transformer_feature, preds, trues)
+    # 构造数据集与 DataLoader
+    dataset = SyntheticTimeSeriesDataset(seq_length=seq_length, num_samples=num_samples)
+    print(dataset)
+    print(len(dataset))
+    # train_size = int(0.8 * len(dataset))
+    # val_size = len(dataset) - train_size
+    # train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
+    # train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    # val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    #
+    # # 初始化模型、损失函数和优化器
+    # model = MultiScaleTimeSeriesModel().to(device)
+    # criterion = nn.MSELoss()
+    # optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
+    #
+    # # 训练模型
+    # print("开始模型训练：")
+    # train_losses = train_model(model, train_loader, criterion, optimizer, num_epochs=num_epochs, device=device)
+    #
+    # # 在验证集上评估模型
+    # val_loss, preds, trues, transformer_feature = evaluate_model(model, val_loader, criterion, device=device)
+    # print(f"验证集损失：{val_loss:.4f}")
+    #
+    # # 为绘图生成示例数据：取一个样本的原始序列
+    # sample_idx = 0
+    # sample_signal, _ = dataset[sample_idx]
+    # sample_time = np.linspace(0, 10, seq_length)
+    #
+    # plot_results(train_losses, sample_time, sample_signal, transformer_feature, preds, trues)
