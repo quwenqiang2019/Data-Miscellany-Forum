@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 import random
 import pandas as pd
-
+import seaborn as sns
 
 seed=42
 np.random.seed(seed)
@@ -67,7 +67,7 @@ class PassengersDataset(Dataset):
 
 # 定义输入和输出窗口长度
 input_window = 30# 使用过去 30 天数据作为输入
-output_window = 7# 预测未来 7 天气温
+output_window = 7# 预测未来 7 天乘客
 
 # 划分训练集和测试集，采用 80% 训练、20% 测试
 split_ratio = 0.8
@@ -113,7 +113,7 @@ class PositionalEncoding(nn.Module):
 
 class HybridModel(nn.Module):
     """
-    混合模型：结合 LSTM 分支和 Transformer 分支进行特征提取，最后通过全连接层预测未来 output_window 天气温
+    混合模型：结合 LSTM 分支和 Transformer 分支进行特征提取，最后通过全连接层预测未来 output_window 乘客数量
     """
 
     def __init__(self, input_window, output_window, lstm_hidden_dim=64, transformer_dim=64, num_transformer_layers=2):
@@ -171,7 +171,7 @@ lstm_hidden_dim = 64
 transformer_dim = 64
 num_transformer_layers = 2
 learning_rate = 0.001
-num_epochs = 10000 # 为了演示，这里设置 50 轮；实际应用中可调节
+num_epochs = 10000# 为了演示，这里设置 10000 轮；实际应用中可调节
 
 # 实例化模型
 model = HybridModel(input_window, output_window, lstm_hidden_dim, transformer_dim, num_transformer_layers)
@@ -233,61 +233,68 @@ sample_true = true_values[sample_idx]
 errors = sample_pred - sample_true
 
 # 6. 数据分析与可视化部分
-plt.figure(figsize=(16, 12))
+sns.set(font_scale=1.2)
+plt.rc('font', family=['Times New Roman', 'Simsun'], size=12)
 
 # 子图 1：Training Loss Curve
-plt.subplot(2, 2, 1)
+plt.figure(figsize=(10, 6))
 plt.plot(range(1, num_epochs + 1), train_losses, marker='o', color='red', linewidth=2)
 plt.xlabel("Epoch", fontsize=12)  # 英文标签
 plt.ylabel("Loss", fontsize=12)  # 英文标签
 plt.title("Training Loss Curve", fontsize=14)  # 英文标题
 plt.grid(True)
+plt.tight_layout()
+plt.show()
 
 # 子图 2：True vs Predicted Temperature for one sample
-plt.subplot(2, 2, 2)
+plt.figure(figsize=(10, 6))
 days = np.arange(1, output_window + 1)
-plt.plot(days, sample_true, marker='s', linestyle='-', color='green', linewidth=2, label="True Temperature")
-plt.plot(days, sample_pred, marker='o', linestyle='--', color='magenta', linewidth=2, label="Predicted Temperature")
+plt.plot(days, sample_true, marker='s', linestyle='-', color='green', linewidth=2, label="True Passengers")
+plt.plot(days, sample_pred, marker='o', linestyle='--', color='magenta', linewidth=2, label="Predicted Passengers")
 plt.xlabel("Day", fontsize=12)
-plt.ylabel("Temperature", fontsize=12)
-plt.title("True vs Predicted Temperature", fontsize=14)
+plt.ylabel("Passengers", fontsize=12)
+plt.title("True vs Predicted Passengers", fontsize=14)
 plt.legend()
 plt.grid(True)
+plt.tight_layout()
+plt.show()
 
 # 子图 3：Prediction Error Histogram
-plt.subplot(2, 2, 3)
+plt.figure(figsize=(10, 6))
 plt.hist(errors, bins=10, color='orange', edgecolor='black')
 plt.xlabel("Prediction Error", fontsize=12)
 plt.ylabel("Frequency", fontsize=12)
 plt.title("Prediction Error Histogram", fontsize=14)
+plt.tight_layout()
+plt.show()
 
 # 子图 4：Overall Temperature Time Series with Forecast
-plt.subplot(2, 2, 4)
-# 绘制整个虚拟气温数据曲线（历史数据）
+# 绘制整个乘客数据曲线（历史数据）
+plt.figure(figsize=(10, 6))
 all_days = np.arange(1, num_total_days + 1)
-plt.plot(all_days, passengers_data, color='navy', linewidth=2, label="Historical Temperature")
+plt.plot(all_days, passengers_data, color='navy', linewidth=2, label="Historical Passengers")
 # 假设最后一段数据为测试集最后一个样本，取出最后 input_window + output_window 的数据作为示例
 forecast_start = num_total_days - (input_window + output_window)
 forecast_days = np.arange(forecast_start + 1, num_total_days + 1)
-# 真实未来气温（测试集真实值）
+# 真实未来乘客（测试集真实值）
 true_forecast = passengers_data[forecast_start + input_window: forecast_start + input_window + output_window]
-# 用模型预测未来气温，注意这里只是演示，所以取测试集中最后一个样本预测结果
+# 用模型预测未来乘客，注意这里只是演示，所以取测试集中最后一个样本预测结果
 plt.plot(forecast_days[input_window:], true_forecast, marker='s', linestyle='-', color='darkgreen', linewidth=2,
          label="True Forecast")
 plt.plot(forecast_days[input_window:], sample_pred, marker='o', linestyle='--', color='red', linewidth=2,
          label="Predicted Forecast")
 plt.xlabel("Day", fontsize=12)
-plt.ylabel("Temperature", fontsize=12)
-plt.title("Overall Temperature Time Series with Forecast", fontsize=14)
+plt.ylabel("Passengers", fontsize=12)
+plt.title("Overall Passengers Time Series with Forecast", fontsize=14)
 plt.legend()
 plt.grid(True)
 
 plt.tight_layout()
 plt.show()
 
-# 7. 模型预测未来一周气温的实际案例
-# 为了演示模型预测未来一周气温变化的效果，我们选择数据集最后一段作为预测对象
-# 取最后 input_window 天数据作为输入，预测未来 7 天气温
+# 7. 模型预测未来一周乘客的实际案例
+# 为了演示模型预测未来一周乘客变化的效果，我们选择数据集最后一段作为预测对象
+# 取最后 input_window 天数据作为输入，预测未来 7 乘客数量
 last_input = passengers_data[-input_window:]
 # 将输入数据转换为 tensor，形状：(1, input_window, 1)
 last_input_tensor = torch.tensor(last_input, dtype=torch.float32).unsqueeze(0).unsqueeze(-1).to(device)
@@ -296,19 +303,19 @@ with torch.no_grad():
     future_pred = model(last_input_tensor).cpu().numpy().flatten()
 
 # 打印预测结果
-print("Predicted temperature for the next 7 days:")
+print("Predicted Passengers for the next 7 days:")
 print(future_pred)
 
 # 绘制未来预测结果与历史数据对比图
 plt.figure(figsize=(12, 6))
 # 历史数据绘制
-plt.plot(np.arange(1, num_total_days + 1), passengers_data, color='blue', linewidth=2, label="Historical Temperature")
+plt.plot(np.arange(1, num_total_days + 1), passengers_data, color='blue', linewidth=2, label="Historical Passengers")
 # 未来预测数据：将预测值接在历史数据之后
 future_days = np.arange(num_total_days + 1, num_total_days + output_window + 1)
 plt.plot(future_days, future_pred, marker='o', linestyle='--', color='red', linewidth=2, label="Future Prediction")
 plt.xlabel("Day", fontsize=12)
-plt.ylabel("Temperature", fontsize=12)
-plt.title("Historical Temperature and Future Prediction", fontsize=14)
+plt.ylabel("Passengers", fontsize=12)
+plt.title("Historical Passengers and Future Prediction", fontsize=14)
 plt.legend()
 plt.grid(True)
 
