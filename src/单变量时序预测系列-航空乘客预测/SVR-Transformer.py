@@ -18,7 +18,7 @@ from sklearn.svm import SVR
 from sklearn.decomposition import PCA
 from sklearn.metrics import mean_squared_error
 
-# 利用滑动窗口生成样本数据，窗口大小为 seq_len，目标为下一个时间步的负荷值
+
 def create_sliding_window(data, seq_len=24):
     X, y = [], []
     for i in range(len(data) - seq_len):
@@ -37,25 +37,21 @@ if torch.cuda.is_available():
     torch.cuda.manual_seed(seed)
 
 # 1. 数据读取部分
-# 读取数据集
-num_total_days = 144
 data = pd.read_csv('data.csv')
 # 将日期列转换为日期时间类型
 data['Month'] = pd.to_datetime(data['Month'])
 print(data)
 load_series = np.array(data['Passengers'])
 time_series = np.array(data['Month'])
+
+# 利用滑动窗口生成样本数据，窗口大小为 seq_len，目标为下一个时间步的乘客值
 seq_len = 24
 X, y = create_sliding_window(load_series, seq_len=seq_len)
-
-
-
 # 数据归一化（简单标准化）
 mean_val = np.mean(X)
 std_val = np.std(X)
 X_norm = (X - mean_val) / std_val
 y_norm = (y - mean_val) / std_val
-
 # 划分训练集与测试集（70% 训练，30% 测试）
 split_idx = int(0.7 * len(X_norm))
 X_train, X_test = X_norm[:split_idx], X_norm[split_idx:]
@@ -194,32 +190,34 @@ svr_mse = mean_squared_error(test_targets, svr_pred)
 print(f"SVR Test MSE: {svr_mse:.4f}")
 
 # 5. 数据分析图形绘制
-# 图1：原始电力负荷时间序列
+# 图1：原始乘客数时间序列
 # 图2：训练损失曲线
-# 图3：Transformer+SVR 的预测结果与真实负荷对比（测试集）
+# 图3：Transformer+SVR 的预测结果与真实乘客数对比（测试集）
 # 图4：Transformer 特征 PCA 降维可视化
 
 # 设置图形整体风格
-plt.figure(figsize=(16, 12))
-
-# 图1：原始电力负荷时间序列
-plt.subplot(2, 2, 1)
+plt.figure(figsize=(10, 6))
+sns.set(font_scale=1.2)
+plt.rc('font', family=['Times New Roman', 'Simsun'], size=12)
+# 图1：原始乘客时间序列
 plt.plot(time_series, load_series, color='blue', linewidth=2)
 plt.xlabel("Time", fontsize=12)   
 plt.ylabel("Load", fontsize=12)   
 plt.title("Raw Time Series", fontsize=14)  
 plt.grid(True)
+plt.tight_layout()
+plt.show()
 
 # 图2：训练损失曲线
-plt.subplot(2, 2, 2)
 plt.plot(range(1, num_epochs+1), train_losses, marker='o', color='red', linewidth=2)
 plt.xlabel("Epoch", fontsize=12)  
 plt.ylabel("MSE Loss", fontsize=12)  
 plt.title("Training Loss Curve", fontsize=14)  
 plt.grid(True)
+plt.tight_layout()
+plt.show()
 
-# 图3：Transformer+SVR 的预测结果与真实负荷对比（测试集）
-plt.subplot(2, 2, 3)
+# 图3：Transformer+SVR 的预测结果与真实乘客数对比（测试集）
 # 由于测试集数据在原始序列中位于后半部分，因此横轴使用测试数据对应的时间序列索引
 plt.plot(t_test, test_targets * std_val + mean_val, label="Actual Load", color='purple', linewidth=2)
 plt.plot(t_test, svr_pred * std_val + mean_val, label="Predicted Load", color='cyan', linewidth=2, linestyle='--')
@@ -228,9 +226,10 @@ plt.ylabel("Load", fontsize=12)
 plt.title("Predicted vs. Actual Load", fontsize=14)  
 plt.legend()
 plt.grid(True)
+plt.tight_layout()
+plt.show()
 
 # 图4：Transformer 特征 PCA 降维可视化
-plt.subplot(2, 2, 4)
 # 对测试集提取的高维特征进行 PCA 降维到二维
 pca = PCA(n_components=2)
 features_2d = pca.fit_transform(test_features)
@@ -241,6 +240,5 @@ plt.ylabel("PC2", fontsize=12)
 plt.title("PCA of Transformer Features", fontsize=14)  
 plt.colorbar(sc, label="Normalized Load")
 plt.grid(True)
-
 plt.tight_layout()
 plt.show()
