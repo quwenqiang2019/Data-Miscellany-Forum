@@ -8,6 +8,7 @@ import tensorflow as tf
 import random
 import os
 import seaborn as sns
+from keras.layers import Bidirectional
 '''
 LSTM模型训练中的一些操作（如参数初始化、数据分割等）具有随机性，这会导致每次训练后的模型表现有所不同。
 解决方案：
@@ -25,13 +26,13 @@ print(base_dir)
 data = pd.DataFrame(pd.read_excel(os.path.join(base_dir, 'data', "gcdata_zd", filename)))
 data = data[['datetime', 'obv_24h']]
 print(data)
+# 将日期列设置为索引
+data.set_index('datetime', inplace=True)
 
 # 划分训练集和测试集
-train_data = data[(data['datetime'] >= '2020-01-01') & (data['datetime'] < '2024-01-01')]
-train_data.set_index('datetime', inplace=True)
-test_data = data[(data['datetime'] >= '2024-01-01')]
-test_data.set_index('datetime', inplace=True)
-train_size = int(len(train_data))
+train_size = int(len(data) * 0.8)
+train_data = data[:train_size]
+test_data = data[train_size:]
 
 # 绘制训练集和测试集的折线图
 sns.set(font_scale=1.2)
@@ -61,7 +62,7 @@ def create_sliding_windows(data, window_size):
 
 
 # 定义滑动窗口大小
-window_size = 3
+window_size = 7
 
 # 创建滑动窗口数据集
 X_train, Y_train = create_sliding_windows(train_data_scaler, window_size)
@@ -72,23 +73,20 @@ X_train = np.reshape(X_train, (X_train.shape[0], window_size, 1))
 X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
 
 
-# 构建 LSTM 模型
-# input = Input(shape=(window_size, 1))
-# lstm = LSTM(units=50, activation='relu')(input)
-# output = Dense(units=1)(lstm)
-# model = Model(inputs=input, outputs=output)
+# 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
+X_train = np.reshape(X_train, (X_train.shape[0], window_size, 1))
+X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
 
-
-# 构建多层 LSTM 模型
+# 构建模型
 model = Sequential()
-model.add(LSTM(50, input_shape=(window_size, 1), return_sequences=True))
-model.add(LSTM(50))
+model.add(Bidirectional(LSTM(50, input_shape=(window_size,1))))
 model.add(Dense(1))
 
 
-model.summary()
+# model.summary()
 model.compile(optimizer='adam', loss='mse')
 model.fit(X_train, Y_train, epochs=100, batch_size=32)
+
 
 # 使用 LSTM 模型进行预测
 train_predictions = model.predict(X_train)
@@ -99,18 +97,6 @@ train_predictions = scaler.inverse_transform(train_predictions)
 test_predictions = scaler.inverse_transform(test_predictions)
 print(test_predictions)
 
-# 绘制训练集预测结果的折线图
-plt.figure(figsize=(10, 6))
-plt.plot(train_data, label='Actual')
-plt.plot(list(train_data.index)[-len(train_predictions):], train_predictions, label='Predicted')
-plt.xlabel('Month')
-plt.ylabel('obv_24h')
-plt.title('Actual vs Predicted')
-plt.legend()
-plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred_test.jpg'), bbox_inches='tight', dpi = 600)
-plt.show()
-
-
 # 绘制测试集预测结果的折线图
 plt.figure(figsize=(10, 6))
 plt.plot(test_data, label='Actual')
@@ -122,26 +108,14 @@ plt.legend()
 plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred_test.jpg'), bbox_inches='tight', dpi = 600)
 plt.show()
 
-print(list(test_data.index)[-len(test_predictions):])
-
-
-
-# 读取数据集
-filename = '56669_20230517-20241231.xlsx'
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__name__)))
-print(base_dir)
-data = pd.DataFrame(pd.read_excel(os.path.join(base_dir, 'data', "qpe_zd", filename)))
-data = data[['datetime', 'qpe24']]
-data = data[(data['datetime'] >= '2024-01-04') & (data['datetime'] <= '2024-12-30')]
-print(data)
-# 绘制测试集预测结果的折线图
+# 绘制原始数据、训练集预测结果和测试集预测结果的折线图
 plt.figure(figsize=(10, 6))
-plt.plot(test_data, label='Actual')
-plt.plot(list(test_data.index)[-len(test_predictions):], test_predictions, label='Predicted')
-plt.plot(data['datetime'], data['qpe24'], label='qpe24')
-plt.xlabel('Month')
+plt.plot(data, label='Actual')
+plt.plot(list(train_data.index)[window_size:train_size], train_predictions, label='Training Predictions')
+plt.plot(list(test_data.index)[-(len(test_data)-window_size):], test_predictions, label='Testing Predictions')
+plt.xlabel('Year')
 plt.ylabel('obv_24h')
-plt.title('Actual vs Predicted')
+plt.title('obv_24h - Actual vs Predicted')
 plt.legend()
-plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred_test.jpg'), bbox_inches='tight', dpi = 600)
+plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred_train_test.jpg'), bbox_inches='tight', dpi = 600)
 plt.show()
