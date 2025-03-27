@@ -21,7 +21,6 @@ random.seed(seed_value)
 # 读取数据集
 filename = '56669_2020-2024.xlsx'
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__name__)))
-print(base_dir)
 data = pd.DataFrame(pd.read_excel(os.path.join(base_dir, 'data', "gcdata_zd", filename)))
 data = data[['datetime', 'obv_24h']]
 print(data)
@@ -58,8 +57,6 @@ def create_sliding_windows(data, window_size):
         Y.append(data[i+window_size,0])
     return np.array(X), np.array(Y)
 
-
-
 # 定义滑动窗口大小
 window_size = 3
 
@@ -79,25 +76,24 @@ X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
 # model = Model(inputs=input, outputs=output)
 
 
-# 构建多层 LSTM 模型
+# # 构建多层 LSTM 模型
 model = Sequential()
 model.add(LSTM(50, input_shape=(window_size, 1), return_sequences=True))
 model.add(LSTM(50))
 model.add(Dense(1))
-
-
 model.summary()
 model.compile(optimizer='adam', loss='mse')
-model.fit(X_train, Y_train, epochs=100, batch_size=32)
+model.fit(X_train, Y_train, epochs=50, batch_size=32)
+model.save(os.path.join(base_dir, 'models', '56669'),save_format='tf')
 
 # 使用 LSTM 模型进行预测
+# model = tf.keras.models.load_model(os.path.join(base_dir, 'models', '56669'))
 train_predictions = model.predict(X_train)
 test_predictions = model.predict(X_test)
 
 # 反归一化预测结果
 train_predictions = scaler.inverse_transform(train_predictions)
 test_predictions = scaler.inverse_transform(test_predictions)
-print(test_predictions)
 
 # 绘制训练集预测结果的折线图
 plt.figure(figsize=(10, 6))
@@ -105,11 +101,10 @@ plt.plot(train_data, label='Actual')
 plt.plot(list(train_data.index)[-len(train_predictions):], train_predictions, label='Predicted')
 plt.xlabel('Month')
 plt.ylabel('obv_24h')
-plt.title('Actual vs Predicted')
+plt.title('Actual vs Predicted-Train Dataset')
 plt.legend()
-plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred_test.jpg'), bbox_inches='tight', dpi = 600)
+plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred_train.jpg'), bbox_inches='tight', dpi = 600)
 plt.show()
-
 
 # 绘制测试集预测结果的折线图
 plt.figure(figsize=(10, 6))
@@ -117,31 +112,34 @@ plt.plot(test_data, label='Actual')
 plt.plot(list(test_data.index)[-len(test_predictions):], test_predictions, label='Predicted')
 plt.xlabel('Month')
 plt.ylabel('obv_24h')
-plt.title('Actual vs Predicted')
+plt.title('Actual vs Predicted-Test Dataset')
 plt.legend()
 plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred_test.jpg'), bbox_inches='tight', dpi = 600)
 plt.show()
 
-print(list(test_data.index)[-len(test_predictions):])
-
+timestamps = list(test_data.index)[-len(test_predictions):]
+data_pred =  pd.DataFrame({'datetime': timestamps, 'obv_24': test_predictions.flatten().tolist()})
+print(data_pred) # 362
 
 
 # 读取数据集
 filename = '56669_20230517-20241231.xlsx'
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__name__)))
-print(base_dir)
 data = pd.DataFrame(pd.read_excel(os.path.join(base_dir, 'data', "qpe_zd", filename)))
 data = data[['datetime', 'qpe24']]
 data = data[(data['datetime'] >= '2024-01-04') & (data['datetime'] <= '2024-12-30')]
-print(data)
-# 绘制测试集预测结果的折线图
+print(data)  #326
+
+merged_df = pd.merge(data_pred, data, on='datetime', how='left')
+merged_df.to_excel(os.path.join(base_dir, 'result', 'result_compare.xlsx'))
+
+# 绘制预测结果的折线图
 plt.figure(figsize=(10, 6))
-plt.plot(test_data, label='Actual')
-plt.plot(list(test_data.index)[-len(test_predictions):], test_predictions, label='Predicted')
+plt.plot(test_data, label='Actual-obv_24h')
+plt.plot(list(test_data.index)[-len(test_predictions):], test_predictions, label='Predicted-obv_24h')
 plt.plot(data['datetime'], data['qpe24'], label='qpe24')
 plt.xlabel('Month')
-plt.ylabel('obv_24h')
 plt.title('Actual vs Predicted')
 plt.legend()
-plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred_test.jpg'), bbox_inches='tight', dpi = 600)
+plt.savefig(os.path.join(base_dir, 'result', 'lstm_pred_compare.jpg'), bbox_inches='tight', dpi = 600)
 plt.show()
