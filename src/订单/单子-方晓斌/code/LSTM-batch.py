@@ -85,7 +85,7 @@ def lstm_model(name):
     model.add(Dense(1))
     model.summary()
     model.compile(optimizer='adam', loss='mse')
-    model.fit(X_train, Y_train, epochs=50, batch_size=32)
+    model.fit(X_train, Y_train, epochs=500, batch_size=32)
     model.save(os.path.join(base_dir, 'models', f'{name}'),save_format='tf')
 
     # 使用 LSTM 模型进行预测
@@ -150,15 +150,15 @@ def lstm_model(name):
         pass
 
 if __name__ == "__main__":
-    lstm_model('T4803')
+    # lstm_model('T4803')
 
 
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     folder_path = os.path.join(base_dir, 'data', 'gcdata_zd')
     # 获取文件夹中所有文件
     files = os.listdir(folder_path)
-    print(files)
-    for file in files:
+    print(files[151:])
+    for file in files[151:]:
         name = file.split('_')[0]
         print(name)
         try:
