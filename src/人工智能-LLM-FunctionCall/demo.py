@@ -148,7 +148,6 @@ print(len(tools))
 import json
 from zhipuai import ZhipuAI
 api_key = 'your_api_key'
-api_key = '6358a059f55445ec800a5c3554a0d686.3eXwmE2Il7C6yr6Q'
 client = ZhipuAI(api_key=api_key)
 system_prompt = """你是一位专业的 AI 助手，你的任务是回答用户问题，可以利用工具接口获得用户想要的答案"""
 def call_glm(messages, model="glm-4-plus", temperature=0.95, tools=None, top_p=0.7):
