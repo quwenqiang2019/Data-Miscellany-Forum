@@ -1,0 +1,9 @@
+model:
+  name: SimpleNet
+  layers: 3
+  units: 64
+
+train:
+  epochs: 10
+  batch_size: 32
+  learning_rate: 0.001
