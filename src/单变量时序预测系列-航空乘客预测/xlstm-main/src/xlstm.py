@@ -13,7 +13,7 @@ batch_size = 3
 seq_len = 8
 
 
-# Load and preprocess the AirPassengers dataset
+# Load and preprocess the dataset
 data = pd.read_csv('AirPassengers.csv', usecols=[1], engine='python')
 dataset = data.values.astype('float32')
 

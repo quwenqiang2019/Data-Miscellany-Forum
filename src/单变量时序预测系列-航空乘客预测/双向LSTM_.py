@@ -34,8 +34,9 @@ train_data_scaler = scaler.fit_transform(train_data.values.reshape(-1, 1))
 print(train_data_scaler)
 test_data_scaler = scaler.transform(test_data.values.reshape(-1, 1))
 print(test_data_scaler)
+
 # 定义滑动窗口函数
-def create_sliding_windows(data, window_size):
+def create_dataset(data, window_size):
     X, Y = [], []
     for i in range(len(data) - window_size):
         X.append(data[i:i+window_size, 0:data.shape[1]])
@@ -43,13 +44,12 @@ def create_sliding_windows(data, window_size):
     return np.array(X), np.array(Y)
 
 
-
 # 定义滑动窗口大小
 window_size = 12
 
 # 创建滑动窗口数据集
-X_train, Y_train = create_sliding_windows(train_data_scaler, window_size)
-X_test, Y_test = create_sliding_windows(test_data_scaler, window_size)
+X_train, Y_train = create_dataset(train_data_scaler, window_size)
+X_test, Y_test = create_dataset(test_data_scaler, window_size)
 
 # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
 X_train = np.reshape(X_train, (X_train.shape[0], window_size, 1))

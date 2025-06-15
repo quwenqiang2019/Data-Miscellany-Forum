@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Import Data
-df = pd.read_csv("F:\数据杂坛\datasets\economics.csv")
+df = pd.read_csv("economics.csv")
 
 x = df['date']
 y1 = df['psavert']
