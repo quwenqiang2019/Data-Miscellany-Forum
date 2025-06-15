@@ -1,0 +1,21 @@
+<!-- frontend/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前端应用</title>
+    <script>
+        async function fetchData() {
+            const response = await fetch('http://127.0.0.1:5000/api/hello');
+            const data = await response.json();
+            document.getElementById('result').innerText = data.message;
+        }
+        window.onload = fetchData;
+    </script>
+</head>
+<body>
+    前后端分离示例
+    <div id="result"></div>
+</body>
+</html>

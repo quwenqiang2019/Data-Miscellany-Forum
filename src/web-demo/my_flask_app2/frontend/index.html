@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前后端分离示例</title>
+</head>
+<body>
+    <h1>前端页面</h1>
+    <p>从后端获取的数据：</p>
+    <div id="data"></div>
+    <script>
+        // 使用fetch调用后端API接口
+        fetch('http://localhost:5000/api/data')
+            .then(response => response.json())
+            .then(data => {
+                // 将获取的数据展示在页面上
+                document.getElementById('data').innerText = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('data').innerText = 'Failed to fetch data';
+            });
+    </script>
+</body>
+</html>
