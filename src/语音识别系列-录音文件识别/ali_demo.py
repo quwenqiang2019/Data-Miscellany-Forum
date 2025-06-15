@@ -97,9 +97,9 @@ def fileTrans(akId, akSecret, appKey, fileLink) :
         print ("录音文件识别失败！")
     return
 
-accessKeyId = 'LTAI5tGAebtRMRBgjqQ15VKo'
-accessKeySecret = 'h8qYkGkNVaqnqK8Xk9LUwqmXZjuNLw'
-appKey = 'YKnMvAbxO1vjCKaX'
+accessKeyId = 'xxx'
+accessKeySecret = 'xxx'
+appKey = 'xxx'
 
 # accessKeyId = os.getenv('LTAI5tGAebtRMRBgjqQ15VKo')
 # accessKeySecret = os.getenv('h8qYkGkNVaqnqK8Xk9LUwqmXZjuNLw')

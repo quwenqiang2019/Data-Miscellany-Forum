@@ -52,8 +52,8 @@ def process(request, token, audioFile):
     conn.close()
 
 
-appKey = 'YKnMvAbxO1vjCKaX'
-token = '2e5bb0947e714b68b971c1ce0fff2c01'
+appKey = 'xxx'
+token = 'xxx'
 
 # 服务请求地址
 url = 'https://nls-gateway-cn-shanghai.aliyuncs.com/stream/v1/asr'
