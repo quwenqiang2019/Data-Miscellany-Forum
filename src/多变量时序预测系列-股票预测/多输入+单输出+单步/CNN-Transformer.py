@@ -1,6 +1,6 @@
 import math
 import random
-import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -14,7 +14,7 @@ from torch.utils.data import Dataset, DataLoader
 
 # 1. 构造时间序列数据集
 class VirtualTimeSeriesDataset(Dataset):
-    def __init__(self, seq_len=12, num_samples=132):
+    def __init__(self, seq_len=30, num_samples=5173):
         super(VirtualTimeSeriesDataset, self).__init__()
         self.seq_len = seq_len
         self.num_samples = num_samples
@@ -27,20 +27,18 @@ class VirtualTimeSeriesDataset(Dataset):
         data = []
         targets = []
         # 读取数据集
-        df = pd.read_excel('_data.xlsx')
-        # 将日期列转换为日期时间类型
-        df['Month'] = pd.to_datetime(df['Month'])
-        # 将日期列设置为索引
-        df.set_index('Month', inplace=True)
-        # 归一化
-        df = scaler.fit_transform(df.values.reshape(-1, 1))
+        df = pd.read_csv('data.csv', parse_dates=["Date"], index_col=[0])
+        fea_num = len(df.columns)
+
+        scaler = MinMaxScaler()
+        df = scaler.fit_transform(df.values.reshape(-1, fea_num))
 
         for i in range(len(df) - window_size):
             data.append(df[i:i + window_size, 0:df.shape[1]])
             targets.append(df[i + window_size, 0])
 
 
-        data = np.array(data, dtype=np.float32)  # shape: (num_samples, seq_len, 1)
+        data = np.array(data, dtype=np.float32)  # shape: (num_samples, seq_len, fea_num)
         targets = np.array(targets, dtype=np.float32).reshape(-1, 1)
         print(data.shape, targets.shape)
 
@@ -75,7 +73,7 @@ class PositionalEncoding(nn.Module):
 
 # 3. 融合 Transformer 与 CNN 的模型定义
 class FusedCNNTransformer(nn.Module):
-    def __init__(self, input_dim=1, embed_dim=64, cnn_channels=64, kernel_size=3,
+    def __init__(self, input_dim=5, embed_dim=64, cnn_channels=64, kernel_size=3,
                  num_transformer_layers=2, nhead=4, dropout=0.1, fc_dim=32):
         super(FusedCNNTransformer, self).__init__()
         self.embed_dim = embed_dim
@@ -182,19 +180,10 @@ def evaluate_model(model, dataloader, device='cpu'):
             trues.append(batch_targets.cpu().numpy())
             cnn_features.append(cnn_f.cpu().numpy())
             trans_features.append(trans_f.cpu().numpy())
-
-
-    preds_reshaped = np.array(preds).reshape(-1, 1)
-    trues_reshaped = np.array(trues).reshape(-1, 1)
-    preds_original = scaler.inverse_transform(preds_reshaped)
-    trues_original = scaler.inverse_transform(trues_reshaped)
-
-    preds = np.concatenate(preds_original, axis=0).squeeze()
-    trues = np.concatenate(trues_original, axis=0).squeeze()
+    preds = np.concatenate(preds, axis=0).squeeze()
+    trues = np.concatenate(trues, axis=0).squeeze()
     cnn_features = np.concatenate(cnn_features, axis=0)
     trans_features = np.concatenate(trans_features, axis=0)
-    df = pd.DataFrame({"preds":preds, "trues":trues})
-    print(df)
     return preds, trues, cnn_features, trans_features
 
 
@@ -205,51 +194,45 @@ def visualize_results(loss_history, preds, trues, cnn_features, trans_features):
 
     # 图 1：训练损失曲线
     # 模型在训练过程中损失的下降情况，说明模型不断优化拟合数据。
-    plt.plot(loss_history, marker='o', linestyle='-', linewidth=2)
+    plt.plot(loss_history, marker='o', color='dodgerblue', linestyle='-', linewidth=2)
     plt.title("Training Loss Curve")
     plt.xlabel("Epoch")
     plt.ylabel("MSE Loss")
     plt.tight_layout()
-    plt.savefig(os.path.join(base_dir, 'figure1.jpg'), bbox_inches='tight', dpi=600)
     plt.show()
 
     # 图 2：真实值与预测值对比曲线
     # 对比曲线直观展示模型预测趋势与真实数据的匹配情况，越接近表示模型效果越好。
-    plt.plot(trues, label="True Values",  marker='o')
-    plt.plot(preds, label="Predicted Values", marker='x')
+    plt.plot(trues, label="True Values", color='limegreen', marker='o')
+    plt.plot(preds, label="Predicted Values", color='crimson', marker='x')
     plt.title("True vs. Predicted Values")
     plt.xlabel("Sample Index")
     plt.ylabel("Trend Value")
     plt.legend()
     plt.tight_layout()
-    plt.savefig(os.path.join(base_dir, 'figure2.jpg'), bbox_inches='tight', dpi=600)
     plt.show()
 
     # 图 3：CNN 提取的局部特征展示（选取第一个样本的特征向量）
     # 展示 CNN 分支提取到的局部特征，反映了数据中局部模式信息的提取情况。
-    plt.bar(np.arange(cnn_features.shape[1]), cnn_features[0])
+    plt.bar(np.arange(cnn_features.shape[1]), cnn_features[0], color='orchid')
     plt.title("CNN Local Features (Sample 1)")
     plt.xlabel("Feature Dimension")
     plt.ylabel("Feature Value")
     plt.tight_layout()
-    plt.savefig(os.path.join(base_dir, 'figure3.jpg'), bbox_inches='tight', dpi=600)
     plt.show()
 
     # 图 4：Transformer 提取的全局特征展示（选取第一个样本的特征向量）
     # 展示 Transformer 分支提取到的全局特征，体现了长距离依赖关系的建模效果。
-    plt.plot(trans_features[0], marker='s', linestyle='-')
+    plt.plot(trans_features[0], marker='s', linestyle='-', color='goldenrod')
     plt.title("Transformer Global Features (Sample 1)")
     plt.xlabel("Feature Dimension")
     plt.ylabel("Feature Value")
     plt.tight_layout()
-    plt.savefig(os.path.join(base_dir, 'figure4.jpg'), bbox_inches='tight', dpi=600)
     plt.show()
 
 
 # 5. 主函数：数据加载、模型训练、评估与可视化
 if __name__ == '__main__':
-
-    base_dir = './'
     # 设置随机种子，保证结果可重复
     torch.manual_seed(42)
     np.random.seed(42)
@@ -262,25 +245,18 @@ if __name__ == '__main__':
     num_epochs = 50
     learning_rate = 1e-3
 
-    scaler = MinMaxScaler()
-
     # 构造数据集
-    dataset = VirtualTimeSeriesDataset(seq_len=12, num_samples=132)
-    # # 随机划分训练集与测试集（80%/20%）
-    # train_size = int(0.8 * len(dataset))
-    # test_size = len(dataset) - train_size
-    # train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
-
-    # 直接通过索引切片（非随机划分）创建新数据集（80%/20%）
+    dataset = VirtualTimeSeriesDataset(seq_len=12, num_samples=5173)
+    # 划分训练集与测试集（80%/20%）
     train_size = int(0.8 * len(dataset))
-    train_dataset = torch.utils.data.Subset(dataset, range(0, train_size))
-    test_dataset = torch.utils.data.Subset(dataset, range(train_size, len(dataset)))
+    test_size = len(dataset) - train_size
+    train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     # 模型实例化
-    model = FusedCNNTransformer(input_dim=1, embed_dim=64, cnn_channels=64, kernel_size=3,
+    model = FusedCNNTransformer(input_dim=5, embed_dim=64, cnn_channels=64, kernel_size=3,
                                 num_transformer_layers=2, nhead=4, dropout=0.1, fc_dim=32)
     model.to(device)
 
