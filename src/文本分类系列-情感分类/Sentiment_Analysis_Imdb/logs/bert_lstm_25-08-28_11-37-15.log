@@ -1,0 +1,48 @@
+> creating model bert
+> cuda memory allocated: 444761600
+> training arguments:
+>>> num_classes: 2
+>>> model_name: bert
+>>> method_name: lstm
+>>> train_batch_size: 4
+>>> test_batch_size: 16
+>>> num_epoch: 10
+>>> lr: 1e-05
+>>> weight_decay: 0.01
+>>> device: cuda
+>>> backend: False
+>>> workers: 0
+>>> timestamp: 1756352235224
+>>> log_name: bert_lstm_25-08-28_11-37-15.log
+1/10 - 10.00%
+[train] loss: 0.4965, acc: 81.65
+[test] loss: 0.4291, acc: 88.30
+2/10 - 20.00%
+[train] loss: 0.4030, acc: 90.75
+[test] loss: 0.4330, acc: 87.90
+3/10 - 30.00%
+[train] loss: 0.3772, acc: 93.45
+[test] loss: 0.4773, acc: 83.40
+4/10 - 40.00%
+[train] loss: 0.3707, acc: 94.25
+[test] loss: 0.4320, acc: 87.90
+5/10 - 50.00%
+[train] loss: 0.3601, acc: 95.10
+[test] loss: 0.4120, acc: 89.70
+6/10 - 60.00%
+[train] loss: 0.3523, acc: 95.97
+[test] loss: 0.4047, acc: 90.30
+7/10 - 70.00%
+[train] loss: 0.3429, acc: 96.95
+[test] loss: 0.4036, acc: 90.90
+8/10 - 80.00%
+[train] loss: 0.3358, acc: 97.78
+[test] loss: 0.4351, acc: 87.40
+9/10 - 90.00%
+[train] loss: 0.3459, acc: 96.55
+[test] loss: 0.4135, acc: 89.80
+10/10 - 100.00%
+[train] loss: 0.3362, acc: 97.67
+[test] loss: 0.4124, acc: 89.80
+best loss: 0.4036, best acc: 90.90
+log saved: bert_lstm_25-08-28_11-37-15.log

@@ -1,0 +1,16 @@
+> creating model bert
+Xet Storage is enabled for this repo, but the 'hf_xet' package is not installed. Falling back to regular HTTP download. For better performance, install the package with: `pip install huggingface_hub[hf_xet]` or `pip install hf_xet`
+> training arguments:
+>>> num_classes: 2
+>>> model_name: bert
+>>> method_name: lstm
+>>> train_batch_size: 4
+>>> test_batch_size: 16
+>>> num_epoch: 50
+>>> lr: 1e-05
+>>> weight_decay: 0.01
+>>> device: cpu
+>>> backend: False
+>>> workers: 0
+>>> timestamp: 1756302459495
+>>> log_name: bert_lstm_25-08-27_21-47-38.log

@@ -1,0 +1,16 @@
+> creating model bert
+> cuda memory allocated: 444761600
+> training arguments:
+>>> num_classes: 2
+>>> model_name: bert
+>>> method_name: lstm
+>>> train_batch_size: 4
+>>> test_batch_size: 16
+>>> num_epoch: 50
+>>> lr: 1e-05
+>>> weight_decay: 0.01
+>>> device: cuda
+>>> backend: False
+>>> workers: 0
+>>> timestamp: 1756352184829
+>>> log_name: bert_lstm_25-08-28_11-36-24.log
