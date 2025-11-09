@@ -6,64 +6,20 @@ import torch.nn as nn
 from torch.nn.utils import weight_norm
 from sklearn.preprocessing import StandardScaler
 import xgboost as xgb
+import seaborn as sns
 
-
+# 1. 读取时间序列数据
 data_ = pd.read_csv("data.csv")
 df = pd.DataFrame(data_)
 print(df.head())
 df['Date'] = pd.to_datetime(df['Date'])
 print(type(df['Date']))
 features = ['Open', 'High', 'Low', 'Close', 'Adj Close']
+
+# 2. 数据预处理
 data = df[features].values
 scaler = StandardScaler()
 data_scaled = scaler.fit_transform(data)
-
-
-# # 1. 时间序列数据
-# np.random.seed(42)
-# n = 1200
-# t = np.arange(n)
-# trend = 0.05 * t
-# seasonal = 10 * np.sin(2 * np.pi * t / 50)
-# noise = np.random.normal(0, 2, n)
-# event = np.zeros(n)
-# event[300:310] += 20
-# event[800:810] -= 15
-# series = trend + seasonal + noise + event
-#
-# df = pd.DataFrame({"ds": pd.date_range("2020-01-01", periods=n), "y": series})
-
-# plt.figure(figsize=(14,5))
-# plt.plot(df['Month'], df['Passengers'], color='#FF6347', label='原始时间序列')
-# plt.title('原始虚拟时间序列数据')
-# plt.xlabel('时间')
-# plt.ylabel('数值')
-# plt.legend()
-# plt.show()
-#
-# # 2. 数据增强
-# # 2.1 滞后特征和滚动统计
-# window = 60
-# df['y_roll_mean'] = df['y'].rolling(5).mean().fillna(method='bfill')
-# df['y_roll_std'] = df['y'].rolling(5).std().fillna(method='bfill')
-#
-# # 2.2 周期性特征
-# df['sin_50'] = np.sin(2 * np.pi * t / 50)
-# df['cos_50'] = np.cos(2 * np.pi * t / 50)
-# df['sin_200'] = np.sin(2 * np.pi * t / 200)
-# df['cos_200'] = np.cos(2 * np.pi * t / 200)
-#
-# # 2.3 事件特征
-# df['event'] = 0
-# df.loc[300:310, 'event'] = 1
-# df.loc[800:810, 'event'] = -1
-#
-# features = ['y', 'y_roll_mean', 'y_roll_std', 'sin_50', 'cos_50', 'sin_200', 'cos_200', 'event']
-# data = df[features].values
-# scaler = StandardScaler()
-# data_scaled = scaler.fit_transform(data)
-
-
 
 
 
@@ -203,6 +159,9 @@ lstm_pred_inv = scaler.inverse_transform(np.hstack([lstm_pred,np.zeros((len(lstm
 transformer_pred_inv = scaler.inverse_transform(np.hstack([transformer_pred,np.zeros((len(transformer_pred),4))]))[:,0]
 tcn_pred_inv = scaler.inverse_transform(np.hstack([tcn_pred,np.zeros((len(tcn_pred),4))]))[:,0]
 
+
+sns.set(font_scale=1.2)
+plt.rc('font', family=['Times New Roman', 'SimSun'], size=12)
 plt.figure(figsize=(14,5))
 plt.plot(df['Date'][-len(y_test):],y_test_inv,label='真实值',color='#FF6347')
 plt.plot(df['Date'][-len(y_test):],lstm_pred_inv,label='LSTM预测',color='#1E90FF')
@@ -228,8 +187,8 @@ stack_res_pred = xgb_model.predict(stack_test_X).reshape(-1,1)
 
 # 加权融合
 stack_pred_final = (lstm_pred + transformer_pred + tcn_pred)/3 + stack_res_pred
-
 stack_pred_inv = scaler.inverse_transform(np.hstack([stack_pred_final,np.zeros((len(stack_pred_final),4))]))[:,0]
+
 
 plt.figure(figsize=(14,5))
 plt.plot(df['Date'][-len(y_test):],y_test_inv,label='真实值',color='#FF6347')
