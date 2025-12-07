@@ -1,0 +1,78 @@
+> creating model bert
+> cuda memory allocated: 439076352
+> training arguments:
+>>> num_classes: 2
+>>> model_name: bert
+>>> method_name: fnn
+>>> train_batch_size: 4
+>>> test_batch_size: 16
+>>> num_epoch: 20
+>>> lr: 1e-05
+>>> weight_decay: 0.01
+>>> device: cuda
+>>> backend: False
+>>> workers: 0
+>>> timestamp: 1756389648916
+>>> log_name: bert_fnn_25-08-28_22-00-47.log
+1/20 - 5.00%
+[train] loss: 0.4757, acc: 82.75
+[test] loss: 0.4154, acc: 89.40
+2/20 - 10.00%
+[train] loss: 0.3993, acc: 91.00
+[test] loss: 0.4105, acc: 89.60
+3/20 - 15.00%
+[train] loss: 0.3779, acc: 93.45
+[test] loss: 0.4164, acc: 89.40
+4/20 - 20.00%
+[train] loss: 0.3764, acc: 93.47
+[test] loss: 0.3999, acc: 91.20
+5/20 - 25.00%
+[train] loss: 0.3612, acc: 95.17
+[test] loss: 0.4045, acc: 90.70
+6/20 - 30.00%
+[train] loss: 0.3516, acc: 96.12
+[test] loss: 0.4125, acc: 89.70
+7/20 - 35.00%
+[train] loss: 0.3615, acc: 95.10
+[test] loss: 0.3994, acc: 91.10
+8/20 - 40.00%
+[train] loss: 0.3561, acc: 95.65
+[test] loss: 0.4093, acc: 89.90
+9/20 - 45.00%
+[train] loss: 0.3561, acc: 95.62
+[test] loss: 0.4822, acc: 83.00
+10/20 - 50.00%
+[train] loss: 0.3493, acc: 96.33
+[test] loss: 0.4057, acc: 90.80
+11/20 - 55.00%
+[train] loss: 0.3440, acc: 96.88
+[test] loss: 0.4035, acc: 90.80
+12/20 - 60.00%
+[train] loss: 0.3393, acc: 97.35
+[test] loss: 0.3967, acc: 91.30
+13/20 - 65.00%
+[train] loss: 0.3353, acc: 97.70
+[test] loss: 0.3988, acc: 91.00
+14/20 - 70.00%
+[train] loss: 0.3379, acc: 97.42
+[test] loss: 0.4252, acc: 88.60
+15/20 - 75.00%
+[train] loss: 0.3384, acc: 97.40
+[test] loss: 0.4048, acc: 90.70
+16/20 - 80.00%
+[train] loss: 0.3421, acc: 97.08
+[test] loss: 0.4068, acc: 90.40
+17/20 - 85.00%
+[train] loss: 0.3377, acc: 97.58
+[test] loss: 0.3910, acc: 92.10
+18/20 - 90.00%
+[train] loss: 0.3338, acc: 97.90
+[test] loss: 0.3983, acc: 91.30
+19/20 - 95.00%
+[train] loss: 0.3369, acc: 97.65
+[test] loss: 0.4095, acc: 90.30
+20/20 - 100.00%
+[train] loss: 0.3348, acc: 97.82
+[test] loss: 0.4152, acc: 89.80
+best loss: 0.3910, best acc: 92.10
+log saved: bert_fnn_25-08-28_22-00-47.log

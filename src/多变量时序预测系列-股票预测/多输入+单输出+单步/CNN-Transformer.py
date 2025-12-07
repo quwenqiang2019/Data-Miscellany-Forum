@@ -14,7 +14,7 @@ from torch.utils.data import Dataset, DataLoader
 
 # 1. 构造时间序列数据集
 class VirtualTimeSeriesDataset(Dataset):
-    def __init__(self, seq_len=12, num_samples=132):
+    def __init__(self, seq_len=30, num_samples=5173):
         super(VirtualTimeSeriesDataset, self).__init__()
         self.seq_len = seq_len
         self.num_samples = num_samples
@@ -27,20 +27,18 @@ class VirtualTimeSeriesDataset(Dataset):
         data = []
         targets = []
         # 读取数据集
-        df = pd.read_csv('data.csv')
-        # 将日期列转换为日期时间类型
-        df['Month'] = pd.to_datetime(df['Month'])
-        # 将日期列设置为索引
-        df.set_index('Month', inplace=True)
+        df = pd.read_csv('data.csv', parse_dates=["Date"], index_col=[0])
+        fea_num = len(df.columns)
+
         scaler = MinMaxScaler()
-        df = scaler.fit_transform(df.values.reshape(-1, 1))
+        df = scaler.fit_transform(df.values.reshape(-1, fea_num))
 
         for i in range(len(df) - window_size):
             data.append(df[i:i + window_size, 0:df.shape[1]])
             targets.append(df[i + window_size, 0])
 
 
-        data = np.array(data, dtype=np.float32)  # shape: (num_samples, seq_len, 1)
+        data = np.array(data, dtype=np.float32)  # shape: (num_samples, seq_len, fea_num)
         targets = np.array(targets, dtype=np.float32).reshape(-1, 1)
         print(data.shape, targets.shape)
 
@@ -75,7 +73,7 @@ class PositionalEncoding(nn.Module):
 
 # 3. 融合 Transformer 与 CNN 的模型定义
 class FusedCNNTransformer(nn.Module):
-    def __init__(self, input_dim=1, embed_dim=64, cnn_channels=64, kernel_size=3,
+    def __init__(self, input_dim=5, embed_dim=64, cnn_channels=64, kernel_size=3,
                  num_transformer_layers=2, nhead=4, dropout=0.1, fc_dim=32):
         super(FusedCNNTransformer, self).__init__()
         self.embed_dim = embed_dim
@@ -243,30 +241,22 @@ if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # 超参数设置
-    seq_len = 200
-    num_samples = 3000  # 总样本数
     batch_size = 32
     num_epochs = 50
     learning_rate = 1e-3
 
     # 构造数据集
-    dataset = VirtualTimeSeriesDataset()
-
-    # 随机划分训练集与测试集（80%/20%）
+    dataset = VirtualTimeSeriesDataset(seq_len=12, num_samples=5173)
+    # 划分训练集与测试集（80%/20%）
     train_size = int(0.8 * len(dataset))
     test_size = len(dataset) - train_size
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
-
-    # # 直接通过索引切片（非随机划分）创建新数据集（80%/20%）
-    # train_size = int(0.8 * len(dataset))
-    # train_dataset = torch.utils.data.Subset(dataset, range(0, train_size))
-    # test_dataset = torch.utils.data.Subset(dataset, range(train_size, len(dataset)))
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     # 模型实例化
-    model = FusedCNNTransformer(input_dim=1, embed_dim=64, cnn_channels=64, kernel_size=3,
+    model = FusedCNNTransformer(input_dim=5, embed_dim=64, cnn_channels=64, kernel_size=3,
                                 num_transformer_layers=2, nhead=4, dropout=0.1, fc_dim=32)
     model.to(device)
 

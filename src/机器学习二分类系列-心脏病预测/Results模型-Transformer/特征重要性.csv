@@ -1,0 +1,14 @@
+﻿Feature,Importance
+oldpeak,9.739667
+thalach,9.575537
+fbs,9.256477
+chol,9.034809
+restecg,8.82502
+trestbps,8.587217
+slope,8.509974
+ca,8.44201
+cp,8.422159
+sex,8.343132
+thal,8.120077
+age,7.8802695
+exang,7.6285663

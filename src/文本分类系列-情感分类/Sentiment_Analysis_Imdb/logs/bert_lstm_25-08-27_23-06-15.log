@@ -1,0 +1,28 @@
+> creating model bert
+> cuda memory allocated: 444761600
+> training arguments:
+>>> num_classes: 2
+>>> model_name: bert
+>>> method_name: lstm
+>>> train_batch_size: 4
+>>> test_batch_size: 16
+>>> num_epoch: 50
+>>> lr: 1e-05
+>>> weight_decay: 0.01
+>>> device: cuda
+>>> backend: False
+>>> workers: 0
+>>> timestamp: 1756307176631
+>>> log_name: bert_lstm_25-08-27_23-06-15.log
+1/50 - 2.00%
+[train] loss: 0.5091, acc: 81.75
+[test] loss: 0.4222, acc: 88.70
+2/50 - 4.00%
+[train] loss: 0.4013, acc: 91.17
+[test] loss: 0.4214, acc: 89.10
+3/50 - 6.00%
+[train] loss: 0.3829, acc: 92.77
+[test] loss: 0.4236, acc: 88.50
+4/50 - 8.00%
+[train] loss: 0.3585, acc: 95.43
+[test] loss: 0.4072, acc: 90.20
