@@ -8,7 +8,8 @@ import seaborn as sns
 
 
 # 1. 时间序列数据
-data = pd.read_csv('data.csv')
+# data = pd.read_csv('data.csv')
+data = pd.read_csv('/workspaces/Data-Miscellany-Forum/src/单变量时序预测系列-航空乘客预测/data.csv')
 print(data)
 t = np.array(data['Month'])
 series = np.array(data['Passengers'])
@@ -33,13 +34,14 @@ class TimeSeriesDataset(Dataset):
 input_len = 30
 pred_len = 5
 dataset = TimeSeriesDataset(series, input_len, pred_len)
-
+print(dataset.__getitem__)
 # 拆分训练/测试集
 train_size = int(len(dataset)*0.8)
 test_size = len(dataset) - train_size
 train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=False)  # 时间序列通常不要shuffle
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+
 
 # 3. 定义融合模型：CNN + LSTM + Transformer
 class CNN_LSTM_Transformer(nn.Module):
@@ -83,7 +85,7 @@ model = CNN_LSTM_Transformer().to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 criterion = nn.MSELoss()
 
-epochs = 5000
+epochs = 50
 for epoch in range(epochs):
     model.train()
     total_loss = 0
