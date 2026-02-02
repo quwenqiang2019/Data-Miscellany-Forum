@@ -1,5 +1,4 @@
 import random
-import math
 
 import numpy as np
 import pandas as pd
@@ -9,10 +8,12 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import r2_score
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import mean_squared_error
+
 
 # 1. 构造时间序列数据集
 class TimeSeriesDataset(Dataset):
@@ -34,7 +35,7 @@ class TimeSeriesDataset(Dataset):
 
         data = np.array(data, dtype=np.float32)  # shape: (num_samples, seq_len, fea_num)
         targets = np.array(targets, dtype=np.float32).reshape(-1, 1) # shape: (num_samples, pred_len)
-        targets = targets.reshape(-1, 1, 1) # shape: (num_samples, pred_len, fea_num)
+        # targets = targets.reshape(-1, 1, 1) # shape: (num_samples, pred_len, fea_num)
         print(data.shape, targets.shape)
 
         return data, targets
@@ -46,41 +47,43 @@ class TimeSeriesDataset(Dataset):
         return self.data[index], self.targets[index]
 
 
-# 2. 定义融合模型：CNN + LSTM + Transformer
-class CNN_LSTM_Transformer(nn.Module):
-    def __init__(self, input_dim=5, cnn_channels=16, lstm_hidden=32, transformer_dim=32,
-                 transformer_heads=4, transformer_layers=1, pred_len=1):
-        super().__init__()
-        # CNN
-        self.cnn = nn.Conv1d(in_channels=input_dim, out_channels=cnn_channels, kernel_size=3, padding=1)
-        self.cnn_relu = nn.ReLU()
+# 2. 构建LSTM模型
+class LSTMRegressor(nn.Module):
+    def __init__(self, input_size=5, hidden_size=50, num_layers=1, output_size=1, dropout=0.2):
+        """
+        input_size: 输入特征维度（多变量个数）
+        hidden_size: LSTM隐藏层维度
+        num_layers: LSTM层数
+        """
+        super(LSTMRegressor, self).__init__()
+        self.hidden_size = hidden_size
+
+        # LSTM层
+        self.lstm = nn.LSTM(
+            input_size, 
+            hidden_size, 
+            num_layers, 
+            batch_first=True)
+
+
+        # 全连接层
+        self.fc = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size // 2),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_size // 2, output_size)
+        )
         
-        # LSTM
-        self.lstm = nn.LSTM(input_size=cnn_channels, hidden_size=lstm_hidden, batch_first=True)
-        
-        # Transformer Encoder 
-        encoder_layer = nn.TransformerEncoderLayer(d_model=transformer_dim, nhead=transformer_heads, batch_first=True)
-        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=transformer_layers)
-        
-        # Projection layers
-        self.proj_lstm = nn.Linear(lstm_hidden, transformer_dim)
-        self.pred_len = pred_len
-        self.fc_out = nn.Linear(transformer_dim, pred_len)
-    
+
     def forward(self, x):
-        # x: [batch, seq_len, 1]
-        batch_size, seq_len, _ = x.shape
-        # CNN expects [batch, channels, seq_len]
-        cnn_out = self.cnn_relu(self.cnn(x.transpose(1,2)))  # [B, C, T]
-        cnn_out = cnn_out.transpose(1,2)  # [B, T, C]
-        # LSTM
-        lstm_out, _ = self.lstm(cnn_out)  # [B, T, hidden]
-        lstm_proj = self.proj_lstm(lstm_out)  # [B, T, transformer_dim]
-        # Transformer
-        trans_out = self.transformer(lstm_proj)  # [B, T, transformer_dim]
-        # 取最后时间步输出预测
-        out = self.fc_out(trans_out[:, -1, :])  # [B, pred_len]
-        return out.unsqueeze(-1)  # [B, pred_len, 1]
+        """
+        x: (batch_size, seq_length, input_dim)
+        return: (batch_size, output_dim)
+        """
+        lstm_out, (hidden, cell) = self.lstm(x)  # lstm_out: (batch, seq, hidden)
+        last_hidden = lstm_out[:, -1, :]  # (batch, hidden)取最后一个时间步的隐藏状态（或可用 hidden[-1]）
+        out = self.fc(last_hidden)  # (batch, output_dim)
+        return out
 
 
 # 3. 训练、评估与可视化函数
@@ -90,6 +93,9 @@ def train_model(model, dataloader, num_epochs=50, learning_rate=1e-3, device='cp
 
     model.train()
 
+    preds = []
+    trues = []
+
     loss_history = []
     for epoch in range(num_epochs):
         epoch_losses = []
@@ -98,6 +104,8 @@ def train_model(model, dataloader, num_epochs=50, learning_rate=1e-3, device='cp
             batch_targets = batch_targets.to(device)
             optimizer.zero_grad()
             outputs = model(batch_data)
+            preds.append(outputs.detach().cpu().numpy())
+            trues.append(batch_targets.detach().cpu().numpy())
             loss = criterion(outputs, batch_targets)
             loss.backward()
             optimizer.step()
@@ -106,7 +114,11 @@ def train_model(model, dataloader, num_epochs=50, learning_rate=1e-3, device='cp
         loss_history.append(avg_loss)
         if (epoch + 1) % 10 == 0:
             print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss:.4f}")
-    return loss_history
+
+    preds = np.concatenate(preds, axis=0).squeeze()
+    trues = np.concatenate(trues, axis=0).squeeze()
+    return loss_history, preds, trues
+
 
 def evaluate_model(model, dataloader, device='cpu'):
     model.eval()
@@ -125,31 +137,55 @@ def evaluate_model(model, dataloader, device='cpu'):
 
     return preds, trues
 
-def visualize_results(loss_history, preds, trues):
+
+def visualize_results(loss_history, preds, final_preds, trues):
     sns.set(font_scale=1.2)
     plt.rc('font', family=['Times New Roman', 'Simsun'], size=12)
 
-    # 图 1：训练损失曲线
-    # 模型在训练过程中损失的下降情况，说明模型不断优化拟合数据。
-    plt.plot(loss_history, marker='o', color='dodgerblue', linestyle='-', linewidth=2)
-    plt.title("Training Loss Curve")
-    plt.xlabel("Epoch")
-    plt.ylabel("MSE Loss")
-    plt.tight_layout()
-    plt.savefig('output_image1.png', dpi=300, format='png')
-    plt.show()
+    # # 图 1：训练损失曲线
+    # # 模型在训练过程中损失的下降情况，说明模型不断优化拟合数据。
+    # plt.plot(loss_history, marker='o', color='dodgerblue', linestyle='-', linewidth=2)
+    # plt.title("Training Loss Curve")
+    # plt.xlabel("Epoch")
+    # plt.ylabel("MSE Loss")
+    # plt.tight_layout()
+    # plt.savefig('output_image1.png', dpi=300, format='png')
+    # plt.show()
 
-    # 图 2：真实值与预测值对比曲线
-    # 对比曲线直观展示模型预测趋势与真实数据的匹配情况，越接近表示模型效果越好。
-    plt.plot(trues, label="True Values", color='limegreen')
-    plt.plot(preds, label="Predicted Values", color='crimson')
-    plt.title("True vs. Predicted Values")
-    plt.xlabel("Sample Index")
-    plt.ylabel("Trend Value")
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig('output_image2.png', dpi=300, format='png')
-    plt.show()
+    # # 图 2：真实值与预测值对比曲线(LSTM)
+    # # 对比曲线直观展示模型预测趋势与真实数据的匹配情况，越接近表示模型效果越好。
+    # plt.plot(trues, label="True Values", color='limegreen')
+    # plt.plot(preds, label="Predicted Values", color='crimson')
+    # plt.title("True vs. Predicted Values")
+    # plt.xlabel("Sample Index")
+    # plt.ylabel("Trend Value")
+    # plt.legend()
+    # plt.tight_layout()
+    # plt.savefig('output_image2.png', dpi=300, format='png')
+    # plt.show()
+
+
+    # # 图 3：真实值与预测值对比曲线(融合模型)
+    # # 对比曲线直观展示模型预测趋势与真实数据的匹配情况，越接近表示模型效果越好。
+    # plt.plot(trues, label="True Values", color='limegreen')
+    # plt.plot(final_preds, label="Predicted Values", color='crimson')
+    # plt.title("True vs. Predicted Values")
+    # plt.xlabel("Sample Index")
+    # plt.ylabel("Trend Value")
+    # plt.legend()
+    # plt.tight_layout()
+    # plt.savefig('output_image3.png', dpi=300, format='png')
+    # plt.show()
+
+
+    # # 图 4：残差分布图（增强前后）
+    # sns.histplot(trues - preds, color='red', label='LSTM Residuals', kde=True)
+    # sns.histplot(trues - final_preds, color='green', label='Hybrid Residuals', kde=True)
+    # plt.title("Residual Distribution: LSTM vs Hybrid")
+    # plt.legend()
+    # plt.tight_layout()
+    # plt.savefig('output_image4.png', dpi=300, format='png')
+    # plt.show()
 
 def evaluate_metrics(y_true, y_pred):
     y_true = y_true.reshape(-1)
@@ -186,6 +222,9 @@ if __name__ == '__main__':
     learning_rate = 1e-3
     seq_len = 30
     pred_len = 1
+    hidden_size = 50
+    num_layers = 1
+    dropout = 0.2
 
     # 数据加载
     df = pd.read_csv('/workspaces/Data-Miscellany-Forum/src/多变量时序预测系列-股票预测/多输入+单输出+单步/data.csv', parse_dates=["Date"], index_col=[0])
@@ -210,23 +249,37 @@ if __name__ == '__main__':
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     # 训练模型
-    model = CNN_LSTM_Transformer().to(device)
+    model = LSTMRegressor(input_size=var_num, hidden_size=hidden_size, num_layers=num_layers, output_size=pred_len, dropout=dropout).to(device)
     print("开始训练模型...")
-    loss_history = train_model(model, train_loader, num_epochs=num_epochs, learning_rate=learning_rate, device=device)
+    loss_history, train_preds, train_trues = train_model(model, train_loader, num_epochs=num_epochs, learning_rate=learning_rate, device=device)
+    # 决策树基于LSTM残差训练
+    residuals = np.array(train_trues).reshape(-1, 1)- np.array(train_preds).reshape(-1, 1)
+    X_tree_train = train_preds.reshape(-1, 1)
+    model_tree = DecisionTreeRegressor(max_depth=3)
+    model_tree.fit(X_tree_train, residuals)
 
     # 在测试集上进行评估
     preds, trues = evaluate_model(model, test_loader, device=device)
+    X_tree_test = preds.reshape(-1, 1)
+    residual_preds = model_tree.predict(X_tree_test)
+    final_preds = preds + residual_preds
 
     preds_copies_array = np.repeat(preds, var_num, axis=-1)
     preds_test=scaler.inverse_transform(np.reshape(preds_copies_array, (len(preds), var_num)))[:,0]
+
+    final_preds_copies_array = np.repeat(final_preds, var_num, axis=-1)
+    final_preds_test=scaler.inverse_transform(np.reshape(final_preds_copies_array, (len(final_preds), var_num)))[:,0]
 
     trues_copies_array = np.repeat(trues, var_num, axis=-1)
     trues_test=scaler.inverse_transform(np.reshape(trues_copies_array, (len(trues), var_num)))[:,0]
 
     # 可视化结果
-    visualize_results(loss_history, preds_test, trues_test)
+    # visualize_results(loss_history, preds_test, final_preds_test, trues_test)
 
     # 计算误差
-    metrics = evaluate_metrics(preds_test, trues_test)
+    metrics = evaluate_metrics(final_preds_test, trues_test)
     print("Test metrics:", metrics)
+
+
+
 
