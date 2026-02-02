@@ -7,7 +7,7 @@ from sklearn.metrics import mean_squared_error
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
-
+"""多变量时序单步预测"""
 
 # 1、读取数据集
 data = pd.read_csv('/workspaces/Data-Miscellany-Forum/src/单变量时序预测系列-航空乘客预测/data.csv')
