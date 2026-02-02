@@ -7,16 +7,16 @@ from sklearn.metrics import mean_squared_error
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
-
+"""多变量时序单步预测"""
 
 # 1、读取数据集
-data = pd.read_csv('data.csv')
+data = pd.read_csv('/workspaces/Data-Miscellany-Forum/src/单变量时序预测系列-航空乘客预测/data.csv')
 # 将日期列转换为日期时间类型
 data['Month'] = pd.to_datetime(data['Month'])
 # 将日期列设置为索引
 data.set_index('Month', inplace=True)
 series = np.array(data['Passengers'])
-series  = (series - series.min()) / (series.max() - series.min())
+series = (series - series.min()) / (series.max() - series.min())
 time = np.arange(len(series))
 
 # 2. 构造滑动窗口特征
@@ -27,7 +27,7 @@ def create_windows(data, window_size):
         y.append(data[i+window_size])
     return np.array(X), np.array(y)
 
-window_size = 1
+window_size = 7
 X, y = create_windows(series, window_size)
 
 # 3. 划分训练和测试集（避免泄露，按时间顺序切分）
@@ -42,7 +42,9 @@ rf_train_pred = rf.predict(X_train)
 rf_test_pred = rf.predict(X_test)
 
 # 5. 将 RF 输出拼接入 GRU 输入特征
+print(X_train.shape)
 X_train_gru = np.hstack([X_train, rf_train_pred.reshape(-1,1)])
+print(X_train_gru.shape)
 X_test_gru = np.hstack([X_test, rf_test_pred.reshape(-1,1)])
 
 # 6. PyTorch GRU 模型定义

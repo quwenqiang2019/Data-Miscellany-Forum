@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from bayes_opt import BayesianOptimization
@@ -10,11 +9,7 @@ from keras.optimizers import Adam
 import matplotlib.pyplot as plt
 
 
-'''
-yfinance是Ran Aroussi开发的一个流行的开源库，用于访问雅虎财经上提供的财务数据。
-'''
-
-# 获取股票数据
+# 获取数据
 def load_data():
     data = pd.read_csv('data.csv')
     # 将日期列转换为日期时间类型
