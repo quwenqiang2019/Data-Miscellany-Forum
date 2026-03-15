@@ -6,7 +6,7 @@ from keras.models import Sequential, Model
 from keras.layers import LSTM, Dense, Input
 import tensorflow as tf
 import random
-
+import seaborn as sns
 '''
 LSTM模型训练中的一些操作（如参数初始化、数据分割等）具有随机性，这会导致每次训练后的模型表现有所不同。
 解决方案：
@@ -30,6 +30,8 @@ train_data = data[:train_size]
 test_data = data[train_size:]
 
 # 绘制训练集和测试集的折线图
+sns.set(font_scale=1.2)
+plt.rc('font', family=['Times New Roman', 'SimSun'], size=12)
 plt.figure(figsize=(10, 6))
 plt.plot(train_data, label='Training Data')
 plt.plot(test_data, label='Testing Data')
@@ -55,11 +57,10 @@ def create_sliding_windows(data, window_size):
 
 
 # 定义滑动窗口大小
-window_size = 12
+window_size = 7
 
 # 创建滑动窗口数据集
 X_train, Y_train = create_sliding_windows(train_data_scaler, window_size)
-print(X_train, Y_train)
 X_test, Y_test = create_sliding_windows(test_data_scaler, window_size)
 
 # 将数据集转换为 LSTM 模型所需的形状（样本数，时间步长，特征数）
@@ -74,13 +75,13 @@ X_test = np.reshape(X_test, (X_test.shape[0], window_size, 1))
 # model.add(Dense(1))
 
 input = Input(shape=(window_size, 1))
-lstm = LSTM(units=50, activation='relu')(input)
+lstm = LSTM(units=64, activation='relu')(input)
 output = Dense(units=1)(lstm)
 model = Model(inputs=input, outputs=output)
 model.summary()
 model.compile(optimizer='adam', loss='mse')
 # 训练 LSTM 模型
-model.fit(X_train, Y_train, epochs=100, batch_size=32)
+model.fit(X_train, Y_train, epochs=200, batch_size=32)
 
 
 # 使用 LSTM 模型进行预测
