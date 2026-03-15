@@ -1,0 +1,17 @@
+=== Training Set ===
+MAE: 267.7468
+RMSE: 333.4608
+MAPE: 4.00%
+R2: 0.9565
+
+=== Validation Set ===
+MAE: 266.7151
+RMSE: 319.4174
+MAPE: 2.91%
+R2: 0.6800
+
+=== Test Set ===
+MAE: 450.0255
+RMSE: 581.7472
+MAPE: 4.10%
+R2: 0.8022
