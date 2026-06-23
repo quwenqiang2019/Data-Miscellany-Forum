@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage
 
 model = ChatOpenAI(
     model="deepseek-chat",
-    api_key="sk-d195bef79a94410686e71c7002aeb050",
+    api_key="sk-xxxxxxxxxxxxxx",
     base_url="https://api.deepseek.com/v1",
 )
 agent = create_deep_agent(
