@@ -20,7 +20,7 @@ plt.rc('font', family=['Times New Roman', 'SimSun'], size=12)
 
 DATA_PATH = "./data/数据集.xlsx"
 OUTPUT_DIR = "./output/lstm_prediction"
-SEQ_LEN = 7
+SEQ_LEN = 60
 BATCH_SIZE = 64
 EPOCHS = 100
 LEARNING_RATE = 0.001
