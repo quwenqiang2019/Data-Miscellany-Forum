@@ -118,7 +118,7 @@ def run_city_brain_tests():
     # 初始化大模型
     model = ChatOpenAI(
         model="deepseek-chat",
-        api_key="sk-d195bef79a94410686e71c7002aeb050",
+        api_key="sk-xxxxxxxxxxxx",
         base_url="https://api.deepseek.com/v1",
     )
     # 初始化两个自定义的子智能体
