@@ -5,6 +5,11 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 from keras.layers import Bidirectional
+import seaborn as sns
+
+sns.set(font_scale=1.2)
+plt.rc("font", family=["Times New Roman", "Simsun"], size=12)
+
 
 # 读取数据集
 data = pd.read_csv('data.csv')
@@ -26,6 +31,7 @@ plt.xlabel('Year')
 plt.ylabel('Passenger Count')
 plt.title('International Airline Passengers - Training and Testing Data')
 plt.legend()
+# plt.savefig('output_image1.png', dpi=300, format='png')
 plt.show()
 
 # 将数据归一化到 0~1 范围
@@ -80,6 +86,7 @@ plt.xlabel('Month')
 plt.ylabel('Passengers')
 plt.title('Actual vs Predicted')
 plt.legend()
+# plt.savefig('output_image2.png', dpi=300, format='png')
 plt.show()
 
 # 绘制原始数据、训练集预测结果和测试集预测结果的折线图
@@ -91,4 +98,5 @@ plt.xlabel('Year')
 plt.ylabel('Passenger Count')
 plt.title('International Airline Passengers - Actual vs Predicted')
 plt.legend()
+plt.savefig('output_image3.png', dpi=300, format='png')
 plt.show()

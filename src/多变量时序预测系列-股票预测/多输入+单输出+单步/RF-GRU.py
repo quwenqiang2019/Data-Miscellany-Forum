@@ -227,7 +227,7 @@ if __name__ == '__main__':
     dropout = 0.2
 
     # 数据加载
-    df = pd.read_csv('/workspaces/Data-Miscellany-Forum/src/多变量时序预测系列-股票预测/多输入+单输出+单步/data.csv', parse_dates=["Date"], index_col=[0])
+    df = pd.read_csv('data.csv', parse_dates=["Date"], index_col=[0])
     df = pd.DataFrame(df)
     var_num = len(df.columns)
     print(df)

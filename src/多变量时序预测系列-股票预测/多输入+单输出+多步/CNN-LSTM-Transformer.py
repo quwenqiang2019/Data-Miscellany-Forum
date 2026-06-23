@@ -148,15 +148,15 @@ def visualize_results(loss_history, preds, trues):
 
     # 图 2：真实值与预测值对比曲线
     # 对比曲线直观展示模型预测趋势与真实数据的匹配情况，越接近表示模型效果越好。
-    plt.plot(trues, label="True Values", color='limegreen')
-    plt.plot(preds, label="Predicted Values", color='crimson')
-    plt.title("True vs. Predicted Values")
-    plt.xlabel("Sample Index")
-    plt.ylabel("Trend Value")
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig('output_image2.png', dpi=300, format='png')
-    plt.show()
+    # plt.plot(trues, label="True Values", color='limegreen')
+    # plt.plot(preds, label="Predicted Values", color='crimson')
+    # plt.title("True vs. Predicted Values")
+    # plt.xlabel("Sample Index")
+    # plt.ylabel("Trend Value")
+    # plt.legend()
+    # plt.tight_layout()
+    # plt.savefig('output_image2.png', dpi=300, format='png')
+    # plt.show()
 
 def visualize_results_v2(idx, preds, trues):
     # 图：测试集 单样本预测 vs 真值（多步）
@@ -243,7 +243,7 @@ if __name__ == '__main__':
     pred_len = 5
 
     # 数据加载
-    df = pd.read_csv('/workspaces/Data-Miscellany-Forum/src/多变量时序预测系列-股票预测/多输入+单输出+多步/data.csv', parse_dates=["Date"], index_col=[0])
+    df = pd.read_csv('~/snap/wenqiang/Data-Miscellany-Forum/src/多变量时序预测系列-股票预测/多输入+单输出+多步/data.csv', parse_dates=["Date"], index_col=[0])
     df = pd.DataFrame(df)
     var_num = len(df.columns)
     print(df)
@@ -282,8 +282,8 @@ if __name__ == '__main__':
     trues_test_2d = trues_test.reshape(int(len(y_true))//int(var_num), int(var_num))
 
     # 可视化结果
-    visualize_results(loss_history, preds_test, trues_test)
-    visualize_results_v2(0, preds_test_2d, trues_test_2d)
+    # visualize_results(loss_history, preds_test, trues_test)
+    # visualize_results_v2(0, preds_test_2d, trues_test_2d)
 
     # 计算误差
     metrics = evaluate_metrics(trues_test, preds_test)
