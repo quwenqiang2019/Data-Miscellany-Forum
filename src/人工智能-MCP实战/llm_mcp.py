@@ -6,7 +6,7 @@ import os
 
 # 大模型请求地址
 BASE_URL = "https://api.deepseek.com/v1"
-API_KEY = "sk-d195bef79a94410686e71c7002aeb050"
+API_KEY = "sk-xxxxxxxxxxxxxxxx"
 MODEL_NAME = "deepseek-chat"
 
 async def main():
