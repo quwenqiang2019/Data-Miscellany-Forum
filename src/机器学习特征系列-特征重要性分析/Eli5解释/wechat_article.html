@@ -1,0 +1,125 @@
+<section style="padding:6px 4px;">
+  <!-- 本期要点速览卡 -->
+  <section style="background:#f7f8fa; border-radius:8px; padding:16px 18px; margin-bottom:16px;">
+    <strong style="font-size:15px; color:#2b4fbf; display:block; margin-bottom:10px;">本期要点速览</strong>
+    <p style="font-size:14px; color:#555; line-height:1.7; margin:0 0 6px 0;"><span style="color:#3b6ee0; font-weight:bold;">· </span>Eli5 库通过 Permutation Importance 方法，随机打乱特征值来评估每个特征对模型性能的实际贡献</p>
+    <p style="font-size:14px; color:#555; line-height:1.7; margin:0 0 6px 0;"><span style="color:#3b6ee0; font-weight:bold;">· </span>心脏疾病数据集 13 个特征中，<strong style="color:#3b6ee0;">cp（胸痛类型）</strong>、<strong style="color:#3b6ee0;">ca（主要血管数）</strong>、<strong style="color:#3b6ee0;">thal（地中海贫血类型）</strong>为最关键特征</p>
+    <p style="font-size:14px; color:#555; line-height:1.7; margin:0;"><span style="color:#3b6ee0; font-weight:bold;">· </span>随机森林分类模型经网格搜索优化后测试集准确率达 <strong style="color:#3b6ee0;">85%</strong>，完整代码可复现</p>
+  </section>
+
+  <section style="height:1px; background:#eee; margin:20px 0;"></section>
+
+  <!-- 一、Eli5 介绍 -->
+  <section style="background:#f0f5ff; border-left:4px solid #3b6ee0; border-radius:4px; padding:14px 16px; margin-bottom:16px;">
+    <strong style="font-size:17px; color:#2b4fbf; line-height:1.4;">一、Eli5 库：让模型解释更简单</strong>
+  </section>
+
+  <p style="font-size:15px; color:#3f3f3f; line-height:1.75; letter-spacing:0.3px; text-indent:2em; margin:0 0 10px 0;">Eli5 是一个用于解释机器学习模型的 Python 库，旨在通过可视化和简洁的方式帮助理解模型的决策过程。特别是对于黑箱模型（如随机森林、梯度提升机、神经网络等），Eli5 提供了多种方法来解释和展示模型的内部机制。</p>
+
+  <p style="font-size:15px; color:#3f3f3f; line-height:1.75; letter-spacing:0.3px; text-indent:2em; margin:0 0 10px 0;">Eli5 的主要功能包含：<strong style="color:#3b6ee0;">特征重要性评估</strong>、模型解释、文本和图像解释等。其中 <strong style="color:#3b6ee0;">Permutation Importance</strong> 方法是评估特征重要性的核心工具——它通过随机打乱特征值来评估每个特征对模型性能的贡献，可以用于任何监督学习模型。</p>
+
+  <p style="font-size:15px; color:#3f3f3f; line-height:1.75; letter-spacing:0.3px; text-indent:2em; margin:0;">与传统 <code style="background:#f7f8fa; padding:2px 6px; border-radius:3px; font-size:14px;">feature_importances_</code> 不同，Permutation Importance 直接反映特征对模型性能（如准确率）的影响。它的工作原理是：逐一打乱每个特征的值，然后观察模型性能下降的程度。性能下降越多，说明该特征越重要。</p>
+
+  <section style="height:1px; background:#eee; margin:20px 0;"></section>
+
+  <!-- 二、数据集与方法 -->
+  <section style="background:#f0f5ff; border-left:4px solid #3b6ee0; border-radius:4px; padding:14px 16px; margin-bottom:16px;">
+    <strong style="font-size:17px; color:#2b4fbf; line-height:1.4;">二、心脏疾病数据集与建模方法</strong>
+  </section>
+
+  <p style="font-size:15px; color:#3f3f3f; line-height:1.75; letter-spacing:0.3px; text-indent:2em; margin:0 0 10px 0;">本案例使用经典心脏疾病预测数据集，包含 <strong style="color:#3b6ee0;">297 条样本</strong>、<strong style="color:#3b6ee0;">13 个特征</strong>和 1 个二分类目标变量。特征涵盖年龄（age）、性别（sex）、胸痛类型（cp）、静息血压（trestbps）、血清胆固醇（chol）、空腹血糖（fbs）、静息心电图（restecg）、最大心率（thalach）、运动诱发心绞痛（exang）、ST 段压低（oldpeak）、ST 斜率（slope）、主要血管染色数量（ca）和地中海贫血类型（thal）。</p>
+
+  <p style="font-size:15px; color:#3f3f3f; line-height:1.75; letter-spacing:0.3px; text-indent:2em; margin:0 0 10px 0;">建模流程：采用 <strong style="color:#3b6ee0;">随机森林分类器</strong> 作为基模型，通过 <strong style="color:#3b6ee0;">GridSearchCV</strong> 网格搜索优化超参数（n_estimators、max_depth、min_samples_split、min_samples_leaf），5 折交叉验证选择最优模型，最终在测试集上评估并使用 Eli5 进行特征重要性分析。</p>
+
+  <section style="background:#f7f8fa; border-left:4px solid #3b6ee0; border-radius:4px; padding:12px 14px; margin:0 0 10px 0;">
+    <p style="font-size:15px; color:#3f3f3f; line-height:1.75; margin:0;"><strong style="color:#2b4fbf;">最优参数</strong>：n_estimators=100, max_depth=5, min_samples_split=5, min_samples_leaf=1</p>
+  </section>
+  <section style="background:#f7f8fa; border-left:4px solid #3b6ee0; border-radius:4px; padding:12px 14px; margin:0 0 10px 0;">
+    <p style="font-size:15px; color:#3f3f3f; line-height:1.75; margin:0;"><strong style="color:#2b4fbf;">交叉验证准确率</strong>：83.49%　|　<strong style="color:#2b4fbf;">测试集准确率</strong>：85.00%</p>
+  </section>
+
+  <section style="height:1px; background:#eee; margin:20px 0;"></section>
+
+  <!-- 三、特征重要性分析结果 -->
+  <section style="background:#f0f5ff; border-left:4px solid #3b6ee0; border-radius:4px; padding:14px 16px; margin-bottom:16px;">
+    <strong style="font-size:17px; color:#2b4fbf; line-height:1.4;">三、Permutation Importance 分析结果</strong>
+  </section>
+
+  <p style="font-size:15px; color:#3f3f3f; line-height:1.75; letter-spacing:0.3px; text-indent:2em; margin:0 0 10px 0;">通过对训练集执行 Permutation Importance 分析（基于准确率评分），各特征对模型性能的贡献度如下：</p>
+
+  <img src="http://mmbiz.qpic.cn/mmbiz_png/kzMgiae8XwlDmj86yp63j16aGIia8BbN2k1F42VkkS9uztVaK0ibXwe2Ugibs7SVPllTMf6wAXhkaibBX0toCtAXXKjdgFkTHEJLp4Rb2U4QnfT0/0?from=appmsg" style="width:100%; display:block; border-radius:8px; margin:0 0 12px 0;" />
+
+  <section style="background:#f7f8fa; border-radius:8px; padding:16px 18px; margin-bottom:16px;">
+    <strong style="font-size:15px; color:#2b4fbf; display:block; margin-bottom:10px;">特征重要性排名</strong>
+    <p style="font-size:14px; color:#555; line-height:1.7; margin:0 0 6px 0;"><span style="color:#3b6ee0; font-weight:bold;">1. cp（胸痛类型）</span>：weight = <strong style="color:#3b6ee0;">0.0616</strong> ± 0.0102 — 最重要的预测因子，不同类型胸痛与心脏疾病高度相关</p>
+    <p style="font-size:14px; color:#555; line-height:1.7; margin:0 0 6px 0;"><span style="color:#3b6ee0; font-weight:bold;">2. ca（主要血管染色数量）</span>：weight = <strong style="color:#3b6ee0;">0.0481</strong> ± 0.0164 — 血管病变程度的直接指标</p>
+    <p style="font-size:14px; color:#555; line-height:1.7; margin:0 0 6px 0;"><span style="color:#3b6ee0; font-weight:bold;">3. thal（地中海贫血类型）</span>：weight = <strong style="color:#3b6ee0;">0.0253</strong> ± 0.0027 — 反映血红蛋白异常程度</p>
+    <p style="font-size:14px; color:#555; line-height:1.7; margin:0 0 6px 0;"><span style="color:#3b6ee0; font-weight:bold;">4. slope（ST 段斜率）</span>：weight = 0.0076 ± 0.0056</p>
+    <p style="font-size:14px; color:#555; line-height:1.7; margin:0 0 6px 0;"><span style="color:#3b6ee0; font-weight:bold;">5. oldpeak（ST 段压低值）</span>：weight = 0.0051 ± 0.0086</p>
+    <p style="font-size:14px; color:#555; line-height:1.7; margin:0;"><span style="color:#888; font-weight:bold;">其余特征</span>（trestbps, sex, age, fbs, restecg, chol, thalach, exang）权重接近零或为负值，表明打乱这些特征对模型性能影响甚微甚至有轻微正向波动。</p>
+  </section>
+
+  <p style="font-size:15px; color:#3f3f3f; line-height:1.75; letter-spacing:0.3px; text-indent:2em; margin:0 0 10px 0;">值得注意的是，Permutation Importance 的结果与 <code style="background:#f7f8fa; padding:2px 6px; border-radius:3px; font-size:14px;">feature_importances_</code> 存在差异。例如 <strong style="color:#3b6ee0;">thalach（最大心率）</strong> 在 feature_importances_ 中排名第四（0.1178），但在 Permutation Importance 中权重为负——说明该特征在训练时的分裂贡献并不能直接等同于对模型预测性能的影响。</p>
+
+  <section style="height:1px; background:#eee; margin:20px 0;"></section>
+
+  <!-- 四、决策树可视化 -->
+  <section style="background:#f0f5ff; border-left:4px solid #3b6ee0; border-radius:4px; padding:14px 16px; margin-bottom:16px;">
+    <strong style="font-size:17px; color:#2b4fbf; line-height:1.4;">四、决策树分裂路径解析</strong>
+  </section>
+
+  <p style="font-size:15px; color:#3f3f3f; line-height:1.75; letter-spacing:0.3px; text-indent:2em; margin:0 0 10px 0;">随机森林由多棵决策树组成，观察单棵决策树的分裂路径可以直观理解模型的决策逻辑。以下以第一棵决策树（max_depth=5）为例：</p>
+
+  <section style="background:#f7f8fa; border-radius:8px; padding:16px 18px; margin-bottom:16px;">
+    <p style="font-size:14px; color:#555; line-height:1.8; margin:0 0 8px 0;">根节点首先根据 <strong style="color:#3b6ee0;">ca ≤ 0.5</strong>（主要血管数）进行分裂：</p>
+    <p style="font-size:14px; color:#555; line-height:1.8; margin:0 0 6px 0;">　→ 左子树（ca ≤ 0.5）：进一步按 <strong style="color:#3b6ee0;">thal</strong> 分裂，再结合 exang、thalach 等判断</p>
+    <p style="font-size:14px; color:#555; line-height:1.8; margin:0 0 8px 0;">　→ 右子树（ca > 0.5）：按 <strong style="color:#3b6ee0;">cp</strong> 分裂，结合 chol、slope 等特征</p>
+    <p style="font-size:14px; color:#555; line-height:1.8; margin:0;">最终，每个叶节点给出类别预测和概率。树的层次结构清晰展示了各特征对预测结果的逐级影响。</p>
+  </section>
+
+  <section style="height:1px; background:#eee; margin:20px 0;"></section>
+
+  <!-- 五、两种方法对比 -->
+  <section style="background:#f0f5ff; border-left:4px solid #3b6ee0; border-radius:4px; padding:14px 16px; margin-bottom:16px;">
+    <strong style="font-size:17px; color:#2b4fbf; line-height:1.4;">五、两种特征重要性方法的差异</strong>
+  </section>
+
+  <section style="background:#f7f8fa; border-left:4px solid #3b6ee0; border-radius:4px; padding:12px 14px; margin:0 0 10px 0;">
+    <p style="font-size:15px; color:#3f3f3f; line-height:1.75; margin:0;"><strong style="color:#2b4fbf;">feature_importances_</strong>：反映特征在模型训练过程中的分裂贡献（基尼不纯度减少），关注的是特征在构建模型时的作用</p>
+  </section>
+  <section style="background:#f7f8fa; border-left:4px solid #3b6ee0; border-radius:4px; padding:12px 14px; margin:0 0 10px 0;">
+    <p style="font-size:15px; color:#3f3f3f; line-height:1.75; margin:0;"><strong style="color:#2b4fbf;">Permutation Importance</strong>：通过打乱特征值并观察模型性能变化来评估，直接反映特征对模型预测能力的影响</p>
+  </section>
+
+  <p style="font-size:15px; color:#3f3f3f; line-height:1.75; letter-spacing:0.3px; text-indent:2em; margin:0 0 10px 0;">在特征选择和模型优化中，<strong style="color:#3b6ee0;">Permutation Importance 更适合实际应用</strong>，因为它直接衡量特征对模型性能的贡献。当需要通过特征筛选提升模型性能时，可结合 Permutation Importance 排名进行递归特征消除。</p>
+
+  <section style="height:1px; background:#eee; margin:20px 0;"></section>
+
+  <!-- 六、核心代码 -->
+  <section style="background:#f0f5ff; border-left:4px solid #3b6ee0; border-radius:4px; padding:14px 16px; margin-bottom:16px;">
+    <strong style="font-size:17px; color:#2b4fbf; line-height:1.4;">六、核心代码片段</strong>
+  </section>
+
+  <p style="font-size:15px; color:#3f3f3f; line-height:1.75; letter-spacing:0.3px; margin:0 0 10px 0;">完整代码可运行，关键步骤如下：</p>
+
+  <section style="background:#f7f8fa; border-radius:8px; padding:14px 16px; margin-bottom:16px;">
+    <p style="font-size:13px; color:#555; line-height:1.6; margin:0 0 6px 0; font-family:monospace;"># 训练随机森林 + 网格搜索</p>
+    <p style="font-size:13px; color:#555; line-height:1.6; margin:0 0 6px 0; font-family:monospace;">grid_search = GridSearchCV(RandomForestClassifier(random_state=42),</p>
+    <p style="font-size:13px; color:#555; line-height:1.6; margin:0 0 6px 0; font-family:monospace;">    param_grid, cv=5, scoring='accuracy')</p>
+    <p style="font-size:13px; color:#555; line-height:1.6; margin:0 0 6px 0; font-family:monospace;">grid_search.fit(X_train, y_train)</p>
+    <p style="font-size:13px; color:#555; line-height:1.6; margin:0 0 6px 0; font-family:monospace;">&nbsp;</p>
+    <p style="font-size:13px; color:#555; line-height:1.6; margin:0 0 6px 0; font-family:monospace;"># Permutation Importance 分析</p>
+    <p style="font-size:13px; color:#555; line-height:1.6; margin:0 0 6px 0; font-family:monospace;">from eli5.sklearn import PermutationImportance</p>
+    <p style="font-size:13px; color:#555; line-height:1.6; margin:0 0 6px 0; font-family:monospace;">perm = PermutationImportance(best_model, scoring='accuracy')</p>
+    <p style="font-size:13px; color:#555; line-height:1.6; margin:0 0 6px 0; font-family:monospace;">perm.fit(X_train, y_train)</p>
+    <p style="font-size:13px; color:#555; line-height:1.6; margin:0 0 6px 0; font-family:monospace;">print(eli5.format_as_dataframe(</p>
+    <p style="font-size:13px; color:#555; line-height:1.6; margin:0; font-family:monospace;">    eli5.explain_weights(perm, feature_names=feature_names)))</p>
+  </section>
+
+  <section style="height:1px; background:#eee; margin:20px 0;"></section>
+
+  <!-- 参考来源 -->
+  <section style="background:#f7f8fa; border-radius:8px; padding:14px 16px; margin-top:20px;">
+    <p style="font-size:13px; color:#888; line-height:1.7; margin:0;">参考来源：<a href="https://mp.weixin.qq.com/s/HVLIM6MCrmhur8M91idmLw" style="color:#3b6ee0;">Eli5解释：通过随机打乱特征评估其对模型性能的重要性</a>（Python机器学习AI）；<a href="https://eli5.readthedocs.io/" style="color:#3b6ee0;">Eli5 官方文档</a></p>
+  </section>
+</section>

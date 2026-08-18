@@ -4,8 +4,9 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 
 model = ChatOpenAI(
-    model="deepseek-chat",
-    api_key="sk-xxxxxxxxxxxxxx",
+    # model="deepseek-chat",
+    model="deepseek-v4-flash",
+    api_key="sk-d195bef79a94410686e71c7002aeb050",
     base_url="https://api.deepseek.com/v1",
 )
 agent = create_deep_agent(
